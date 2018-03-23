@@ -1,0 +1,28 @@
+Package: scPred
+Type: Package
+Title: scPred - Single cell prediction using singular value decomposition and machine learning classification
+Version: 0.0.0.9000
+Author: c(person("Jose", "Alquicira-Hernandez", email = "j.alquicira@imb.uq.edu.au", rol = "aut, cre"), person("Quan", "Nguyen", email = "quan.nguyen@imb.uq.edu.au", rol = "aut"))
+Maintainer: Jose Alquicira-Hernandez <j.alquicira@imb.uq.edu.au>
+Description: Provides a series of functions to train a prediction model based on gene expression data to classify single cells
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+Depends:
+    dplyr,
+    tidyr,
+    magrittr,
+    caret,
+    kernlab,
+    pROC,
+    ggplot2
+Imports:
+    dplyr,
+    tidyr,
+    magrittr,
+    caret,
+    kernlab,
+    pROC,
+    ggplot2
+VignetteBuilder: knitr
+RoxygenNote: 6.0.1
