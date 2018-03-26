@@ -12,6 +12,7 @@
 #' }
 #' @keywords singular value decomposition, pca
 #' @importFrom methods is
+#' @importFrom methods new
 #' @export
 #' @author José Alquicira Hernández
 #' @examples 

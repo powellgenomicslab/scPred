@@ -54,6 +54,7 @@ setMethod("metadata", "eigenPred", function(object) {
 #' \item columns: associated metadata such as cell type, conditions, sample or, batch. 
 #' } 
 #' @importFrom methods setMethod
+#' @importFrom methods loadMethod
 #' @export
 
 setGeneric("metadata<-", function(object, value) standardGeneric("metadata<-"))
