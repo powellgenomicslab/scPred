@@ -4,6 +4,7 @@
 #' @param referenceData A matrix object with cells as rows and genes (loci) as columns obtained with \code{projectNewData} function
 #' @param trainedModel A \code{train} object returned by \code{trainModel} function
 #' @keywords prediction, new, test, validation
+#' @importFrom methods is
 #' @export
 #' @author
 #' José Alquicira Hernández

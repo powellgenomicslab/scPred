@@ -11,6 +11,7 @@
 #' \item \code{pseudo}: \code{TRUE} if a pseudo-log2 transformation was performed
 #' }
 #' @keywords singular value decomposition, pca
+#' @importFrom methods is
 #' @export
 #' @author José Alquicira Hernández
 #' @examples 

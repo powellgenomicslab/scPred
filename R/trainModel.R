@@ -15,6 +15,7 @@
 #' @return A \code{train} object with final results. See \code{train} function for details. An aditional value \code{top} is added to the 
 #' \code{train} object to track the features used to train the model
 #' @keywords train, model
+#' @importFrom methods is
 #' @export
 #' @author
 #' José Alquicira Hernández

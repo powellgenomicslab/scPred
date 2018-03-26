@@ -4,6 +4,7 @@
 #' @param referenceData An \code{eigenDec} object
 #' @return A data frame with the projection
 #' @keywords test, validation, projection
+#' @importFrom methods is
 #' @export
 #' @author
 #' José Alquicira Hernández

@@ -23,6 +23,7 @@
 #' \item \code{rep}: Number of random samples to determine stable principal components
 #' }
 #' @keywords informative, significant, features
+#' @importFrom methods is
 #' @export
 #' @author
 #' José Alquicira Hernández
