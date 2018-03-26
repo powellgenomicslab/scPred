@@ -41,16 +41,29 @@ getInformativePCs <- function(object, pVar, rep = 100, seed = NULL, varLim = 0.0
   
   if(!is.null(seed)){
     set.seed(seed)   
-    seeds <- sample(1:10000, rep)
+    seeds <- sample(1:1000000L, rep)
   }else{
-    seeds <- sample(1:10000, rep)
+    seeds <- sample(1:1000000L, rep)
   }
-  lapply(seeds, function(x) .getSignificantPCs(object,
-                                               pVar = pVar,
-                                               seed = x,
-                                               varLim = varLim,
-                                               correction = correction,
-                                               sig = sig)) -> res
+  
+  res <- list()
+  
+  message("Identifying stable features...")
+  pb <- txtProgressBar(min = 0, max = length(seeds), style = 3)
+  
+  for(i in seq_len(length(seeds))){
+    res[[i]] <- .getSignificantPCs(object,
+                                   pVar = pVar,
+                                   seed = seeds[i],
+                                   varLim = varLim,
+                                   correction = correction,
+                                   sig = sig)
+    setTxtProgressBar(pb, i)
+  }
+  close(pb)
+  
+  message("Gathering results...")
+  
   res %>% 
     lapply("[", "PC") %>% 
     unlist() %>% 
@@ -65,6 +78,8 @@ getInformativePCs <- function(object, pVar, rep = 100, seed = NULL, varLim = 0.0
   object@features <- sigPCs
   object@pVar <- pVar
   object@rep <- rep
+  
+  message("DONE!")
   object
   
 }
@@ -84,29 +99,15 @@ getInformativePCs <- function(object, pVar, rep = 100, seed = NULL, varLim = 0.0
   subpca <- getPCA(object)[i, pcs]
   submeta <- metadata(object)[i, pVar]
   
-  subpca$pVar <- submeta
-  
-  # Convert to long format
-  subpcaLong <- gather(subpca, "PC", "value", seq_len(ncol(subpca) - 1))
-  
-  # Test for informative PCs
-  subpcaLong %>% 
-    split(subpcaLong$PC) %>% 
-    lapply(function(pc) wilcox.test(value ~ pVar, pc)) -> pcaTest
-  
-  pcaTest %>% 
+  lapply(subpca, function(pc){
+    wilcox.test(pc[submeta == levels(submeta)[1]],
+                pc[submeta == levels(submeta)[2]])}) %>% 
     lapply('[[', "p.value") %>% 
     as.data.frame() %>% 
-    gather(key = "PC", value = "pValue") -> pcaPvals
-  
-  pcaPvals$pValueAdj <- p.adjust(pcaPvals$pValue, method = correction, n = nrow(pcaPvals))
-  
-  
-  # Filter PCs
-  pcaPvals %>%
+    gather(key = "PC", value = "pValue") %>% 
+    mutate(pValueAdj = p.adjust(pValue, method = correction, n = nrow(.))) %>% 
     arrange(pValueAdj) %>% 
-    filter(pValueAdj < sig) %>% 
-    mutate(varExp = object@expVar[match(PC, names(object@expVar))]) -> pcaSig
+    filter(pValueAdj < sig) -> pcaSig
   
   pcaSig
   
