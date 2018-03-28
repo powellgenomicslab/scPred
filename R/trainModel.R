@@ -48,14 +48,16 @@ trainModel <- function(object,
   
   # Get features
   if(length(object@features$PC) == 0){
-      stop("No significant principal components were found")
+    stop("No significant principal components were found")
   }
   
   if(nrow(object@features) < top){
-    warning(sprintf("Only % principal components were determined as significant. Using these as features"))
-  }  
-  features <- getPCA(object)[,object@features$PC[seq_len(top)]]
-
+    warning(sprintf("Only % principal components were determined as significant. Using these as features", nrow(object@features)))
+    features <- getPCA(object)[,object@features$PC[seq_len(nrow(object@features))]]
+    
+  }else{  
+    features <- getPCA(object)[,object@features$PC[seq_len(top)]]
+  }
   # Get response variable
   response <- object@metadata[[object@pVar]]
   
