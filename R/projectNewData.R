@@ -17,17 +17,31 @@ projectNewData <- function(newData, referenceData){
   }
   
   if(!is(referenceData, "eigenPred")){
-    stop("'referenceData' must be of class 'eigenDec'")
+    stop("'referenceData' must be of class 'eigenPred'")
   }
-
   
   if(referenceData@pseudo){
     newData <- log2(newData + 1)
-  }else{
-    newData <- newData
+  }
+
+  new <- colnames(newData)
+  ref <- rownames(getLoadings(referenceData))
+
+  
+  if(all(new %in% ref) | all(ref %in% new)){ # Subset genes if necesary
+    newSub <- newData[,new %in% ref] 
+    refSub <- getLoadings(referenceData)[ref %in% new, ]
+    newSub <- newSub[, match(rownames(refSub), colnames(newSub))]
+  }else if(!all(new == ref)){ # Order new data according to loadings matrix
+    newSub <- newData[, match(ref, new)]
+    refSub <- getLoadings(referenceData)
+  }else{ # Use data directly if genes match and are ordered
+    newSub <- newData
+    refSub <- getLoadings(referenceData)
   }
   
-  newDataProj <- predict(referenceData@prcomp, newdata = newData)
+
+  newDataProj <- scale(newSub, referenceData@prcomp$center, referenceData@prcomp$scale) %*% refSub
   
   as.data.frame(newDataProj)
   
