@@ -28,7 +28,7 @@ projectNewData <- function(newData, referenceData){
   ref <- rownames(getLoadings(referenceData))
 
   
-  if(!(all(new %in% ref) | all(ref %in% new))){ # Subset genes if necesary
+  if(!(all(new %in% ref) & all(ref %in% new))){ # Subset genes if necesary
     newSub <- newData[,new %in% ref] 
     refSub <- getLoadings(referenceData)[ref %in% new, ]
     newSub <- newSub[, match(rownames(refSub), colnames(newSub))]

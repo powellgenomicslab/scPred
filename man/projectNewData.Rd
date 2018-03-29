@@ -9,7 +9,7 @@ projectNewData(newData, referenceData)
 \arguments{
 \item{newData}{A matrix object with cells as rows and genes (loci) as columns}
 
-\item{referenceData}{An \code{eigenDec} object}
+\item{referenceData}{An \code{eigenPred} object}
 }
 \value{
 A data frame with the projection
