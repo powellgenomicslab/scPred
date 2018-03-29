@@ -52,9 +52,9 @@ trainModel <- function(object,
   }
   
   if(nrow(object@features) < top){
-    warning(sprintf("Only %i principal components were determined as significant. Using these as features", nrow(object@features)))
+    message(sprintf("Only %i principal components were determined as significant. Using these as features", nrow(object@features)))
     features <- getPCA(object)[,object@features$PC[seq_len(nrow(object@features))]]
-    
+    top <- nrow(object@features)
   }else{  
     features <- getPCA(object)[,object@features$PC[seq_len(top)]]
   }
