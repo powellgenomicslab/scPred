@@ -25,6 +25,7 @@
 trainModel <- function(object,
                        positiveClass = NULL,
                        top = 10,
+                       all = FALSE,
                        method = "svmPoly",
                        resampleMethod = "cv",
                        seed = NULL,
@@ -50,8 +51,9 @@ trainModel <- function(object,
   if(length(object@features$PC) == 0){
     stop("No significant principal components were found")
   }
-  
-  if(nrow(object@features) < top){
+  if(all){
+    features <- getPCA(object)[,object@features$PC]
+  }else if(nrow(object@features) < top){
     message(sprintf("Only %i principal components were determined as significant. Using these as features", nrow(object@features)))
     features <- getPCA(object)[,object@features$PC[seq_len(nrow(object@features))]]
     top <- nrow(object@features)
@@ -106,7 +108,10 @@ trainModel <- function(object,
     
   }
   
-  fit$top <- top
-  
+  if(all){
+    fit$top <- "all"
+  }else{
+    fit$top <- top
+  }
   fit
 }

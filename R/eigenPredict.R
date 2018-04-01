@@ -35,8 +35,11 @@ eigenPredict <- function(trainData, predData, trainedModel, classes = NULL){
     stop("No significant principal components were found")
   }
   
-  featureList <- trainData@features$PC[seq_len(trainedModel$top)]
-  
+  if(trainedModel$top == "all"){
+    featureList <- trainData@features$PC
+  }else{
+    featureList <- trainData@features$PC[seq_len(trainedModel$top)]
+  }
   
   projection <- predData[,featureList]
   prediction <- predict(trainedModel, newdata = as.matrix(projection), type = "prob")
