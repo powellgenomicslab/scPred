@@ -4,9 +4,9 @@
 \alias{trainModel}
 \title{Train a prediction model}
 \usage{
-trainModel(object, positiveClass = NULL, top = 10, method = "svmPoly",
-  resampleMethod = "cv", seed = NULL, number = 10, returnData = FALSE,
-  savePredictions = FALSE)
+trainModel(object, positiveClass = NULL, top = 10, all = FALSE,
+  method = "svmPoly", resampleMethod = "cv", seed = NULL, number = 10,
+  returnData = FALSE, savePredictions = FALSE)
 }
 \arguments{
 \item{object}{An \code{eigenPred} object with informative PCs obtained using 

@@ -183,21 +183,14 @@ setGeneric("plotFeatures", def = function(object) {
 
 
 setMethod("plotFeatures", signature("eigenPred"), function(object){
-  object@features %>% 
-    mutate(cumExpVarScaled = ( (cumExpVar - min(cumExpVar)) / (max(cumExpVar) - min(cumExpVar)) ) * (max(Freq) - min(Freq)) + min(Freq)) -> pcFreq
-  
-  ggplot(pcFreq, aes(PC, Freq)) +
-    geom_bar(stat = "identity", fill = "steelblue") +
-    geom_line(aes(as.numeric(PC), cumExpVarScaled)) +
-    geom_point(aes(as.numeric(PC), cumExpVarScaled), shape = 1) +
-    scale_y_continuous(sec.axis = sec_axis(~( (. - min(pcFreq$Freq)) / (max(pcFreq$Freq) - min(pcFreq$Freq)) ) * (max(pcFreq$cumExpVar) - min(pcFreq$cumExpVar)) + min(pcFreq$cumExpVar), 
-                                           name = "Cumulative explained variance")) +
+
+  ggplot(object@features, aes(x = PC, y = cumExpVar, group = 1)) + 
+    geom_line(stat = "identity") +
+    geom_point(stat = "identity") +
+    xlab("Informative principal components") +
+    ylab("Cumulative explained variance") +
     theme_bw() +
-    xlab("Significant principal components") +
-    ylab(paste("Frequency of occurence in", object@rep, "interations")) +
     theme(axis.text.x = element_text(angle = 90, hjust = 1)) -> p
-  
   p
-  
-  
+    
 })
