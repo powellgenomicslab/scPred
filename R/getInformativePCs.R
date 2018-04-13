@@ -1,12 +1,12 @@
 #' @title Get informative principal components
 #' @description Given a prediction variable, finds a set of class-informative principal components that are significant across n subsets of cells from the 
 #' PCA matrix. A Wilcoxon rank sum test is used to determine a difference between the value distributions of classes from the prediction variable.
-#' @param object An \code{eigenPred} object
+#' @param object An \code{scPred} object
 #' @param pVar Prediction variable corresponding to a column in \code{metadata} slot
 #' @param varLim Threshold to filter principal components based on variance explained.
 #' @param correction Multiple testing correction method. Default: false discovery rate. See \code{p.adjust} function 
 #' @param sig Significance level to determine principal components explaining class identity
-#' @return A \code{eigenPred} object with two additional filled slots:
+#' @return A \code{scPred} object with two additional filled slots:
 #' \itemize{
 #' \item \code{features}: A data frame with significant principal components the following information:
 #' \itemize{
@@ -30,24 +30,56 @@
 
 
 getInformativePCs <- function(object, pVar, varLim = 0.01, correction = "fdr", sig = 0.1){
-  if(!is(object, "eigenPred")){
-    stop("Invalid class for object: must be 'eigenPred'")
+  
+  
+  # Validations -------------------------------------------------------------
+  
+  if(!is(object, "scPred")){
+    stop("Invalid class for object: must be 'scPred'")
   }
   
   if(!any(correction %in% stats::p.adjust.methods)){
     stop("Invalid multiple testing correction method. See ?p.adjust function")
   }
   
-  i <- object@expVar > varLim
-  
-  pca <- getPCA(object)[,i]
   classes <- metadata(object)[[pVar]]
   
-  testDiff <- function(pc){
-    wilcox.test(pc[classes == levels(classes)[1]], pc[classes == levels(classes)[2]])
+  if(!is.factor(classes)){
+    stop("Prediction variable must be a factor object")
+  }else if(!all(levels(classes) %in% unique(classes))){
+    stop("Not all levels are included in prediction variable")
   }
   
-  lapply(pca,testDiff) %>% 
+  
+  # Filter principal components by variance ---------------------------------
+  
+  i <- object@expVar > varLim
+  pca <- getPCA(object)[,i]
+  
+  
+  res <- lapply(levels(classes), .getPcByClass, object, classes, pca, correction, sig)
+  names(res) <- levels(classes)
+  
+
+  object@features <- res
+  object@pVar <- pVar
+  
+  message("DONE!")
+  object
+  
+}
+
+
+
+.getPcByClass <- function(positiveClass, object, classes, pca, correction, sig){
+  
+  i <- classes != positiveClass
+  newClasses <- as.character(classes)
+  newClasses[i] <- "other"
+  newClasses <- factor(newClasses, levels = c(positiveClass, "other"))
+  
+  
+  lapply(pca, function(pc) wilcox.test(pc[newClasses == positiveClass], pc[newClasses == "other"])) %>% 
     lapply('[[', "p.value") %>% 
     as.data.frame() %>% 
     gather(key = "PC", value = "pValue") %>% 
@@ -57,14 +89,6 @@ getInformativePCs <- function(object, pVar, varLim = 0.01, correction = "fdr", s
     mutate(expVar = object@expVar[match(PC, names(object@expVar))]) %>% 
     mutate(PC = factor(PC, levels = PC), cumExpVar = cumsum(expVar)) -> sigPCs
   
-  
-  
-  object@features <- sigPCs
-  object@pVar <- pVar
-  
-  message("DONE!")
-  object
-  
+  sigPCs
 }
-
 

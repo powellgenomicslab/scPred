@@ -29,12 +29,12 @@ setOldClass("prcomp")
 #' 
 
 
-setClass("eigenPred", representation(prcomp = "prcomp",
+setClass("scPred", representation(prcomp = "prcomp",
                                     metadata = "data.frame",
                                     expVar = "numeric",
                                     pVar = "character",
-                                    features = "data.frame",
-                                    rep = "numeric",
+                                    features = "list",
+                                    train = "list",
                                     pseudo = "logical"),
          prototype(metadata = data.frame(), features = data.frame()))
 

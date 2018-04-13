@@ -1,12 +1,12 @@
 #' @title show
-#' @description Generic display function for \linkS4class{eigenPred} objects. Displays summary of the
+#' @description Generic display function for \linkS4class{scPred} objects. Displays summary of the
 #' object such as number of cells, genes, significant features.
 #' @importFrom methods setMethod
 #' @export
 
-setMethod("show", signature("eigenPred"), function(object) {
+setMethod("show", signature("scPred"), function(object) {
   
-  cat("'eigenPred' object\n")
+  cat("'scPred' object\n")
   
   nCells <- nrow(object@prcomp$x)
   nPCs <- ncol(object@prcomp$x)
@@ -35,20 +35,20 @@ setMethod("show", signature("eigenPred"), function(object) {
 
 
 #' @title Get metadata
-#' @description Gets metadata from \code{eigenPred} object
+#' @description Gets metadata from \code{scPred} object
 #' @importFrom methods setMethod
 #' @export
 
 
 setGeneric("metadata", function(object) standardGeneric("metadata"))
-setMethod("metadata", "eigenPred", function(object) {
+setMethod("metadata", "scPred", function(object) {
   out <- object@metadata
   return(out)
 })
 
 
 #' @title Set metadata
-#' @description Sets metadata to a \code{eigenPred} object. Metadata must be a dataframe
+#' @description Sets metadata to a \code{scPred} object. Metadata must be a dataframe
 #' \itemize{
 #' \item row names: ids matching the column names of the expression matrix
 #' \item columns: associated metadata such as cell type, conditions, sample or, batch. 
@@ -58,7 +58,7 @@ setMethod("metadata", "eigenPred", function(object) {
 #' @export
 
 setGeneric("metadata<-", function(object, value) standardGeneric("metadata<-"))
-setMethod("metadata<-", signature("eigenPred"), 
+setMethod("metadata<-", signature("scPred"), 
           function(object, value) {
             if(!all(rownames(getPCA(object)) == row.names(value))){
               stop("Cells Ids do not match cell IDs in metadata")
@@ -71,7 +71,7 @@ setMethod("metadata<-", signature("eigenPred"),
 
 
 #' @title Get principal components
-#' @description Gets matrix with principal components from a \code{eigenPred} object
+#' @description Gets matrix with principal components from a \code{scPred} object
 #' @importFrom methods setMethod
 #' @export
 
@@ -81,17 +81,17 @@ setGeneric("getPCA", def = function(object) {
 
 
 #' @title Get principal components
-#' @description Gets matrix with principal components from a \code{eigenPred} object
+#' @description Gets matrix with principal components from a \code{scPred} object
 #' @importFrom methods setMethod
 #' @export
 
-setMethod("getPCA", signature("eigenPred"), function(object) {
+setMethod("getPCA", signature("scPred"), function(object) {
   return(as.data.frame(object@prcomp$x))
 })
 
 
 #' @title Get loadings matrix
-#' @description Gets rotation matrix (right singular vectors) from a \code{eigenPred} object
+#' @description Gets rotation matrix (right singular vectors) from a \code{scPred} object
 #' @importFrom methods setMethod
 #' @export
 
@@ -100,11 +100,11 @@ setGeneric("getLoadings", def = function(object) {
 })
 
 #' @title Get loadings matrix
-#' @description Gets rotation matrix (right singular vectors) from a \code{eigenPred} object
+#' @description Gets rotation matrix (right singular vectors) from a \code{scPred} object
 #' @importFrom methods setMethod
 #' @export
 
-setMethod("getLoadings", signature("eigenPred"), function(object) {
+setMethod("getLoadings", signature("scPred"), function(object) {
   return(object@prcomp$rotation)
 })
 
@@ -124,7 +124,7 @@ setGeneric("plotEigen", def = function(object, group = NULL, pc = c(1,2), geom =
 #' @export
 
 
-setMethod("plotEigen", signature("eigenPred"), function(object, group = NULL, pc = c(1,2), geom = c("both", "points", "density_2d")){
+setMethod("plotEigen", signature("scPred"), function(object, group = NULL, pc = c(1,2), geom = c("both", "points", "density_2d")){
   
   geom <- match.arg(geom)
   pca <- getPCA(object)[,pc] 
@@ -133,7 +133,7 @@ setMethod("plotEigen", signature("eigenPred"), function(object, group = NULL, pc
   if(!is.null(group)){
     
     if(ncol(object@metadata) == 0){
-      stop("No metadata has been assigned to 'eigenPred' object")
+      stop("No metadata has been assigned to 'scPred' object")
     }
     
     if(!any(group %in% names(object@metadata))){
@@ -182,7 +182,7 @@ setGeneric("plotFeatures", def = function(object) {
 #' @export
 
 
-setMethod("plotFeatures", signature("eigenPred"), function(object){
+setMethod("plotFeatures", signature("scPred"), function(object){
 
   ggplot(object@features, aes(x = PC, y = cumExpVar, group = 1)) + 
     geom_line(stat = "identity") +

@@ -37,7 +37,17 @@ eigenDecompose <- function(expData, pseudo = TRUE, args = NULL, decimals = 2){
   
   namesArgs <- names(args)
   
+
+  # Remove features with zero variance --------------------------------------
   
+  zeroVar <- which(apply(expData, 2, var) == 0)
+  
+  if(any(zeroVar)){
+    expData <- expData[,-zeroVar]
+    message("The following genes were removed as their variance is zero across all cells:")
+    cat(paste0(names(zeroVar), collapse = "\n"), "\n", sep = "")
+  }
+
   # Call prcomp() function
   
   if(is.null(args)){
@@ -52,8 +62,9 @@ eigenDecompose <- function(expData, pseudo = TRUE, args = NULL, decimals = 2){
   varianceExplained <- round((pca$sdev**2 / sum(pca$sdev**2))*100, decimals)
   names(varianceExplained) <- colnames(pca$x)
   
+  message("DONE!")
   
-  return(new("eigenPred", prcomp = pca, expVar = varianceExplained, pseudo = pseudo)) 
+  return(new("scPred", prcomp = pca, expVar = varianceExplained, pseudo = pseudo)) 
   
   
 }

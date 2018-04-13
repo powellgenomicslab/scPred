@@ -2,7 +2,6 @@
 #' @description Trains a prediction model from an \code{eigenPred} object
 #' @param object An \code{eigenPred} object with informative PCs obtained using 
 #' the \code{getInformativePCs} function
-#' @param positiveClass If a positive class is provided, the best model is selected based on the highest ROC value. Otherwise, accuracy is used
 #' @param top Top n significant features from \code{features} slot to be used as predictors
 #' @param method Classification model supported via \code{caret} package
 #' Default: support vector machine with polynomial kernel
@@ -23,9 +22,6 @@
 
 
 trainModel <- function(object,
-                       positiveClass = NULL,
-                       top = 10,
-                       all = FALSE,
                        method = "svmPoly",
                        resampleMethod = "cv",
                        seed = NULL,
@@ -34,52 +30,67 @@ trainModel <- function(object,
                        savePredictions = FALSE){
   
   # Validate class
-  if(!is(object, "eigenPred")){
-    stop("object must be 'object class'")
+  if(!is(object, "scPred")){
+    stop("object must be 'scPred'")
   }
   
   if(nrow(object@metadata) == 0){
     stop("No metadata has been assigned to object")
   }
   
-  if(nrow(object@features) == 0){
+  if(length(object@features) == 0){
     stop("No features have been determined. Use 'getInformativePCs' function")
   }
   
   
-  # Get features
-  if(length(object@features$PC) == 0){
-    stop("No significant principal components were found")
-  }
-  if(all){
-    features <- getPCA(object)[,object@features$PC]
-  }else if(nrow(object@features) < top){
-    message(sprintf("Only %i principal components were determined as significant. Using these as features", nrow(object@features)))
-    features <- getPCA(object)[,object@features$PC[seq_len(nrow(object@features))]]
-    top <- nrow(object@features)
-  }else{  
-    features <- getPCA(object)[,object@features$PC[seq_len(top)]]
-  }
-  # Get response variable
-  response <- object@metadata[[object@pVar]]
+  classes <- metadata(object)[[object@pVar]]
+  modelsRes <- lapply(levels(classes), .trainModelByClass,
+                      classes,
+                      object,
+                      method,
+                      resampleMethod,
+                      seed,
+                      number,
+                      returnData,
+                      savePredictions)
+  names(modelsRes) <- levels(classes)
   
-  if(!is.null(positiveClass)){
+  object@train <- modelsRes
+  object
+}
+
+.trainModelByClass <- function(positiveClass,
+                               classes,
+                               object,
+                               method,
+                               resampleMethod,
+                               seed,
+                               number,
+                               returnData,
+                               savePredictions){
+  
+    if(nrow(object@features[[positiveClass]]) == 0){
+      message("No informative principal components were identified for class: ", positiveClass)
+      return(NA)
+    }
+  
+  
+    features <- getPCA(object)[, as.character(object@features[[positiveClass]]$PC)]
+
+  
     # Get and refactor response variable according to positive class
     # According to twoClassSummary() documentation
     ## "If assumes that the first level of the factor variables corresponds to a relevant result 
     ## but the lev argument can be used to change this."
     
-    if(!any(levels(response) == positiveClass)){
-      stop(paste0("positiveClass '", positiveClass, "' is not included in prediction variable '", object@pVar, "'"))
-    }
-    orderedLevels <- c(levels(response)[levels(response) == positiveClass], levels(response)[levels(response) != positiveClass])
-    response <- factor(response, levels = orderedLevels)
-  }
+    i <- classes != positiveClass
+    response <- as.character(classes)
+    response[i] <- "other"
+    response <- factor(response, levels = c(positiveClass, "other"))
   
-  # Train model
-  
-  if(!is.null(positiveClass)){
+
     if(!is.null(seed)) set.seed(seed)
+    
     trCtrl <- trainControl(classProbs = TRUE,
                            method = resampleMethod,
                            number = number,
@@ -93,25 +104,10 @@ trainModel <- function(object,
                  method = method,
                  metric = "ROC",
                  trControl = trCtrl)
-  }else{
-    if(!is.null(seed)) set.seed(seed)
-    trCtrl <- trainControl(method = resampleMethod,
-                           number = number,
-                           savePredictions = savePredictions,
-                           allowParallel = FALSE)
-    
-    fit <- train(x = as.matrix(features), 
-                 y = response, 
-                 method = method,
-                 trControl = trCtrl,
-                 returnData = returnData)
-    
-  }
-  
-  if(all){
-    fit$top <- "all"
-  }else{
-    fit$top <- top
-  }
-  fit
+    fit
 }
+
+
+
+
+

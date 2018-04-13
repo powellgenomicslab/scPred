@@ -16,8 +16,8 @@ projectNewData <- function(newData, referenceData){
     stop("'newData' must be a matrix")
   }
   
-  if(!is(referenceData, "eigenPred")){
-    stop("'referenceData' must be of class 'eigenPred'")
+  if(!is(referenceData, "scPred")){
+    stop("'referenceData' must be of class 'scPred'")
   }
   
   if(referenceData@pseudo){
