@@ -7,5 +7,5 @@
 metadata(object)
 }
 \description{
-Gets metadata from \code{eigenPred} object
+Gets metadata from \code{scPred} object
 }

@@ -4,17 +4,12 @@
 \alias{trainModel}
 \title{Train a prediction model}
 \usage{
-trainModel(object, positiveClass = NULL, top = 10, all = FALSE,
-  method = "svmPoly", resampleMethod = "cv", seed = NULL, number = 10,
-  returnData = FALSE, savePredictions = FALSE)
+trainModel(object, method = "svmPoly", resampleMethod = "cv", seed = NULL,
+  number = 10, returnData = FALSE, savePredictions = FALSE)
 }
 \arguments{
-\item{object}{An \code{eigenPred} object with informative PCs obtained using 
+\item{object}{An \code{scPred} object with informative PCs obtained using 
 the \code{getInformativePCs} function}
-
-\item{positiveClass}{If a positive class is provided, the best model is selected based on the highest ROC value. Otherwise, accuracy is used}
-
-\item{top}{Top n significant features from \code{features} slot to be used as predictors}
 
 \item{method}{Classification model supported via \code{caret} package
 Default: support vector machine with polynomial kernel}
@@ -28,13 +23,15 @@ Default: support vector machine with polynomial kernel}
 \item{returnData}{If \code{TRUE}, training data is returned}
 
 \item{savePredictions}{If \code{TRUE}, predictions for training data are returned}
+
+\item{top}{Top n significant features from \code{features} slot to be used as predictors}
 }
 \value{
 A \code{train} object with final results. See \code{train} function for details. An aditional value \code{top} is added to the 
 \code{train} object to track the features used to train the model
 }
 \description{
-Trains a prediction model from an \code{eigenPred} object
+Trains a prediction model from an \code{scPred} object
 }
 \author{
 José Alquicira Hernández

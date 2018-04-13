@@ -1,6 +1,6 @@
 #' @title Train a prediction model
-#' @description Trains a prediction model from an \code{eigenPred} object
-#' @param object An \code{eigenPred} object with informative PCs obtained using 
+#' @description Trains a prediction model from an \code{scPred} object
+#' @param object An \code{scPred} object with informative PCs obtained using 
 #' the \code{getInformativePCs} function
 #' @param top Top n significant features from \code{features} slot to be used as predictors
 #' @param method Classification model supported via \code{caret} package

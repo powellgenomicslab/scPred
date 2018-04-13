@@ -1,7 +1,7 @@
 #' @title Project new data into training principal components
 #' @description Projects a new dataset into the principal components obtained from a training dataset
 #' @param newData A matrix object with cells as rows and genes (loci) as columns
-#' @param referenceData An \code{eigenPred} object
+#' @param referenceData An \code{scPred} object
 #' @return A data frame with the projection
 #' @keywords test, validation, projection
 #' @importFrom methods is

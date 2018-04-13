@@ -49,7 +49,7 @@ eigenDecompose <- function(expData, pseudo = TRUE, args = NULL, decimals = 2){
   }
 
   # Call prcomp() function
-  
+  message("Performing SVD...")
   if(is.null(args)){
     pca <- prcomp(expData, center = TRUE, scale. = TRUE)
   }else{

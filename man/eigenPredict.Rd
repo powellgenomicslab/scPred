@@ -4,14 +4,14 @@
 \alias{eigenPredict}
 \title{Predict classes of a new dataset using a trained model}
 \usage{
-eigenPredict(trainData, predData, trainedModel, classes = NULL)
+eigenPredict(object, newData, threshold = 0.7)
 }
 \arguments{
-\item{trainData}{An \code{eigenPred} object with metadata and informative features obtained.}
-
-\item{trainedModel}{A \code{train} object returned by \code{trainModel} function}
+\item{trainData}{An \code{scPred} object with metadata and informative features obtained.}
 
 \item{referenceData}{A matrix object with cells as rows and genes (loci) as columns obtained with \code{projectNewData} function}
+
+\item{trainedModel}{A \code{train} object returned by \code{trainModel} function}
 }
 \description{
 Predicts cell classes for a new dataset based on a training model, a reference \code{eigenPred} object

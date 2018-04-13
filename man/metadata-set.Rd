@@ -7,7 +7,7 @@
 metadata(object) <- value
 }
 \description{
-Sets metadata to a \code{eigenPred} object. Metadata must be a dataframe
+Sets metadata to a \code{scPred} object. Metadata must be a dataframe
 \itemize{
 \item row names: ids matching the column names of the expression matrix
 \item columns: associated metadata such as cell type, conditions, sample or, batch. 

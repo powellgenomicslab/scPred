@@ -22,10 +22,10 @@ setOldClass("prcomp")
 #' }
 #' @slot rep Number of random samples to determine stable principal components
 #' @slot pseudo TRUE of a \code{log2(data + 1)} transformation was performed before performing the PCA 
-#' @name eigenPred
-#' @rdname eigenPred
-#' @aliases eigenPred-class
-#' @exportClass eigenPred
+#' @name scPred
+#' @rdname scPred
+#' @aliases scPred-class
+#' @exportClass scPred
 #' 
 
 
