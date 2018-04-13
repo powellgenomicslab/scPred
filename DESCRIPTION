@@ -15,7 +15,8 @@ Depends:
     caret,
     kernlab,
     pROC,
-    ggplot2
+    ggplot2,
+    tibble
 Imports:
     dplyr,
     tidyr,
@@ -23,6 +24,7 @@ Imports:
     caret,
     kernlab,
     pROC,
-    ggplot2
+    ggplot2,
+    tibble
 VignetteBuilder: knitr
 RoxygenNote: 6.0.1

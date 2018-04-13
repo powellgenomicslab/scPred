@@ -26,7 +26,7 @@ eigenPredict <- function(object, newData, threshold = 0.7){
   }
   
   projection <- projectNewData(newData = newData,
-                                referenceData = object)
+                               referenceData = object)
   
   
   classes <- names(object@features)
@@ -35,6 +35,20 @@ eigenPredict <- function(object, newData, threshold = 0.7){
   names(res) <- levels(classes)
   res <- as.data.frame(res)
   row.names(res) <- rownames(projection)
+  
+  if(length(classes) == 1){
+    classes <- levels(object@metadata[[object@pVar]])
+    res[[classes[2]]] <- 1 - res[[classes[1]]]
+    
+    res$class <- ifelse(res[,1] > threshold, classes[1], 
+                        ifelse(res[,2] > threshold, classes[2], "Unassigned")) %>% 
+      as.factor()
+    
+    res[,2] <- NULL 
+    names(res) <- c("probability", "class")
+    return(res)
+  }
+  
   i <- apply(res, 1, which.max)
   
   prob <- c()
@@ -51,9 +65,9 @@ eigenPredict <- function(object, newData, threshold = 0.7){
     select(-prePrediction) %>% 
     column_to_rownames("id") -> finalPrediction
   
-  finalPrediction
+  return(finalPrediction)
   
-
+  
 }
 
 

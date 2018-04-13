@@ -48,6 +48,8 @@ getInformativePCs <- function(object, pVar, varLim = 0.01, correction = "fdr", s
     stop("Prediction variable must be a factor object")
   }else if(!all(levels(classes) %in% unique(classes))){
     stop("Not all levels are included in prediction variable")
+  }else if(length(levels(classes)) == 1){
+    stop("No training is possible with only one classification class. Check prediction variable")
   }
   
   
@@ -56,11 +58,15 @@ getInformativePCs <- function(object, pVar, varLim = 0.01, correction = "fdr", s
   i <- object@expVar > varLim
   pca <- getPCA(object)[,i]
   
+  if(length(levels(classes)) == 2){
+    res <- .getPcByClass(levels(classes)[1], object, classes, pca, correction, sig)
+    res <- list(res)
+    names(res) <- levels(classes)[1]
+  }else{
+    res <- lapply(levels(classes), .getPcByClass, object, classes, pca, correction, sig)
+    names(res) <- levels(classes)
+  }
   
-  res <- lapply(levels(classes), .getPcByClass, object, classes, pca, correction, sig)
-  names(res) <- levels(classes)
-  
-
   object@features <- res
   object@pVar <- pVar
   
@@ -68,8 +74,6 @@ getInformativePCs <- function(object, pVar, varLim = 0.01, correction = "fdr", s
   object
   
 }
-
-
 
 .getPcByClass <- function(positiveClass, object, classes, pca, correction, sig){
   
