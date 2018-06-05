@@ -2,6 +2,7 @@
 #' @description Projects a new dataset into the principal components obtained from a training dataset
 #' @param newData A matrix object with cells as rows and genes (loci) as columns
 #' @param referenceData An \code{scPred} object
+#' @param informative Perfoms rotation using only informative principal components
 #' @return A data frame with the projection
 #' @keywords test, validation, projection
 #' @importFrom methods is
@@ -10,7 +11,7 @@
 #' José Alquicira Hernández
 
 
-projectNewData <- function(newData, referenceData){
+projectNewData <- function(newData, referenceData, informative = TRUE){
   
   if(!is(newData, "matrix")){
     stop("'newData' must be a matrix")
@@ -43,6 +44,18 @@ projectNewData <- function(newData, referenceData){
   # Get new centers and scales for gene features
   newCenter <- referenceData@prcomp$center[names(referenceData@prcomp$center) %in% colnames(newSub)]
   newScale <- referenceData@prcomp$scale[names(referenceData@prcomp$scale) %in% colnames(newSub)]
+  
+  if(informative){
+  informaticPCs  <- referenceData@features %>% 
+      lapply("[[", "PC") %>% 
+      unlist() %>% 
+      as.vector() %>% 
+      unique() 
+  
+  features <- colnames(refSub) %in% informaticPCs
+  refSub <- refSub[,features]
+  }
+  
   
   
   # Perform linear transformation

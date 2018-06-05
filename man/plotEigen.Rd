@@ -5,7 +5,7 @@
 \title{Plot PCA}
 \usage{
 plotEigen(object, group = NULL, pc = c(1, 2), geom = c("points",
-  "density_2d", "both"))
+  "density_2d", "both"), marginal = TRUE)
 }
 \description{
 Plots PCA with raw results or group by a variable

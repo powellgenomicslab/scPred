@@ -8,28 +8,46 @@ setMethod("show", signature("scPred"), function(object) {
   
   cat("'scPred' object\n")
   
+  cat("- Expression data\n")
   nCells <- nrow(object@prcomp$x)
   nPCs <- ncol(object@prcomp$x)
   
-  cat(sprintf("  Number of cells: %i\n", nCells))
-  cat(sprintf("  Number of genes: %i\n", nrow(getLoadings(object))))
-  cat(sprintf("  Number of principal components: %i\n", nPCs))
-  cat("  Maximum variance explained by a single PC:", max(object@expVar), "\n")
+  cat(sprintf("      Cells =  %i\n", nCells))
+  cat(sprintf("      Genes =  %i\n", nrow(getLoadings(object))))
+  cat(sprintf("      PCs =  %i\n", nPCs))
   
-  if(nrow(object@features) != 0){
-    cat("  ---\n")
-    cat(sprintf("  Number of significant features: %i\n", nrow(object@features)))
+  
+  if(length(object@metadata) > 0){
+    cat("- Metadata information\n")
+    cat(sprintf("      %s\n", paste0(colnames(object@metadata), collapse = ", ")))
   }
   
-  if(length(object@pVar) != 0 & nrow(object@metadata) > 0){
-    cat(sprintf("  Prediction variable: %s\n", object@pVar))
-    metadata(object) %>% 
-      select(one_of(object@pVar)) %>% 
-      table() -> freq 
-      cat("                       |_", names(freq)[1], ":", freq[1], "\n")
-      cat("                       |_", names(freq)[2], ":", freq[2], "\n")
-
+  if(length(object@pVar) != 0 & length(object@metadata) > 0){
+    cat("- Prediction\n")
+    cat(sprintf("      Variable = %s\n", object@pVar))
+    
   }
+  
+  if(length(object@features) != 0){
+    cat("- Informative PCs per class\n")
+    for(i in seq_len(length(object@features))){
+      cat(sprintf("      %s = %i\n", names(object@features)[i], nrow(object@features[[i]])))
+    }
+    
+  }
+  
+  if(length(object@train) != 0){
+    cat("- Training\n")
+    cat(sprintf("      Model: %s\n", object@train[[1]]$modelInfo$label))
+    for(i in seq_len(length(object@train))){
+      cat(sprintf("      Class -> %s\n", names(object@train)[i]))
+      bestModelIndex <- as.integer(rownames(object@train[[i]]$bestTune))
+      metrics <- round(object@train[[i]]$results[bestModelIndex,c("ROC", "Sens", "Spec")], 3)
+      cat(sprintf("      AUROC = %s, Sensitivity = %s, Specificity = %s\n", 
+                  metrics$ROC, metrics$Sens, metrics$Spec))
+    }
+  }
+  
   
 })
 
@@ -67,7 +85,6 @@ setMethod("metadata<-", signature("scPred"),
             object
           }
 )
-
 
 
 #' @title Get principal components
@@ -114,7 +131,7 @@ setMethod("getLoadings", signature("scPred"), function(object) {
 #' @importFrom methods setMethod
 #' @export
 
-setGeneric("plotEigen", def = function(object, group = NULL, pc = c(1,2), geom = c("points", "density_2d", "both")) {
+setGeneric("plotEigen", def = function(object, group = NULL, pc = c(1,2), geom = c("points", "density_2d", "both"), marginal = TRUE) {
   standardGeneric("plotEigen")
 })
 
@@ -124,7 +141,7 @@ setGeneric("plotEigen", def = function(object, group = NULL, pc = c(1,2), geom =
 #' @export
 
 
-setMethod("plotEigen", signature("scPred"), function(object, group = NULL, pc = c(1,2), geom = c("both", "points", "density_2d")){
+setMethod("plotEigen", signature("scPred"), function(object, group = NULL, pc = c(1,2), geom = c("both", "points", "density_2d"), marginal = TRUE){
   
   geom <- match.arg(geom)
   pca <- getPCA(object)[,pc] 
@@ -158,9 +175,15 @@ setMethod("plotEigen", signature("scPred"), function(object, group = NULL, pc = 
   if(geom == "density_2d" | geom == "both"){
     p <- p +  geom_density_2d() 
   }
-  p + 
+  p <- p + 
     scale_color_brewer(palette = "Set1") +
     theme_bw()
+  if(marginal){
+    ggMarginal(p, type = "density", groupColour = TRUE, groupFill = TRUE)
+  }else{
+    p
+  }
+  
 })
 
 
@@ -183,7 +206,7 @@ setGeneric("plotFeatures", def = function(object) {
 
 
 setMethod("plotFeatures", signature("scPred"), function(object){
-
+  
   ggplot(object@features, aes(x = PC, y = cumExpVar, group = 1)) + 
     geom_line(stat = "identity") +
     geom_point(stat = "identity") +
@@ -192,5 +215,5 @@ setMethod("plotFeatures", signature("scPred"), function(object){
     theme_bw() +
     theme(axis.text.x = element_text(angle = 90, hjust = 1)) -> p
   p
-    
+  
 })

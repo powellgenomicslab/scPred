@@ -4,12 +4,14 @@
 \alias{projectNewData}
 \title{Project new data into training principal components}
 \usage{
-projectNewData(newData, referenceData)
+projectNewData(newData, referenceData, informative = TRUE)
 }
 \arguments{
 \item{newData}{A matrix object with cells as rows and genes (loci) as columns}
 
 \item{referenceData}{An \code{scPred} object}
+
+\item{informative}{Perfoms rotation using only informative principal components}
 }
 \value{
 A data frame with the projection

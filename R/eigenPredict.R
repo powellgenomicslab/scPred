@@ -2,7 +2,8 @@
 #' @description Predicts cell classes for a new dataset based on a training model, a reference \code{eigenPred} object
 #' @param trainData An \code{scPred} object with metadata and informative features obtained.
 #' @param referenceData A matrix object with cells as rows and genes (loci) as columns obtained with \code{projectNewData} function
-#' @param trainedModel A \code{train} object returned by \code{trainModel} function
+#' @param threshold Threshold used for probabilities to classify cells into classes
+#' @param informative Perfoms rotation using only informative principal components
 #' @keywords prediction, new, test, validation
 #' @importFrom methods is
 #' @export
@@ -11,14 +12,14 @@
 
 
 
-eigenPredict <- function(object, newData, threshold = 0.7){
+eigenPredict <- function(object, newData, threshold = 0.7, informative = TRUE){
   
   if(!is(object, "scPred")){
-    stop("'eigenDec' object must be of class 'eigenDec'")
+    stop("'object' must be of class 'scPred'")
   }
   
   if(!(is(newData, "matrix") | is(newData, "data.frame"))){
-    stop("'predData' object must be a dataframe")
+    stop("'predData' object must be a dataframe or a matrix")
   }
   
   if(length(object@features) == 0){
@@ -26,7 +27,8 @@ eigenPredict <- function(object, newData, threshold = 0.7){
   }
   
   projection <- projectNewData(newData = newData,
-                               referenceData = object)
+                               referenceData = object,
+                               informative = informative)
   
   
   classes <- names(object@features)

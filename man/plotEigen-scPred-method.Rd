@@ -6,7 +6,7 @@
 \title{Plot PCA}
 \usage{
 \S4method{plotEigen}{scPred}(object, group = NULL, pc = c(1, 2),
-  geom = c("both", "points", "density_2d"))
+  geom = c("both", "points", "density_2d"), marginal = TRUE)
 }
 \description{
 Plots PCA
