@@ -1,9 +1,9 @@
-setOldClass("prcomp")
+setOldClass("irlba_prcomp")
 
 #' @title Definition of 'eigenPred' class
 #' @description An S4 class to contain principal component analysis of a gene expression matrix, metadata and
 #' prediction information.
-#' @slot prcomp Principal component analysis performed with \code{prcomp()} function
+#' @slot prcomp Principal component analysis performed with \code{prcomp_irlba()} function
 #' @slot metadata A dataframe with:
 #' \itemize{
 #' \item row names: ids matching the column names of the gene expression matrix
@@ -20,7 +20,6 @@ setOldClass("prcomp")
 #' \item cumExpVar: All principal components are ranked accoriding to their frequency of ocurrence and their variance explained. 
 #' This column contains the cumulative variance explained across the ranked principal components
 #' }
-#' @slot rep Number of random samples to determine stable principal components
 #' @slot pseudo TRUE of a \code{log2(data + 1)} transformation was performed before performing the PCA 
 #' @name scPred
 #' @rdname scPred
@@ -29,7 +28,7 @@ setOldClass("prcomp")
 #' 
 
 
-setClass("scPred", representation(prcomp = "prcomp",
+setClass("scPred", representation(prcomp = "irlba_prcomp",
                                     metadata = "data.frame",
                                     expVar = "numeric",
                                     pVar = "character",

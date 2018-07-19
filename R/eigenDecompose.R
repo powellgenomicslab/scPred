@@ -20,7 +20,7 @@
 #' # Eigendecompose gene expression matrix
 #' res <- eigendecompose(expTrain)
 
-eigenDecompose <- function(expData, pseudo = TRUE, args = NULL, decimals = 2){
+eigenDecompose <- function(expData, n = 10, pseudo = TRUE){
   
   # Parameter validations
   
@@ -35,8 +35,6 @@ eigenDecompose <- function(expData, pseudo = TRUE, args = NULL, decimals = 2){
     expData <- expData
   }
   
-  namesArgs <- names(args)
-  
 
   # Remove features with zero variance --------------------------------------
   
@@ -49,17 +47,20 @@ eigenDecompose <- function(expData, pseudo = TRUE, args = NULL, decimals = 2){
   }
 
   # Call prcomp() function
-  message("Performing SVD...")
-  if(is.null(args)){
-    pca <- prcomp(expData, center = TRUE, scale. = TRUE)
-  }else{
-    args$x <- expData
-    pca <- do.call(prcomp, args = args)
-  }
+  message("Performing Lanczos bidiagonalization...")
+  pca <- prcomp_irlba(expData, n = n, center = TRUE, scale. = TRUE)
   
+  rownames(pca$x) <- rownames(expData)
+  rownames(pca$rotation) <- colnames(expData)
+  
+  expData <- expData + 0
+  f <- function(i) sqrt(sum((expData[, i] - pca$center[i])^2)/(nrow(expData) -  1L))
+  scale. <- vapply(seq(ncol(expData)), f, pi, USE.NAMES = TRUE)
+  names(scale.) <- names(pca$center)
+  pca$scale <- scale.
+    
   # Extract variance
-  
-  varianceExplained <- round((pca$sdev**2 / sum(pca$sdev**2))*100, decimals)
+  varianceExplained <- pca$sdev**2 / sum(pca$sdev**2)*100
   names(varianceExplained) <- colnames(pca$x)
   
   message("DONE!")

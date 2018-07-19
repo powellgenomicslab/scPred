@@ -12,7 +12,7 @@
 
 
 
-eigenPredict <- function(object, newData, threshold = 0.7, informative = TRUE){
+eigenPredict <- function(object, newData, threshold = 0.9, informative = TRUE){
   
   if(!is(object, "scPred")){
     stop("'object' must be of class 'scPred'")

@@ -22,7 +22,7 @@
 
 
 trainModel <- function(object,
-                       method = "svmPoly",
+                       method = "svmRadial",
                        resampleMethod = "cv",
                        seed = NULL,
                        number = 10,
