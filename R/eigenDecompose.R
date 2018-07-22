@@ -5,7 +5,7 @@
 #' @param pseudo Whether to perform a \code{log2(data + 1)} transformation on expression data
 #' @return A scPred object with three filled slots
 #' \itemize{
-#' \item \code{prcomp}: results from \code{prcomp} function
+#' \item \code{pca}: results from \code{prcomp_irlba} function
 #' \item \code{expVar}: explained variance by each principal component
 #' \item \code{pseudo}: \code{TRUE} if a pseudo-log2 transformation was performed
 #' }
@@ -17,7 +17,21 @@
 #' @examples 
 #' 
 #' # Eigendecompose gene expression matrix
-#' object <- eigendecompose(expTrain, n = 25)
+#' 
+#' # Simulate gene expression data for two groups
+#' 
+#' class1 <- matrix(rnbinom(10000, 1, 0.1),  ncol = 100)
+#' class2 <- matrix(rnbinom(10000, 1, 0.15),  ncol = 100)
+#' 
+#' # Create gene expression matris (rows = cells, colums = genes)
+#' 
+#' expTrain <- rbind(class1, class2)
+#' 
+#' # Eigendecompose gene expression matrix
+#' 
+#' object <- eigenDecompose(expTrain, n = 25)
+#' plotEigen(object)
+#' 
 
 eigenDecompose <- function(expData, n = 10, pseudo = TRUE){
   

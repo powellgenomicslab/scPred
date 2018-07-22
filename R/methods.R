@@ -179,9 +179,14 @@ setMethod("plotEigen", signature("scPred"), function(object, group = NULL, pc = 
     scale_color_brewer(palette = "Set1") +
     theme_bw()
   if(marginal){
+    if(!is.null(group)){
     ggMarginal(p, type = "density", groupColour = TRUE, groupFill = TRUE)
+    }else{
+      ggMarginal(p, type = "density")
+    }
   }else{
     p
   }
   
 })
+
