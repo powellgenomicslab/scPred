@@ -9,8 +9,8 @@ setMethod("show", signature("scPred"), function(object) {
   cat("'scPred' object\n")
   
   cat("- Expression data\n")
-  nCells <- nrow(object@prcomp$x)
-  nPCs <- ncol(object@prcomp$x)
+  nCells <- nrow(object@pca$x)
+  nPCs <- ncol(object@pca$x)
   
   cat(sprintf("      Cells =  %i\n", nCells))
   cat(sprintf("      Genes =  %i\n", nrow(getLoadings(object))))
@@ -103,7 +103,7 @@ setGeneric("getPCA", def = function(object) {
 #' @export
 
 setMethod("getPCA", signature("scPred"), function(object) {
-  return(as.data.frame(object@prcomp$x))
+  return(as.data.frame(object@pca$x))
 })
 
 
@@ -122,7 +122,7 @@ setGeneric("getLoadings", def = function(object) {
 #' @export
 
 setMethod("getLoadings", signature("scPred"), function(object) {
-  return(object@prcomp$rotation)
+  return(object@pca$rotation)
 })
 
 
@@ -183,37 +183,5 @@ setMethod("plotEigen", signature("scPred"), function(object, group = NULL, pc = 
   }else{
     p
   }
-  
-})
-
-
-
-#' @title Generate diagnostic plot
-#' @description Plots a graph showing the frequency of each principal component across a number of random samples and the cumulative variance
-#' explained by them. This plot may be used to select stable principal components to be used to train a prediction model.
-#' @importFrom methods setMethod
-#' @export
-
-setGeneric("plotFeatures", def = function(object) {
-  standardGeneric("plotFeatures")
-})
-
-#' @title Generate diagnostic plot
-#' @description Plots a graph showing the frequency of each principal component across a number of random samples and the cumulative variance
-#' explained by them. This plot may be used to select stable principal components to be used to train a prediction model.
-#' @importFrom methods setMethod
-#' @export
-
-
-setMethod("plotFeatures", signature("scPred"), function(object){
-  
-  ggplot(object@features, aes(x = PC, y = cumExpVar, group = 1)) + 
-    geom_line(stat = "identity") +
-    geom_point(stat = "identity") +
-    xlab("Informative principal components") +
-    ylab("Cumulative explained variance") +
-    theme_bw() +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1)) -> p
-  p
   
 })

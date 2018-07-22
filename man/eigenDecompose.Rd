@@ -2,21 +2,19 @@
 % Please edit documentation in R/eigenDecompose.R
 \name{eigenDecompose}
 \alias{eigenDecompose}
-\title{Eigendecompose gene expression matrix via SVD}
+\title{Eigendecompose gene expression matrix}
 \usage{
-eigenDecompose(expData, pseudo = TRUE, args = NULL, decimals = 2)
+eigenDecompose(expData, n = 10, pseudo = TRUE)
 }
 \arguments{
+\item{n}{Number of principal components to be computed}
+
 \item{pseudo}{Whether to perform a \code{log2(data + 1)} transformation on expression data}
 
-\item{args}{List with extra arguments provided to \code{prcomp()} function.}
-
-\item{decimals}{Number of decimals for explained variance results}
-
-\item{expdata}{A matrix object with cells as rows and genes (loci) as columns. Unique row names must be provided}
+\item{expdata}{A matrix object with cells as rows and genes (loci) as columns. Unique row names for genes must be provided}
 }
 \value{
-A eigenPred object with three filled slots
+A scPred object with three filled slots
 \itemize{
 \item \code{prcomp}: results from \code{prcomp} function
 \item \code{expVar}: explained variance by each principal component
@@ -29,7 +27,7 @@ Performs principal component analysis from a gene expression matrix. Data is cen
 \examples{
 
 # Eigendecompose gene expression matrix
-res <- eigendecompose(expTrain)
+object <- eigendecompose(expTrain, n = 25)
 }
 \author{
 José Alquicira Hernández

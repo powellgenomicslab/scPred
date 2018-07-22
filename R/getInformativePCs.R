@@ -29,7 +29,7 @@
 
 
 
-getInformativePCs <- function(object, pVar, varLim = 0.01, correction = "fdr", sig = 0.1){
+getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig = 0.05){
   
   
   # Validations -------------------------------------------------------------
@@ -59,6 +59,7 @@ getInformativePCs <- function(object, pVar, varLim = 0.01, correction = "fdr", s
   pca <- getPCA(object)[,i]
   
   if(length(levels(classes)) == 2){
+    message("First factor level in '", object@pVar, "' metadata column considered as positive class")
     res <- .getPcByClass(levels(classes)[1], object, classes, pca, correction, sig)
     res <- list(res)
     names(res) <- levels(classes)[1]

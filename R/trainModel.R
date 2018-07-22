@@ -2,13 +2,11 @@
 #' @description Trains a prediction model from an \code{scPred} object
 #' @param object An \code{scPred} object with informative PCs obtained using 
 #' the \code{getInformativePCs} function
-#' @param top Top n significant features from \code{features} slot to be used as predictors
-#' @param method Classification model supported via \code{caret} package
+#' @param model Classification model supported via \code{caret} package
 #' Default: support vector machine with polynomial kernel
-#' @param resampleMethod Resample method used in \code{trainControl} function. Default: K-fold cross validation 
-#' @param seed Seed to apply the resample method
-#' @param number Number of iterations for resample method. See \code{trainControl} function
-
+#' @param resampleMethod Resample model used in \code{trainControl} function. Default: K-fold cross validation 
+#' @param seed Seed to apply the resample model
+#' @param number Number of iterations for resample model. See \code{trainControl} function
 #' @param returnData If \code{TRUE}, training data is returned
 #' @param savePredictions If \code{TRUE}, predictions for training data are returned
 #' @return A \code{train} object with final results. See \code{train} function for details. An aditional value \code{top} is added to the 
@@ -22,7 +20,7 @@
 
 
 trainModel <- function(object,
-                       method = "svmRadial",
+                       model = "svmRadial",
                        resampleMethod = "cv",
                        seed = NULL,
                        number = 10,
@@ -49,7 +47,7 @@ trainModel <- function(object,
     modelsRes <-  .trainModelByClass(levels(classes)[1],
                                      classes,
                                      object,
-                                     method,
+                                     model,
                                      resampleMethod,
                                      seed = seed,
                                      number,
@@ -63,7 +61,7 @@ trainModel <- function(object,
     modelsRes <- lapply(levels(classes), .trainModelByClass,
                         classes,
                         object,
-                        method,
+                        model,
                         resampleMethod,
                         seed,
                         number,
@@ -79,7 +77,7 @@ trainModel <- function(object,
 .trainModelByClass <- function(positiveClass,
                                classes,
                                object,
-                               method,
+                               model,
                                resampleMethod,
                                seed,
                                number,
@@ -91,7 +89,7 @@ trainModel <- function(object,
   }
   
   
-  features <- getPCA(object)[, as.character(object@features[[positiveClass]]$PC)]
+  features <- getPCA(object)[, as.character(object@features[[positiveClass]]$PC), drop = FALSE]
   
   
   # Get and refactor response variable according to positive class
@@ -117,7 +115,7 @@ trainModel <- function(object,
   
   fit <- train(x = as.matrix(features), 
                y = response, 
-               method = method,
+               model = model,
                metric = "ROC",
                trControl = trCtrl)
   fit

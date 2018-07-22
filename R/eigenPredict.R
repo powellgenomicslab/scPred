@@ -1,9 +1,10 @@
 #' @title Predict classes of a new dataset using a trained model
 #' @description Predicts cell classes for a new dataset based on a training model, a reference \code{eigenPred} object
-#' @param trainData An \code{scPred} object with metadata and informative features obtained.
-#' @param referenceData A matrix object with cells as rows and genes (loci) as columns obtained with \code{projectNewData} function
+#' @param object An \code{scPred} object with metadata and informative features obtained.
+#' @param newData A matrix object with cells as rows and genes (loci) as columns obtained with \code{projectNewData} function
 #' @param threshold Threshold used for probabilities to classify cells into classes
-#' @param informative Perfoms rotation using only informative principal components
+#' @return A data frame with prediction probabilities associated to each class and a \code{predClass} column, 
+#' indicating the classification based on the provided threshold
 #' @keywords prediction, new, test, validation
 #' @importFrom methods is
 #' @export
@@ -12,7 +13,7 @@
 
 
 
-eigenPredict <- function(object, newData, threshold = 0.9, informative = TRUE){
+scPredict <- function(object, newData, threshold = 0.9){
   
   if(!is(object, "scPred")){
     stop("'object' must be of class 'scPred'")
@@ -26,9 +27,9 @@ eigenPredict <- function(object, newData, threshold = 0.9, informative = TRUE){
     stop("No informative principal components have been obtained yet.\nSee getInformativePCs() function")
   }
   
-  projection <- projectNewData(newData = newData,
-                               referenceData = object,
-                               informative = informative)
+  projection <- projectNewData(object = object,
+                               newData = newData,
+                               informative = TRUE)
   
   
   classes <- names(object@features)
@@ -38,18 +39,18 @@ eigenPredict <- function(object, newData, threshold = 0.9, informative = TRUE){
   res <- as.data.frame(res)
   row.names(res) <- rownames(projection)
   
-  if(length(classes) == 1){
-    classes <- levels(object@metadata[[object@pVar]])
-    res[[classes[2]]] <- 1 - res[[classes[1]]]
-    
-    res$class <- ifelse(res[,1] > threshold, classes[1], 
-                        ifelse(res[,2] > threshold, classes[2], "Unassigned")) %>% 
-      as.factor()
-    
-    res[,2] <- NULL 
-    names(res) <- c("probability", "class")
-    return(res)
-  }
+  # if(length(classes) == 1){
+  #   classes <- levels(object@metadata[[object@pVar]])
+  #   res[[classes[2]]] <- 1 - res[[classes[1]]]
+  #   
+  #   res$class <- ifelse(res[,1] > threshold, classes[1], 
+  #                       ifelse(res[,2] > threshold, classes[2], "unassigned")) %>% 
+  #     as.factor()
+  #   
+  #   res[,2] <- NULL 
+  #   names(res) <- c("probability", "class")
+  #   return(res)
+  # }
   
   i <- apply(res, 1, which.max)
   
@@ -58,13 +59,13 @@ eigenPredict <- function(object, newData, threshold = 0.9, informative = TRUE){
     prob[j] <- res[j,i[j]]
   }
   
-  predictions <- data.frame(probability = prob, prePrediction = names(res)[i])
+  predictions <- data.frame(res, probability = prob, prePrediction = names(res)[i])
   rownames(predictions) <- rownames(projection)
   
   predictions %>% 
     rownames_to_column("id") %>% 
-    mutate(class = ifelse(probability > threshold, as.character(prePrediction), "Unassigned")) %>%
-    select(-prePrediction) %>% 
+    mutate(predClass = ifelse(probability > threshold, as.character(prePrediction), "unassigned")) %>%
+    select(-probability, -prePrediction) %>% 
     column_to_rownames("id") -> finalPrediction
   
   return(finalPrediction)

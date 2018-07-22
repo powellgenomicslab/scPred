@@ -4,27 +4,25 @@
 \alias{trainModel}
 \title{Train a prediction model}
 \usage{
-trainModel(object, method = "svmPoly", resampleMethod = "cv", seed = NULL,
-  number = 10, returnData = FALSE, savePredictions = FALSE)
+trainModel(object, model = "svmRadial", resampleMethod = "cv",
+  seed = NULL, number = 10, returnData = FALSE, savePredictions = FALSE)
 }
 \arguments{
 \item{object}{An \code{scPred} object with informative PCs obtained using 
 the \code{getInformativePCs} function}
 
-\item{method}{Classification model supported via \code{caret} package
+\item{model}{Classification model supported via \code{caret} package
 Default: support vector machine with polynomial kernel}
 
-\item{resampleMethod}{Resample method used in \code{trainControl} function. Default: K-fold cross validation}
+\item{resampleMethod}{Resample model used in \code{trainControl} function. Default: K-fold cross validation}
 
-\item{seed}{Seed to apply the resample method}
+\item{seed}{Seed to apply the resample model}
 
-\item{number}{Number of iterations for resample method. See \code{trainControl} function}
+\item{number}{Number of iterations for resample model. See \code{trainControl} function}
 
 \item{returnData}{If \code{TRUE}, training data is returned}
 
 \item{savePredictions}{If \code{TRUE}, predictions for training data are returned}
-
-\item{top}{Top n significant features from \code{features} slot to be used as predictors}
 }
 \value{
 A \code{train} object with final results. See \code{train} function for details. An aditional value \code{top} is added to the 

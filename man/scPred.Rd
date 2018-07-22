@@ -6,13 +6,13 @@
 \alias{scPred-class}
 \title{Definition of 'eigenPred' class}
 \description{
-An S4 class to contain principal component analysis of a gene expression matrix, metadata and
+An S4 class to contain principal component analysis of a gene expression matrix, metadata, training, and
 prediction information.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{prcomp}}{Principal component analysis performed with \code{prcomp()} function}
+\item{\code{pca}}{Principal component analysis performed with \code{prcomp_irlba()} function}
 
 \item{\code{metadata}}{A dataframe with:
 \itemize{
@@ -28,13 +28,13 @@ the informative principal components}
 \item{\code{features}}{A data frame with the following information:
 \itemize{
 \item PC: Principal component
-\item Freq: Frequency of occurence of the principal component over a number of random samples from the PCA matrix
+\item Freq: Frequency of occurencxe of the principal component over a number of random samples from the PCA matrix
 \item expVar: Explained variance by the principal component
 \item cumExpVar: All principal components are ranked accoriding to their frequency of ocurrence and their variance explained. 
 This column contains the cumulative variance explained across the ranked principal components
 }}
 
-\item{\code{rep}}{Number of random samples to determine stable principal components}
+\item{\code{train}}{A list with all trained models using the \code{caret} package. Each model correspond to a cell type}
 
 \item{\code{pseudo}}{TRUE of a \code{log2(data + 1)} transformation was performed before performing the PCA}
 }}
