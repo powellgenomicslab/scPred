@@ -2,7 +2,7 @@
 % Please edit documentation in R/projectNewData.R
 \name{projectNewData}
 \alias{projectNewData}
-\title{Project new data into training principal components}
+\title{Project new data onto training principal components}
 \usage{
 projectNewData(object, newData, informative = TRUE)
 }

@@ -42,9 +42,18 @@ setMethod("show", signature("scPred"), function(object) {
     for(i in seq_len(length(object@train))){
       cat(sprintf("      Class -> %s\n", names(object@train)[i]))
       bestModelIndex <- as.integer(rownames(object@train[[i]]$bestTune))
+      
+      if(object@train$normal$metric == "ROC"){
       metrics <- round(object@train[[i]]$results[bestModelIndex,c("ROC", "Sens", "Spec")], 3)
       cat(sprintf("      AUROC = %s, Sensitivity = %s, Specificity = %s\n", 
                   metrics$ROC, metrics$Sens, metrics$Spec))
+      }else{
+        metrics <- round(object@train[[i]]$results[bestModelIndex,c("Accuracy", "Kappa")], 3)
+        cat(sprintf("      Accuracy = %s, Kappa = %s\n", 
+                    metrics$Accuracy, metrics$Kappa))
+        
+        
+      }
     }
   }
   

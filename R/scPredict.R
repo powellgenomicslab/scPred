@@ -1,7 +1,7 @@
 #' @title Predict classes of a new dataset using a trained model
 #' @description Predicts cell classes for a new dataset based on a training model, a reference \code{eigenPred} object
-#' @param object An \code{scPred} object with metadata and informative features obtained.
-#' @param newData A matrix object with cells as rows and genes (loci) as columns obtained with \code{projectNewData} function
+#' @param object An \code{scPred} object with metadata and informative features and trained model(s).
+#' @param newData A matrix object with cells as rows and genes (loci) as columns
 #' @param threshold Threshold used for probabilities to classify cells into classes
 #' @return A data frame with prediction probabilities associated to each class and a \code{predClass} column, 
 #' indicating the classification based on the provided threshold

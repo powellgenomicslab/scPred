@@ -7,9 +7,9 @@
 scPredict(object, newData, threshold = 0.9)
 }
 \arguments{
-\item{object}{An \code{scPred} object with metadata and informative features obtained.}
+\item{object}{An \code{scPred} object with metadata and informative features and trained model(s).}
 
-\item{newData}{A matrix object with cells as rows and genes (loci) as columns obtained with \code{projectNewData} function}
+\item{newData}{A matrix object with cells as rows and genes (loci) as columns}
 
 \item{threshold}{Threshold used for probabilities to classify cells into classes}
 }

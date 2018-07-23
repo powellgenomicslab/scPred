@@ -35,8 +35,21 @@ the informative principal components. Informative principal components are selec
 }
 }
 \description{
-Given a prediction variable, finds a set of class-informative principal components that are significant across n subsets of cells from the 
-PCA matrix. A Wilcoxon rank sum test is used to determine a difference between the value distributions of classes from the prediction variable.
+Given a prediction variable, finds a feature set of class-informative principal components. 
+A Wilcoxon rank sum test is used to determine a difference between the score distributions of cell classes from the prediction variable.
+}
+\examples{
+
+# Assign cell information to scPred object
+# Cell information must be a data.frame with rownames as cell ids matching the eigendecomposed 
+gene expression matrix rownames.
+
+metadata(object) <- cellInfo
+
+# Get feature space for column "cellType" in metadata slot
+
+object <- getFeatureSpace(object = object, pVar = "cellType")
+
 }
 \author{
 José Alquicira Hernández

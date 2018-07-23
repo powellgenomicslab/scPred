@@ -5,31 +5,45 @@
 \title{Train a prediction model}
 \usage{
 trainModel(object, model = "svmRadial", resampleMethod = "cv",
-  seed = NULL, number = 10, returnData = FALSE, savePredictions = FALSE)
+  number = 10, seed = NULL, metric = c("ROC", "Accuracy", "Kappa"),
+  returnData = FALSE, savePredictions = FALSE)
 }
 \arguments{
 \item{object}{An \code{scPred} object with informative PCs obtained using 
 the \code{getInformativePCs} function}
 
-\item{model}{Classification model supported via \code{caret} package
+\item{model}{Classification model supported via \code{caret} package. A list of all models can be found here: 
+https://topepo.github.io/caret/available-models.html
 Default: support vector machine with polynomial kernel}
 
 \item{resampleMethod}{Resample model used in \code{trainControl} function. Default: K-fold cross validation}
 
-\item{seed}{Seed to apply the resample model}
+\item{number}{Number of iterations for resample method. See \code{trainControl} function}
 
-\item{number}{Number of iterations for resample model. See \code{trainControl} function}
+\item{seed}{Numeric seed for resample model}
 
 \item{returnData}{If \code{TRUE}, training data is returned}
 
-\item{savePredictions}{If \code{TRUE}, predictions for training data are returned}
+\item{savePredictions}{an indicator of how much of the hold-out predictions for each resample should be 
+saved. Values can be either "all", "final", or "none". A logical value can also be used that convert to
+ "all" (for true) or "none" (for false). "final" saves the predictions for the optimal tuning parameters.}
 }
 \value{
-A \code{train} object with final results. See \code{train} function for details. An aditional value \code{top} is added to the 
-\code{train} object to track the features used to train the model
+A list of  \code{train} objects for each cell class (e.g. cell type). See \code{train} function for details.
 }
 \description{
 Trains a prediction model from an \code{scPred} object
+}
+\examples{
+
+# Train a SVM with a Radial kernel
+## A numeric seed is provided for the K-fold cross validation
+## The metric ROC is used to select the best tuned model. "Accuracy" and "Kappa" may be used too.
+
+object <- trainModel(object = object, 
+                     seed = 1234, 
+                     metric = "ROC")
+
 }
 \author{
 José Alquicira Hernández

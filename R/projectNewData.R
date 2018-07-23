@@ -1,4 +1,4 @@
-#' @title Project new data into training principal components
+#' @title Project new data onto training principal components
 #' @description Projects a new dataset into the principal components obtained from a training dataset
 #' @param object An \code{scPred} object
 #' @param newData A matrix object with cells as rows and genes (loci) as columns

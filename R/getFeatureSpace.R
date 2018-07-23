@@ -1,6 +1,6 @@
 #' @title Get informative principal components
-#' @description Given a prediction variable, finds a set of class-informative principal components that are significant across n subsets of cells from the 
-#' PCA matrix. A Wilcoxon rank sum test is used to determine a difference between the value distributions of classes from the prediction variable.
+#' @description Given a prediction variable, finds a feature set of class-informative principal components. 
+#' A Wilcoxon rank sum test is used to determine a difference between the score distributions of cell classes from the prediction variable.
 #' @param object An \code{scPred} object
 #' @param pVar Prediction variable corresponding to a column in \code{metadata} slot
 #' @param varLim Threshold to filter principal components based on variance explained.
@@ -25,6 +25,19 @@
 #' @export
 #' @author
 #' José Alquicira Hernández
+#' 
+#' @examples 
+#' 
+#' # Assign cell information to scPred object
+#' # Cell information must be a data.frame with rownames as cell ids matching the eigendecomposed 
+#' gene expression matrix rownames.
+#' 
+#' metadata(object) <- cellInfo
+#' 
+#' # Get feature space for column "cellType" in metadata slot
+#' 
+#' object <- getFeatureSpace(object = object, pVar = "cellType")
+#' 
 
 
 
@@ -59,7 +72,7 @@ getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig
   pca <- getPCA(object)[,i]
   
   if(length(levels(classes)) == 2){
-    message("First factor level in '", object@pVar, "' metadata column considered as positive class")
+    message("First factor level in '", pVar, "' metadata column considered as positive class")
     res <- .getPcByClass(levels(classes)[1], object, classes, pca, correction, sig)
     res <- list(res)
     names(res) <- levels(classes)[1]
