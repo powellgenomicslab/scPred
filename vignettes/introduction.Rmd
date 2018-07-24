@@ -1,0 +1,236 @@
+---
+title: "Introduction to scPred"
+author: "Jose Alquicira Hernandez"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to scPred}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+# Summary
+
+
+`scPred` is a general method to predict cell types based on variance structure decomposition.
+It selects the most cell type-informative principal components from a dataset and trains a prediction model for each cell type. The principal training axes are projected onto the test dataset to obtain the PCs scores for the test dataset and the trained model(s) is/are used to classify single cells.
+
+For more details see our pre-print on **bioRxiv**:
+
+[scPred: Single cell prediction using singular value decomposition and machine learning classification](https://www.biorxiv.org/content/early/2018/07/15/369538)
+
+
+# Application of `scPred`
+
+First, we load the `scPred` package and `tidyverse`.
+
+
+```{r load_libraries,  message=FALSE, results='hide', warning=FALSE}
+library("scPred")
+library("tidyverse")
+```
+
+
+We will work with single cell data of pluripotent, blood, skin and neural cells sequenced at low coverage. For more details about the study, see [Low-coverage single-cell mRNA sequencing reveals cellular heterogeneity and activated signaling pathways in developing cerebral cortex](https://www.ncbi.nlm.nih.gov/pubmed/25086649).
+
+
+The count matrix and metadata may be obtained [here](https://scrnaseq-public-datasets.s3.amazonaws.com/scater-objects/pollen.rds) from Hemberg's [lab](https://hemberg-lab.github.io/scRNA.seq.datasets).
+
+
+
+Read the gene expression data (`SingleCellExperiment` object), calculate CPM values and extract metadata.
+
+
+```{r download_data, eval=FALSE}
+download.file("https://scrnaseq-public-datasets.s3.amazonaws.com/scater-objects/pollen.rds", destfile = "~/Downloads/pollen.rds")
+```
+
+```{r read_data, message=FALSE, results='hide', warning=FALSE}
+require(SingleCellExperiment)
+pollen <- readRDS("~/Downloads/pollen.rds")
+```
+
+
+```{r get_data}
+pollen_counts <- normcounts(pollen)
+pollen_cpm  <- apply(pollen_counts, 2, function(x) (x/sum(x))*1000000)
+pollen_metadata <- as.data.frame(colData(pollen))
+```
+
+
+Let's explore the cell type information
+
+
+```{r get_counts_per_class}
+table(pollen_metadata$cell_type2)
+```
+
+A total of `r length(pollen_metadata$cell_type2)` cells are included in the dataset.
+
+
+
+For demostration purposes, we split a gene expression matrix into two groups (train and test datasets) based cell type information using the `createDataPartition()` function from the `caret` package (already loaded with `scPred`).
+
+The **train** partition will be used to train a prediction models for each cell type and finally, the models will be tested using the **test** partition.
+
+
+```{r create_partitions}
+set.seed(1234)
+i <- createDataPartition(pollen_metadata$cell_type2, p = 0.70, list = FALSE)
+train_data <- t(pollen_cpm[, i])
+test_data <- t(pollen_cpm[, -i])
+
+train_info <- pollen_metadata[i, , drop = FALSE]
+test_info <- pollen_metadata[-i, , drop = FALSE]
+```
+
+
+# Training step
+
+## Eigendecomposition
+
+The first part of the `scPred` algorithm consists on decomposing the gene expresion matrix of the training dataset to obtained a low dimensional space that can describe most of the variance of the dataset. The `eigenDecompose` function calculates the first `n` principal components and log-transforms the input gene expression values to stabilize the variance. It returns an `scPred` object.
+
+
+```{r eigendecomposition, results=FALSE, message=FALSE, warning=FALSE}
+set.seed(1234)
+scp <- eigenDecompose(train_data, n = 10)
+```
+
+Then, we assign the metadata containing the cell type information. Row names in the metadata dataframe must match the row names from the eigendecompsed gene expression matrix.
+
+```{r metadata_assignment}
+scPred::metadata(scp) <- train_info
+```
+
+## Feature selection
+
+Next, we select the principal components that explain the class identity of each cell type using the `getFeatureSpace` function. This function applies a Wilcoxcon rank sum test to determine the informative principal components according to a **categorical variable** variable. In this case, we want to predict the cell types in the `cell_type2` columns from the metadata. Run `?getFeatureSpace` for more details.
+
+```{r get_feature_spaces}
+scp <- getFeatureSpace(scp, pVar = "cell_type2")
+```
+
+
+The `features` slot contains the principal components that explain the class identity.
+
+- **pValue** contains the associated p-value for each principal component obtained using the Wilcoxon Rank sum test
+- **pValueAdj** is the adjusted p-value depending omn the correction criterion applied. By defauls a false discovery rate corrections is performed
+- **expVar** contrains the explained variance by each principal component
+- **cumExpVar** contains the cumulative variance explained
+
+All prrincipal components for each cell type are ranked by p-value.
+
+```{r show_features}
+scp@features
+```
+
+We can plot the principal components grouped by the prediction variable using the `plotEigen()` function
+
+```{r plot_pca, fig.height=5, fig.width=6}
+plotEigen(scp, group = "cell_type2")
+```
+
+## Model training
+
+We can now train prediction models for blood, dermal, neural, and pluripotent cell types.
+
+```{r train_models}
+scp <- trainModel(scp, seed = 66)
+```
+
+If we print the `scPred` object we can look at a summary of the slots contained in it.
+
+- Expression data: shows the number of cells, genes, and principal components computed.
+- Metadata information: Show the columns in the metadata slot. If columns are factor objects, they can be used as response veriables to train a prediction model
+- Prediction: Shows the prediction variable as indicated using the `getFeatureSpace()` function
+- Informative PCs per class: shows the number of discriminant principal components for each class (e.g. cell type)
+- Training: Shows the description of the classification model used for training. For each class, performance metrics such as AUROC,accuracym or kappa are shown
+
+
+The four models showed a specificity of `1` and a sensitivity of `0.99` to `1`.
+
+
+```{r show_summary}
+scp
+```
+
+
+We can plot the distribution of probabilities to see the performance of the predictions for each cell class using
+
+The `getTrainResults()` function extracts the predictions results obtained from the resampling step for training the prediction model.
+
+```{r get_train_results, fig.height=5, fig.width=6}
+res <- getTrainResults(scp)
+```
+
+We can plot the calculated probabilities for each cell type versus our cell labels:
+
+```{r plot_train_probabilities,  fig.height=5, fig.width=7}
+mapply(function(x,y){dplyr::rename(x, probability = !! enquo(y))}, res, names(res), SIMPLIFY = FALSE) %>% 
+  Reduce(rbind, .) -> train_probabilities
+
+train_probabilities %>% 
+    select(object, obs, probability, "other") %>% 
+    ggplot() +
+    aes(probability, fill = obs) +
+    geom_histogram(bins = 30, color = "black") +
+    geom_vline(xintercept = 0.9, color = "red") +
+  facet_wrap(~object) +
+    theme_bw()
+
+```
+
+
+In the previous figure we can observe that a threshold of `0.9` classifies all _dermal_, _neural_ and _pluripotent_ cells correctly and almost all _blood_ cells too. Each panel represents a prediction model and the colors the known true classes. All *other* cells are cells except the positive class (for example, for the blood prediction model all *other* cells are either _dermal_, _neural_, or _pluripotent_)
+
+
+
+# Prediction step
+
+
+Once the models have been trained they can be applied to predict cell types in other dataset, for this demonstration we'll use the **test** partition/ `scPredict()` projects the training principal axes onto the test dataset and predicts the cell identity using the trained models. By default, `scPredict()` uses a threshold of `0.9` to classify the cells into categories.
+
+
+```{r prediction}
+predictions <- scPredict(scp, newData = test_data, threshold = 0.9)
+```
+
+`scPredict()` returns a dataframe with the probabilities of each cell to belong to any of the cell classes. The `predClass` columns is set using the provided threshold.
+
+```{r print_predictions}
+predictions
+```
+
+We can plot the probabilities and compare our predictions to the true cell types
+
+```{r plot_prediction_porbs, fig.height=5, fig.width=7}
+predictions %>% 
+  mutate(true = test_info$cell_type2) %>% 
+  gather(key = "model", value = "probability", 1:4) %>% 
+  ggplot() +
+  aes(probability, fill = true) +
+  geom_histogram(color = "black") +
+  geom_vline(xintercept = 0.9, color = "red") +
+  facet_wrap(~model) +
+  theme_bw() +
+  scale_fill_viridis_d()
+```
+
+In the previous plot, each panel represents the prediction model for each cell type with the output distribution probabilities. The colors in all plot represents the "true". We can observe that all blood, neural and pluripotent cells were correctly classified using a threshold of `0.9`. Only one dermal cell was labeled as **unassigned** as it was below the threshold. This cell has a probability of `0.75` of being dermal.
+
+# Reproducibility
+
+```{r session_info}
+options(width = 70)
+devtools::session_info(include_base = TRUE)
+```
+
