@@ -38,8 +38,8 @@ trainModel <- function(object,
                        number = 10,
                        seed = NULL,
                        metric = c("ROC", "Accuracy", "Kappa"),
-                       returnData = FALSE,
-                       savePredictions = FALSE){
+                       returnData = TRUE,
+                       savePredictions = "final"){
   
   # Validate class
   if(!is(object, "scPred")){
@@ -56,6 +56,7 @@ trainModel <- function(object,
   
   
   classes <- metadata(object)[[object@pVar]]
+  metric <- match.arg(metric)
   
   if(length(levels(classes)) == 2){
     modelsRes <-  .trainModelByClass(levels(classes)[1],

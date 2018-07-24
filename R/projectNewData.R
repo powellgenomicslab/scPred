@@ -9,6 +9,14 @@
 #' @export
 #' @author
 #' José Alquicira Hernández
+#' @examples 
+#' 
+#' # Prjects training discriminant principal axes onto test dataset. 
+#' ## By settint "informative = FALSE", all principal components
+#' ## (including non-informative) are projected.
+#' 
+#' projection <- projectNewData(object, expTest, informative = FALSE)
+#' 
 
 
 projectNewData <- function(object, newData, informative = TRUE){

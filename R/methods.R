@@ -43,7 +43,7 @@ setMethod("show", signature("scPred"), function(object) {
       cat(sprintf("      Class -> %s\n", names(object@train)[i]))
       bestModelIndex <- as.integer(rownames(object@train[[i]]$bestTune))
       
-      if(object@train$normal$metric == "ROC"){
+      if(object@train[[i]]$metric == "ROC"){
       metrics <- round(object@train[[i]]$results[bestModelIndex,c("ROC", "Sens", "Spec")], 3)
       cat(sprintf("      AUROC = %s, Sensitivity = %s, Specificity = %s\n", 
                   metrics$ROC, metrics$Sens, metrics$Spec))
@@ -199,3 +199,34 @@ setMethod("plotEigen", signature("scPred"), function(object, group = NULL, pc = 
   
 })
 
+
+#' @title Get training probabilities
+#' @description Gets training probabilities for each trained model
+#' @importFrom methods setMethod
+#' @export
+
+setGeneric("getTrainResults", def = function(object) {
+  standardGeneric("getTrainResults")
+})
+
+#' @title Get training probabilities
+#' @description Gets training probabilities for each trained model
+#' @importFrom methods setMethod
+#' @export
+
+setMethod("getTrainResults", signature("scPred"), function(object){
+  
+  if(length(object@train) == 0){
+    stop("No models have been trained")
+  }
+  
+  
+  if(ncol(object@train[[1]]$pred) == 0){
+    stop('No training results were calculated. Set savePredictions = "final" and returnData = TRUE')
+  }
+  
+  probs <- lapply(names(object@train), function(model) extractProb(object@train[model]))
+  names(probs) <- names(object@train)
+  probs
+
+})

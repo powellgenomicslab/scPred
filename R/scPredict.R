@@ -1,4 +1,4 @@
-#' @title Predict classes of a new dataset using a trained model
+#' @title Predict cell classes from a new dataset using a trained model
 #' @description Predicts cell classes for a new dataset based on a training model, a reference \code{eigenPred} object
 #' @param object An \code{scPred} object with metadata and informative features and trained model(s).
 #' @param newData A matrix object with cells as rows and genes (loci) as columns
@@ -10,6 +10,13 @@
 #' @export
 #' @author
 #' José Alquicira Hernández
+#' @examples 
+#' 
+#' # Get class probabilities for cells in a new dataset. A 'predClass' columns with 
+#' cell classes is returned depending on the threshold parameter.
+#' 
+#' prediction <- scPredict(object = object, newData = expTest, threshold = 0.9)
+#' 
 
 
 
