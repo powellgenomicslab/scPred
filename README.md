@@ -10,3 +10,8 @@ For more details see our pre-print on **bioRxiv**:
 
 This [introduction to scPred](https://joseah.github.io/scPred_docs/) shows a basic workflow for cell type prediction.
 
+# Authors
+
+- [José Alquicira-Hernández](https://graduate-school.uq.edu.au/profile/530/jose)
+- [Quan Nguyen](https://imb.uq.edu.au/profile/1672/quan-nguyen)
+- [Joseph E Powell](https://qbi.uq.edu.au/profile/469/joseph-powell)
