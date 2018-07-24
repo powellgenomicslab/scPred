@@ -1,37 +1,12 @@
-## Welcome to GitHub Pages
+# scPred: Single cell prediction using singular value decomposition and machine learning classification
 
-You can use the [editor on GitHub](https://github.com/IMB-Computational-Genomics-Lab/scPred/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+`scPred` is a general method to predict cell types based on variance structure decomposition.
+It selects the most cell type-informative principal components from a dataset and trains a prediction model for each cell type. The principal training axes are projected onto the test dataset to obtain the PCs scores for the test dataset and the trained model(s) is/are used to classify single cells.
 
-### Markdown
+For more details see our pre-print on **bioRxiv**:
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+[scPred: Single cell prediction using singular value decomposition and machine learning classification](https://www.biorxiv.org/content/early/2018/07/15/369538)
 
-```markdown
-Syntax highlighted code block
+This [introduction to scPred](https://joseah.github.io/scPred_docs/) shows a basic workflow for cell type prediction.
 
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/IMB-Computational-Genomics-Lab/scPred/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
