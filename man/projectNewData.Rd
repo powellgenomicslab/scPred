@@ -19,6 +19,15 @@ A data frame with the projection
 \description{
 Projects a new dataset into the principal components obtained from a training dataset
 }
+\examples{
+
+# Prjects training discriminant principal axes onto test dataset. 
+## By settint "informative = FALSE", all principal components
+## (including non-informative) are projected.
+
+projection <- projectNewData(object, expTest, informative = FALSE)
+
+}
 \author{
 José Alquicira Hernández
 }

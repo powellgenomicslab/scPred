@@ -2,7 +2,7 @@
 % Please edit documentation in R/scPredict.R
 \name{scPredict}
 \alias{scPredict}
-\title{Predict classes of a new dataset using a trained model}
+\title{Predict cell classes from a new dataset using a trained model}
 \usage{
 scPredict(object, newData, threshold = 0.9)
 }
@@ -19,6 +19,14 @@ indicating the classification based on the provided threshold
 }
 \description{
 Predicts cell classes for a new dataset based on a training model, a reference \code{eigenPred} object
+}
+\examples{
+
+# Get class probabilities for cells in a new dataset. A 'predClass' columns with 
+cell classes is returned depending on the threshold parameter.
+
+prediction <- scPredict(object = object, newData = expTest, threshold = 0.9)
+
 }
 \author{
 José Alquicira Hernández

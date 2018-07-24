@@ -6,7 +6,7 @@
 \usage{
 trainModel(object, model = "svmRadial", resampleMethod = "cv",
   number = 10, seed = NULL, metric = c("ROC", "Accuracy", "Kappa"),
-  returnData = FALSE, savePredictions = FALSE)
+  returnData = TRUE, savePredictions = "final")
 }
 \arguments{
 \item{object}{An \code{scPred} object with informative PCs obtained using 
