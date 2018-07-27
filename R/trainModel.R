@@ -70,7 +70,8 @@ trainModel <- function(object,
                                      metric,
                                      number,
                                      returnData,
-                                     savePredictions)
+                                     savePredictions,
+                                     allowParallel)
     modelsRes <- list(modelsRes)
     names(modelsRes) <- levels(classes)[1]
     
@@ -85,7 +86,8 @@ trainModel <- function(object,
                         metric,
                         number,
                         returnData,
-                        savePredictions)
+                        savePredictions,
+                        allowParallel)
     names(modelsRes) <- levels(classes)
   }
   
