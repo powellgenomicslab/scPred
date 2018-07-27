@@ -6,7 +6,7 @@
 \usage{
 trainModel(object, model = "svmRadial", resampleMethod = "cv",
   number = 10, seed = NULL, metric = c("ROC", "Accuracy", "Kappa"),
-  returnData = TRUE, savePredictions = "final")
+  returnData = TRUE, savePredictions = "final", allowParallel = TRUE)
 }
 \arguments{
 \item{object}{An \code{scPred} object with informative PCs obtained using 
@@ -27,6 +27,8 @@ Default: support vector machine with polynomial kernel}
 \item{savePredictions}{an indicator of how much of the hold-out predictions for each resample should be 
 saved. Values can be either "all", "final", or "none". A logical value can also be used that convert to
  "all" (for true) or "none" (for false). "final" saves the predictions for the optimal tuning parameters.}
+
+\item{allowParallel}{Allows parallel exucution for resampling method}
 }
 \value{
 A list of  \code{train} objects for each cell class (e.g. cell type). See \code{train} function for details.

@@ -12,6 +12,7 @@
 #' @param savePredictions an indicator of how much of the hold-out predictions for each resample should be 
 #' saved. Values can be either "all", "final", or "none". A logical value can also be used that convert to
 #'  "all" (for true) or "none" (for false). "final" saves the predictions for the optimal tuning parameters.
+#' @param  allowParallel Allows parallel exucution for resampling method
 #' @return A list of  \code{train} objects for each cell class (e.g. cell type). See \code{train} function for details.
 #' @keywords train, model
 #' @importFrom methods is
@@ -39,7 +40,8 @@ trainModel <- function(object,
                        seed = NULL,
                        metric = c("ROC", "Accuracy", "Kappa"),
                        returnData = TRUE,
-                       savePredictions = "final"){
+                       savePredictions = "final",
+                       allowParallel = TRUE){
   
   # Validate class
   if(!is(object, "scPred")){
@@ -100,7 +102,8 @@ trainModel <- function(object,
                                metric,
                                number,
                                returnData,
-                               savePredictions){
+                               savePredictions,
+                               allowParallel){
   
   if(nrow(object@features[[positiveClass]]) == 0){
     message("No informative principal components were identified for class: ", positiveClass)
@@ -130,14 +133,14 @@ trainModel <- function(object,
                          summaryFunction = twoClassSummary,
                          returnData = returnData,
                          savePredictions = savePredictions,
-                         allowParallel = FALSE)
+                         allowParallel = allowParallel)
   }else{
     trCtrl <- trainControl(classProbs = TRUE,
                            method = resampleMethod,
                            number = number,
                            returnData = returnData,
                            savePredictions = savePredictions,
-                           allowParallel = FALSE)
+                           allowParallel = allowParallel)
   }
   
   fit <- train(x = as.matrix(features), 
