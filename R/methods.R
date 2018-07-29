@@ -359,7 +359,8 @@ setMethod("plotLoadings", signature("scPred"), function(object, pc = 1, n = 10){
     geom_segment(aes_string(xend = "gene", yend = mean(top[[pc]]))) +
     coord_flip() +
     scale_color_brewer(palette = "Set1") +
-    theme_bw() 
+    theme_bw() +
+    theme(legend.position="none")
   
   
 })
