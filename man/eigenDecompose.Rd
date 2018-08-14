@@ -4,7 +4,7 @@
 \alias{eigenDecompose}
 \title{Eigendecompose gene expression matrix}
 \usage{
-eigenDecompose(expData, n = 10, pseudo = TRUE)
+eigenDecompose(expData, n = 10, pseudo = TRUE, returnData = TRUE)
 }
 \arguments{
 \item{n}{Number of principal components to be computed}

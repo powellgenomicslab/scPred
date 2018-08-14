@@ -199,6 +199,102 @@ setMethod("plotEigen", signature("scPred"), function(object, group = NULL, pc = 
   
 })
 
+#' @title Plot loadings
+#' @description Plot loading values for any given principal component in a \code{scPred} object
+#' @param object A \code{scPred} object
+#' @param pc The number of the principal component to be plotted
+#' @param n Top `n` variable genes to plot. Notice that the number of genes plotted is n*2 as both 
+#' negative and positive loadings are considered
+#' @importFrom methods setMethod
+#' @export
+
+setGeneric("plotLoadings", def = function(object, pc = 1, n = 10) {
+  standardGeneric("plotLoadings")
+})
+
+#' @title Plot loadings
+#' @description Plot loading values for any given principal component in a \code{scPred} object
+#' @param object A \code{scPred} object
+#' @param pc The number of the principal component to be plotted
+#' @param n Top `n` variable genes to plot. Notice that the number of plotted genes is n*2 as both 
+#' negative and positive loadings are considered
+#' @return A ggplot2 object
+#' @importFrom methods setMethod
+#' @export
+
+setMethod("plotLoadings", signature("scPred"), function(object, pc = 1, n = 10){
+  
+  # Validations -------------------------------------------------------------
+  
+  # Validate class object for `pc`
+  if(!(is.numeric(pc) | is.integer(pc))){
+    stop("`pc` parameter value must be numeric or integer")
+  }
+  
+  # Validate class object for `n`
+  if(!(is.numeric(n) | is.integer(n))){
+    stop("`n` parameter values must be numeric or integer")
+  }
+  
+  # Validate that only one principal component to be plotted was provided
+  if(length(pc) != 1){
+    stop("Only one principal component can be plotted. Provide a single number to `pc` parameter")
+  }
+  
+  # Validate that only one principal component to be plotted was provided
+  if(length(n) != 1){
+    stop("`n` must be a scalar integer")
+  }
+  
+  # Validate the principal component provided is valid
+  if(!pc %in% seq_len(ncol(object@pca$rotation))){
+    stop(paste0("Principal component does not exist. Min 1, Max ", ncol(object@pca$rotation)))
+  }
+  
+  # Validate that number of genes to be plotted is valid
+  if(n > nrow(object@pca$rotation) | n < 1){
+    stop(paste0("Only ", nrow(object@pca$rotation), 
+                " genes are included in the loadings matrix. Check provided number to `n` parameter"))
+  }
+  
+  
+  # Main function -----------------------------------------------------------
+  
+  # Create column variable label for principal component
+  pc <- paste0("PC", pc)
+  
+  # Obtain loadings, selects and orders genes according to their loading values
+  object %>% 
+    getLoadings() %>% 
+    as.data.frame() %>% 
+    rownames_to_column("gene") %>% 
+    select(gene, !! sym(pc)) %>% 
+    arrange(!! sym(pc)) -> scores
+  
+  # Get more variable genes (absolute value)
+  top_positive <- top_n(scores, n = n, !! sym(pc))
+  top_negative <- top_n(scores, n = -n, !! sym(pc))
+  
+  # Merge variable genes and sets factor variable to set the order of the genes when plotted
+  rbind(top_negative, top_positive) %>% 
+    mutate(gene = factor(gene, levels = gene)) %>% 
+    mutate(direction = as.factor(c(rep("negative", n), rep("positive", n)))) -> top
+  
+  # Plot "lollipop" graph
+  top %>%  
+    ggplot() +
+    aes_string(x = "gene", y = pc, color = "direction") +
+    xlab("Genes") +
+    geom_point() +
+    geom_segment(aes_string(xend = "gene", yend = mean(top[[pc]]))) +
+    coord_flip() +
+    scale_color_brewer(palette = "Set1") +
+    theme_bw() +
+    theme(legend.position="none")
+  
+  
+})
+
 
 #' @title Get training probabilities
 #' @description Gets training probabilities for each trained model
@@ -229,4 +325,29 @@ setMethod("getTrainResults", signature("scPred"), function(object){
   names(probs) <- names(object@train)
   probs
 
+})
+
+
+#' @title Get predictions
+#' @description Gets prediction probabilities for each cell class
+#' @importFrom methods setMethod
+#' @export
+
+setGeneric("getPredictions", def = function(object) {
+  standardGeneric("getPredictions")
+})
+
+#' @title Get training probabilities
+#' @description Gets prediction probabilities for each cell class
+#' @importFrom methods setMethod
+#' @export
+
+setMethod("getPredictions", signature("scPred"), function(object){
+  
+  if(length(object@train) == 0){
+    stop("No predictions have been performed")
+  }
+  
+  return(object@preditions)
+  
 })

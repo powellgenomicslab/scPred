@@ -20,7 +20,7 @@
 
 
 
-scPredict <- function(object, newData, threshold = 0.9){
+scPredict <- function(object, newData, threshold = 0.9, returnProj = TRUE, returnData = TRUE, informative = TRUE){
   
   if(!is(object, "scPred")){
     stop("'object' must be of class 'scPred'")
@@ -36,7 +36,7 @@ scPredict <- function(object, newData, threshold = 0.9){
   
   projection <- projectNewData(object = object,
                                newData = newData,
-                               informative = TRUE)
+                               informative = informative)
   
   
   classes <- names(object@features)
@@ -75,7 +75,23 @@ scPredict <- function(object, newData, threshold = 0.9){
     select(-probability, -prePrediction) %>% 
     column_to_rownames("id") -> finalPrediction
   
-  return(finalPrediction)
+  object@preditions <- finalPrediction
+  
+  if(returnProj){
+    object@projection <- projection
+  }
+  
+  
+  if(returnData){
+    if(object@pseudo){
+      object@predData <- log2(newData + 1)
+    }else{
+      object@predData <- newData
+      
+    }
+  }
+  
+  return(object)
   
   
 }

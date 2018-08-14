@@ -4,7 +4,8 @@
 \alias{scPredict}
 \title{Predict cell classes from a new dataset using a trained model}
 \usage{
-scPredict(object, newData, threshold = 0.9)
+scPredict(object, newData, threshold = 0.9, returnProj = TRUE,
+  returnData = TRUE, informative = TRUE)
 }
 \arguments{
 \item{object}{An \code{scPred} object with metadata and informative features and trained model(s).}
