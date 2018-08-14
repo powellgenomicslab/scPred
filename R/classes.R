@@ -31,6 +31,8 @@ setOldClass("irlba_prcomp")
 
 setClass("scPred", representation(pca = "irlba_prcomp",
                                     metadata = "data.frame",
+                                    trainData = "matrix",
+                                    predData = "matrix",
                                     expVar = "numeric",
                                     pVar = "character",
                                     features = "list",

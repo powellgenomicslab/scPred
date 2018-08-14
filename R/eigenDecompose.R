@@ -33,7 +33,7 @@
 #' plotEigen(object)
 #' 
 
-eigenDecompose <- function(expData, n = 10, pseudo = TRUE){
+eigenDecompose <- function(expData, n = 10, pseudo = TRUE, returnData = TRUE){
   
   # Parameter validations
   
@@ -82,9 +82,14 @@ eigenDecompose <- function(expData, n = 10, pseudo = TRUE){
   varianceExplained <- pca$sdev**2 / sum(pca$sdev**2)*100
   names(varianceExplained) <- colnames(pca$x)
   
+  
   message("DONE!")
   
-  return(new("scPred", pca = pca, expVar = varianceExplained, pseudo = pseudo)) 
-  
+  if(returnData){
+    return(new("scPred", pca = pca, expVar = varianceExplained, pseudo = pseudo, trainData = expData)) 
+    
+  }else{
+    return(new("scPred", pca = pca, expVar = varianceExplained, pseudo = pseudo)) 
+  }
   
 }
