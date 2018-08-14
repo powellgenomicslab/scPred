@@ -12,7 +12,7 @@
 
 \item{pc}{The number of the principal component to be plotted}
 
-\item{n}{Top `n` variable genes to plot. Notice that the number of genes plotted is n*2 as both 
+\item{n}{Top `n` variable genes to plot. Notice that the number of plotted genes is n*2 as both 
 negative and positive loadings are considered}
 }
 \value{
