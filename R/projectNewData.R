@@ -61,7 +61,7 @@ projectNewData <- function(object, newData, informative = TRUE){
       unique() 
   
   features <- colnames(refSub) %in% informativePCs
-  refSub <- refSub[,features]
+  refSub <- refSub[,features, drop = FALSE]
   }
   
   
