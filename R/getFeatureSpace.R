@@ -97,7 +97,7 @@ getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig
   newClasses <- factor(newClasses, levels = c(positiveClass, "other"))
   
   
-  lapply(pca, function(pc) wilcox.test(pc[newClasses == positiveClass], pc[newClasses == "other"])) %>% 
+  apply(pca, 2, function(pc) wilcox.test(pc[newClasses == positiveClass], pc[newClasses == "other"])) %>% 
     lapply('[[', "p.value") %>% 
     as.data.frame() %>% 
     gather(key = "PC", value = "pValue") %>% 
