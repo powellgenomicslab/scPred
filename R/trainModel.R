@@ -106,9 +106,9 @@ trainModel <- function(object,
     message("No informative principal components were identified for class: ", positiveClass)
   }
   
-  
-  features <- getPCA(object)[, as.character(object@features[[positiveClass]]$PC), drop = FALSE]
-  
+  namesPC <- as.character(object@features[[positiveClass]]$PC)
+  features <- subsetMatrix(getPCA(object), namesPC)
+
   
   # Get and refactor response variable according to positive class
   # According to twoClassSummary() documentation
@@ -140,7 +140,7 @@ trainModel <- function(object,
                            allowParallel = FALSE)
   }
   
-  fit <- train(x = as.matrix(features), 
+  fit <- train(x = features, 
                y = response, 
                method = model,
                metric = metric,
