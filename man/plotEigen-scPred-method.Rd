@@ -6,7 +6,18 @@
 \title{Plot PCA}
 \usage{
 \S4method{plotEigen}{scPred}(object, group = NULL, pc = c(1, 2),
-  geom = c("both", "points", "density_2d"), marginal = TRUE)
+  predGroup = NULL, geom = c("both", "points", "density_2d"))
+}
+\arguments{
+\item{object}{\code{scPred} object}
+
+\item{group}{Groupping variable included in metadata}
+
+\item{pc}{Vector of length 2 with the dimensions to plot}
+
+\item{predGroup}{Equivalent of \code{group} parameter for prediction dataset. Projection and predMeta slots must be filled}
+
+\item{geom}{ggplot geom}
 }
 \description{
 Plots PCA

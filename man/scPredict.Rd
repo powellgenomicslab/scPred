@@ -4,8 +4,8 @@
 \alias{scPredict}
 \title{Predict cell classes from a new dataset using a trained model}
 \usage{
-scPredict(object, newData, threshold = 0.9, returnProj = TRUE,
-  returnData = TRUE, informative = TRUE)
+scPredict(object, newData = NULL, threshold = 0.9, returnProj = TRUE,
+  returnData = FALSE, informative = TRUE, useProj = FALSE)
 }
 \arguments{
 \item{object}{An \code{scPred} object with metadata and informative features and trained model(s).}
@@ -13,6 +13,14 @@ scPredict(object, newData, threshold = 0.9, returnProj = TRUE,
 \item{newData}{A matrix object with cells as rows and genes (loci) as columns}
 
 \item{threshold}{Threshold used for probabilities to classify cells into classes}
+
+\item{returnProj}{Set to TRUE to return computed projection}
+
+\item{returnData}{Returns prediction data (\code{newData})}
+
+\item{informative}{Set to TRUE to project only informative components}
+
+\item{useProj}{If a projection matrix is already stored in the \code{scPred} object, perform predictions using this matrix as input}
 }
 \value{
 A data frame with prediction probabilities associated to each class and a \code{predClass} column, 
