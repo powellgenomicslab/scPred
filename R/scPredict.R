@@ -3,6 +3,10 @@
 #' @param object An \code{scPred} object with metadata and informative features and trained model(s).
 #' @param newData A matrix object with cells as rows and genes (loci) as columns
 #' @param threshold Threshold used for probabilities to classify cells into classes
+#' @param returnProj Set to TRUE to return computed projection
+#' @param returnData Returns prediction data (\code{newData})
+#' @param informative Set to TRUE to project only informative components
+#' @param useProj If a projection matrix is already stored in the \code{scPred} object, perform predictions using this matrix as input
 #' @return A data frame with prediction probabilities associated to each class and a \code{predClass} column, 
 #' indicating the classification based on the provided threshold
 #' @keywords prediction, new, test, validation
