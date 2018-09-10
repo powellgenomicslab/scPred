@@ -44,9 +44,9 @@ setMethod("show", signature("scPred"), function(object) {
       bestModelIndex <- as.integer(rownames(object@train[[i]]$bestTune))
       
       if(object@train[[i]]$metric == "ROC"){
-      metrics <- round(object@train[[i]]$results[bestModelIndex,c("ROC", "Sens", "Spec")], 3)
-      cat(sprintf("      AUROC = %s, Sensitivity = %s, Specificity = %s\n", 
-                  metrics$ROC, metrics$Sens, metrics$Spec))
+        metrics <- round(object@train[[i]]$results[bestModelIndex,c("ROC", "Sens", "Spec")], 3)
+        cat(sprintf("      AUROC = %s, Sensitivity = %s, Specificity = %s\n", 
+                    metrics$ROC, metrics$Sens, metrics$Spec))
       }else{
         metrics <- round(object@train[[i]]$results[bestModelIndex,c("Accuracy", "Kappa")], 3)
         cat(sprintf("      Accuracy = %s, Kappa = %s\n", 
@@ -137,6 +137,11 @@ setMethod("getLoadings", signature("scPred"), function(object) {
 
 #' @title Plot PCA
 #' @description Plots PCA with raw results or group by a variable
+#' @param object \code{scPred} object
+#' @param group Groupping variable included in metadata
+#' @param pc Vector of length 2 with the dimensions to plot
+#' @param predGroup Equivalent of \code{group} parameter for prediction dataset. Projection and predMeta slots must be filled
+#' @param geom ggplot geom
 #' @importFrom methods setMethod
 #' @export
 
@@ -151,6 +156,11 @@ setGeneric("plotEigen", def = function(object,
 
 #' @title Plot PCA
 #' @description Plots PCA 
+#' @param object \code{scPred} object
+#' @param group Groupping variable included in metadata
+#' @param pc Vector of length 2 with the dimensions to plot
+#' @param predGroup Equivalent of \code{group} parameter for prediction dataset. Projection and predMeta slots must be filled
+#' @param geom ggplot geom
 #' @importFrom methods setMethod
 #' @export
 
@@ -159,14 +169,13 @@ setMethod("plotEigen", signature("scPred"), function(object,
                                                      group = NULL, 
                                                      pc = c(1,2), 
                                                      predGroup = NULL,
-                                                     geom = c("both", "points", "density_2d"), 
-                                                     marginal = NULL){
+                                                     geom = c("both", "points", "density_2d")){
   
   geom <- match.arg(geom)
   
   namesPC <- paste0("PC", pc)
   pca <- as.data.frame(subsetMatrix(getPCA(object), namesPC))
-
+  
   pca$dataset <- "Train"
   
   # Check if a grouppping variable is provided
@@ -191,7 +200,7 @@ setMethod("plotEigen", signature("scPred"), function(object,
   
   
   
-
+  
   
   if(length(object@projection)){
     
@@ -201,7 +210,7 @@ setMethod("plotEigen", signature("scPred"), function(object,
     }else{
       pcaPred <-  object@projection
     }
-  
+    
     pcaPred <- pcaPred[namesPC]
     pcaPred$dataset <- "Prediction"
     
@@ -241,21 +250,13 @@ setMethod("plotEigen", signature("scPred"), function(object,
   p <- p + 
     scale_color_brewer(palette = "Set1") +
     theme_bw()
-
+  
   if(any("Prediction" == pcaAll$dataset)){
     p <- p + facet_wrap(~dataset)
   }
   
   
-  if(!is.null(marginal)){
-    if(!is.null(group)){
-    ggMarginal(p, type = marginal, groupColour = TRUE, groupFill = TRUE)
-    }else{
-      ggMarginal(p, type = marginal)
-    }
-  }else{
-    p
-  }
+  p
   
 })
 
@@ -384,7 +385,7 @@ setMethod("getTrainResults", signature("scPred"), function(object){
   probs <- lapply(names(object@train), function(model) extractProb(object@train[model]))
   names(probs) <- names(object@train)
   probs
-
+  
 })
 
 
@@ -414,6 +415,11 @@ setMethod("getPredictions", signature("scPred"), function(object){
 
 #' @title Plot gene expression data
 #' @description Plots a PCA and projection with the gene expression values for a given gene
+#' @param object \code{scPred} object
+#' @param gene Gene id. Must match one of the row names in the gene expression matrix used as input
+#' @param pc Vector of length 2 with the two dimensions to be plotted
+#' @param low Color for low gene expression
+#' @param high Color for high gene expression
 #' @importFrom methods setMethod
 #' @export
 
@@ -423,6 +429,11 @@ setGeneric("plotExp", def = function(object, gene, pc = c(1,2), low = "gray", hi
 
 #' @title Plot gene expression data
 #' @description Plots a PCA and projection with the gene expression values for a given gene
+#' @param object \code{scPred} object
+#' @param gene Gene id. Must match one of the row names in the gene expression matrix used as input
+#' @param pc Vector of length 2 with the two dimensions to be plotted
+#' @param low Color for low gene expression
+#' @param high Color for high gene expression
 #' @importFrom methods setMethod
 #' @export
 
