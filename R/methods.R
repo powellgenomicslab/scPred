@@ -9,8 +9,8 @@ setMethod("show", signature("scPred"), function(object) {
   cat("'scPred' object\n")
   
   cat("- Expression data\n")
-  nCells <- nrow(object@pca$x)
-  nPCs <- ncol(object@pca$x)
+  nCells <- nrow(object@svd$x)
+  nPCs <- ncol(object@svd$x)
   
   cat(sprintf("      Cells =  %i\n", nCells))
   cat(sprintf("      Genes =  %i\n", nrow(getLoadings(object))))
@@ -112,7 +112,7 @@ setGeneric("getPCA", def = function(object) {
 #' @export
 
 setMethod("getPCA", signature("scPred"), function(object) {
-  return(as.data.frame(object@pca$x))
+  return(object@svd$x)
 })
 
 
@@ -131,7 +131,7 @@ setGeneric("getLoadings", def = function(object) {
 #' @export
 
 setMethod("getLoadings", signature("scPred"), function(object) {
-  return(object@pca$rotation)
+  return(object@svd$rotation)
 })
 
 
@@ -140,7 +140,12 @@ setMethod("getLoadings", signature("scPred"), function(object) {
 #' @importFrom methods setMethod
 #' @export
 
-setGeneric("plotEigen", def = function(object, group = NULL, pc = c(1,2), geom = c("points", "density_2d", "both"), marginal = TRUE) {
+setGeneric("plotEigen", def = function(object, 
+                                       group = NULL, 
+                                       pc = c(1,2), 
+                                       predGroup = NULL, 
+                                       geom = c("points", "density_2d", "both"), 
+                                       marginal = NULL) {
   standardGeneric("plotEigen")
 })
 
@@ -150,12 +155,21 @@ setGeneric("plotEigen", def = function(object, group = NULL, pc = c(1,2), geom =
 #' @export
 
 
-setMethod("plotEigen", signature("scPred"), function(object, group = NULL, pc = c(1,2), geom = c("both", "points", "density_2d"), marginal = TRUE){
+setMethod("plotEigen", signature("scPred"), function(object, 
+                                                     group = NULL, 
+                                                     pc = c(1,2), 
+                                                     predGroup = NULL,
+                                                     geom = c("both", "points", "density_2d"), 
+                                                     marginal = NULL){
   
   geom <- match.arg(geom)
-  pca <- getPCA(object)[,pc] 
   
+  namesPC <- paste0("PC", pc)
+  pca <- as.data.frame(subsetMatrix(getPCA(object), namesPC))
+
+  pca$dataset <- "Train"
   
+  # Check if a grouppping variable is provided
   if(!is.null(group)){
     
     if(ncol(object@metadata) == 0){
@@ -172,10 +186,50 @@ setMethod("plotEigen", signature("scPred"), function(object, group = NULL, pc = 
     
     metadata <- object@metadata[group]
     pca <- cbind(pca, metadata)
-    p <- ggplot(pca, aes_string(x = names(pca)[1], y = names(pca)[2], color = group))
+    
+  }
+  
+  
+  
+
+  
+  if(length(object@projection)){
+    
+    if(any(!namesPC %in% names(object@projection))){
+      message("Performing projection of non-informative principal components...")
+      pcaPred <- projectNewData(object, object@predData, informative = FALSE)
+    }else{
+      pcaPred <-  object@projection
+    }
+  
+    pcaPred <- pcaPred[namesPC]
+    pcaPred$dataset <- "Prediction"
+    
+    if(!is.null(group)){
+      if(!is.null(predGroup)){
+        pcaPred[group] <- predGroup
+        
+      }else{
+        pcaPred[group] <- "Unknown" 
+      }
+    }
+    
+    
+    pcaAll <- rbind(pca, pcaPred)
+    pcaAll$dataset <- factor(pcaAll$dataset, levels = c("Train", "Prediction"))
+    
     
   }else{
-    p <- ggplot(pca, aes_string(x = names(pca)[1], y = names(pca)[2]))
+    pcaAll <- pca
+  }
+  
+  
+  
+  if(!is.null(group)){
+    p <- ggplot(pcaAll, aes_string(x = namesPC[1], y = namesPC[2], color = group))
+    
+  }else{
+    p <- ggplot(pcaAll, aes_string(x = namesPC[1], y = namesPC[2]))
   }
   
   if(geom == "points" | geom == "both"){
@@ -187,11 +241,17 @@ setMethod("plotEigen", signature("scPred"), function(object, group = NULL, pc = 
   p <- p + 
     scale_color_brewer(palette = "Set1") +
     theme_bw()
-  if(marginal){
+
+  if(any("Prediction" == pcaAll$dataset)){
+    p <- p + facet_wrap(~dataset)
+  }
+  
+  
+  if(!is.null(marginal)){
     if(!is.null(group)){
-    ggMarginal(p, type = "density", groupColour = TRUE, groupFill = TRUE)
+    ggMarginal(p, type = marginal, groupColour = TRUE, groupFill = TRUE)
     }else{
-      ggMarginal(p, type = "density")
+      ggMarginal(p, type = marginal)
     }
   }else{
     p
@@ -247,13 +307,13 @@ setMethod("plotLoadings", signature("scPred"), function(object, pc = 1, n = 10){
   }
   
   # Validate the principal component provided is valid
-  if(!pc %in% seq_len(ncol(object@pca$rotation))){
-    stop(paste0("Principal component does not exist. Min 1, Max ", ncol(object@pca$rotation)))
+  if(!pc %in% seq_len(ncol(object@svd$rotation))){
+    stop(paste0("Principal component does not exist. Min 1, Max ", ncol(object@svd$rotation)))
   }
   
   # Validate that number of genes to be plotted is valid
-  if(n > nrow(object@pca$rotation) | n < 1){
-    stop(paste0("Only ", nrow(object@pca$rotation), 
+  if(n > nrow(object@svd$rotation) | n < 1){
+    stop(paste0("Only ", nrow(object@svd$rotation), 
                 " genes are included in the loadings matrix. Check provided number to `n` parameter"))
   }
   
@@ -290,7 +350,7 @@ setMethod("plotLoadings", signature("scPred"), function(object, pc = 1, n = 10){
     coord_flip() +
     scale_color_brewer(palette = "Set1") +
     theme_bw() +
-    theme(legend.position="none")
+    theme(legend.position = "none")
   
   
 })
@@ -348,6 +408,81 @@ setMethod("getPredictions", signature("scPred"), function(object){
     stop("No predictions have been performed")
   }
   
-  return(object@preditions)
+  return(object@predictions)
   
 })
+
+#' @title Plot gene expression data
+#' @description Plots a PCA and projection with the gene expression values for a given gene
+#' @importFrom methods setMethod
+#' @export
+
+setGeneric("plotExp", def = function(object, gene, pc = c(1,2), low = "gray", high = "red") {
+  standardGeneric("plotGeneExp")
+})
+
+#' @title Plot gene expression data
+#' @description Plots a PCA and projection with the gene expression values for a given gene
+#' @importFrom methods setMethod
+#' @export
+
+setMethod("plotExp", signature("scPred"), function(object, gene, pc = c(1,2), low = "gray", high = "red"){
+  
+  iTrain <- which(rownames(object@trainData) == gene)
+  
+  if(length(iTrain) == 0){
+    stop("Gene not found in training data")
+  }
+  
+  trainGenes <- t(object@trainData[iTrain, , drop = FALSE])
+  
+  namesPC <- paste0("PC", pc)
+  pca <- as.data.frame(subsetMatrix(getPCA(object), namesPC))
+  
+  pca$gene <- trainGenes
+  pca$dataset <- "Train"
+  
+  if(length(object@projection) & length(object@predData)){
+    
+    if(any(!namesPC %in% names(object@projection))){
+      message("Performing projection of non-informative principal components...")
+      projection <- projectNewData(object, object@predData, informative = FALSE)
+      object@projection <- projection
+    }
+    
+    iPred <- which(rownames(object@predData) == gene)
+    
+    if(length(iPred) == 0){
+      stop("Gene not found in prediction data")
+    }
+    
+    
+    predGenes <- t(object@predData[iPred,])
+    pcaPred <- data.frame(object@projection[namesPC], gene = predGenes)
+    pcaPred$dataset <- "Prediction"
+    
+    pcaAll <- rbind(pca, pcaPred)
+    pcaAll$dataset <- factor(pcaAll$dataset, levels = c("Train", "Prediction"))
+    
+    
+  }else{
+    pcaAll <- pca
+  }
+  
+  
+  
+  ggplot(pcaAll, aes_string(x = namesPC[1], y =  namesPC[2])) +
+    geom_point(aes(color = gene)) +
+    scale_color_gradient(low = low, high = high) +
+    ggtitle(gene) +
+    theme_bw() -> p
+  
+  if(any("Prediction" == pcaAll$dataset)){
+    p <- p + facet_wrap(~dataset)
+  }
+  
+  p
+  
+})
+
+
