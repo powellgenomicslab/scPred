@@ -418,7 +418,7 @@ setMethod("getPredictions", signature("scPred"), function(object){
 #' @export
 
 setGeneric("plotExp", def = function(object, gene, pc = c(1,2), low = "gray", high = "red") {
-  standardGeneric("plotGeneExp")
+  standardGeneric("plotExp")
 })
 
 #' @title Plot gene expression data
