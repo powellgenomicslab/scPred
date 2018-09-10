@@ -20,24 +20,38 @@
 
 
 
-scPredict <- function(object, newData, threshold = 0.9, returnProj = TRUE, returnData = TRUE, informative = TRUE){
+scPredict <- function(object, newData = NULL, threshold = 0.9, 
+                      returnProj = TRUE, returnData = FALSE, informative = TRUE,
+                      useProj = FALSE){
   
   if(!is(object, "scPred")){
     stop("'object' must be of class 'scPred'")
   }
   
-  if(!(is(newData, "matrix") | is(newData, "data.frame"))){
-    stop("'predData' object must be a dataframe or a matrix")
+   
+  if(is.null(newData) & (nrow(object@projection) == 0)){ # Neither newData nor projection
+    stop("No newData or pre-computed projection.")
+  }else if(is.null(newData) & nrow(object@projection)){ # No newData and projection
+    message("Using projection stored in object as prediction set")
+    useProj <- TRUE
+  }else if(!is.null(newData) & nrow(object@projection)){ # NewData and projection
+    if(!is(newData, "matrix")){
+      stop("'predData' object must be a matrix")
+    }
+    message("newData provided and projection stored in scPred object. Set 'useProj = TRUE' to override default projection execution")
   }
   
   if(length(object@features) == 0){
     stop("No informative principal components have been obtained yet.\nSee getInformativePCs() function")
   }
   
-  projection <- projectNewData(object = object,
-                               newData = newData,
-                               informative = informative)
-  
+  if(!useProj){
+    projection <- projectNewData(object = object,
+                                 newData = newData,
+                                 informative = informative)
+  }else{
+    projection <- object@projection
+  }
   
   classes <- names(object@features)
   
@@ -75,19 +89,18 @@ scPredict <- function(object, newData, threshold = 0.9, returnProj = TRUE, retur
     select(-probability, -prePrediction) %>% 
     column_to_rownames("id") -> finalPrediction
   
-  object@preditions <- finalPrediction
+  object@predictions <- finalPrediction
   
-  if(returnProj){
+  if(returnProj & useProj){
     object@projection <- projection
   }
   
   
-  if(returnData){
+  if(returnData & !is.null(newData)){
     if(object@pseudo){
       object@predData <- log2(newData + 1)
     }else{
       object@predData <- newData
-      
     }
   }
   
@@ -100,13 +113,13 @@ scPredict <- function(object, newData, threshold = 0.9, returnProj = TRUE, retur
 .predictClass <- function(positiveClass, object, projection){
   # Get features for positive class
   featureList <- object@features[[positiveClass]]
-  features <- projection[,as.character(featureList$PC)]
-  
+  features <- subsetMatrix(projection, as.character(featureList$PC))
+
   # Perform presictions
   prediction <- predict(object@train[[positiveClass]], 
                         newdata = features, 
                         type = "prob")
   
-  prediction[,1, drop = FALSE]
+  prediction[ , 1, drop = FALSE]
   
 }
