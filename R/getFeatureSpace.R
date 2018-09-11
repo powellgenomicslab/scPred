@@ -1,12 +1,12 @@
 #' @title Get informative principal components
 #' @description Given a prediction variable, finds a feature set of class-informative principal components. 
 #' A Wilcoxon rank sum test is used to determine a difference between the score distributions of cell classes from the prediction variable.
-#' @param object An \code{scPred} object
+#' @param object An \code{scPred} or \code{seurat} object
 #' @param pVar Prediction variable corresponding to a column in \code{metadata} slot
 #' @param varLim Threshold to filter principal components based on variance explained.
 #' @param correction Multiple testing correction method. Default: false discovery rate. See \code{p.adjust} function 
 #' @param sig Significance level to determine principal components explaining class identity
-#' @return A \code{scPred} object with two additional filled slots:
+#' @return An \code{scPred} object with two additional filled slots:
 #' \itemize{
 #' \item \code{features}: A data frame with significant principal components the following information:
 #' \itemize{
@@ -111,41 +111,53 @@ getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig
                   trainData = object@scale.data)
   }
   
+  # Select informative principal components
+  # If only 2 classes are present in prediction variable, train one model for the positive class
+  # The positive class will be the first level of the factor variable
   
   if(length(levels(classes)) == 2){
+    
     message("First factor level in '", pVar, "' metadata column considered as positive class")
-    res <- .getPcByClass(levels(classes)[1], object, classes, pca, correction, sig)
+    res <- .getFeatures(levels(classes)[1], expVar, classes, pca, correction, sig)
     res <- list(res)
     names(res) <- levels(classes)[1]
+    
   }else{
-    res <- lapply(levels(classes), .getPcByClass, object, classes, pca, correction, sig)
+    
+    res <- lapply(levels(classes), .getFeatures, expVar, classes, pca, correction, sig)
     names(res) <- levels(classes)
+    
   }
   
+  # Assigned feature space to `features` slot
   object@features <- res
-  object@pVar <- pVar
-  
   message("DONE!")
+  
   object
   
 }
 
-.getPcByClass <- function(positiveClass, object, classes, pca, correction, sig){
+.getFeatures <- function(positiveClass, expVar, classes, pca, correction, sig){
   
+  # Set non-positive classes to "other"
   i <- classes != positiveClass
   newClasses <- as.character(classes)
   newClasses[i] <- "other"
   newClasses <- factor(newClasses, levels = c(positiveClass, "other"))
   
+  # Get indices for positive and negative class cells
+  positiveCells <- newClasses == positiveClass
+  negativeCells <- newClasses == "other"
   
-  apply(pca, 2, function(pc) wilcox.test(pc[newClasses == positiveClass], pc[newClasses == "other"])) %>% 
-    lapply('[[', "p.value") %>% 
+  # Get informative features
+  apply(pca, 2, function(pc) wilcox.test(pc[positiveCells], pc[negativeCells])) %>%
+    lapply('[[', "p.value") %>% # Extract p-values
     as.data.frame() %>% 
-    gather(key = "PC", value = "pValue") %>% 
-    mutate(pValueAdj = p.adjust(pValue, method = correction, n = nrow(.))) %>% 
+    gather(key = "PC", value = "pValue") %>%
+    mutate(pValueAdj = p.adjust(pValue, method = correction, n = nrow(.))) %>% # Perform multiple test correction
     arrange(pValueAdj) %>% 
-    filter(pValueAdj < sig) %>% 
-    mutate(expVar = object@expVar[match(PC, names(object@expVar))]) %>% 
+    filter(pValueAdj < sig) %>% # Filter significant features by p-value
+    mutate(expVar = expVar[match(PC, names(expVar))]) %>% # Get explained variance for each feature
     mutate(PC = factor(PC, levels = PC), cumExpVar = cumsum(expVar)) -> sigPCs
   
   sigPCs
