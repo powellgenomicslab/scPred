@@ -4,7 +4,7 @@
 \alias{projectNewData}
 \title{Project new data onto training principal components}
 \usage{
-projectNewData(object, newData, informative = TRUE)
+projectNewData(object, newData, informative = TRUE, seurat = FALSE)
 }
 \arguments{
 \item{object}{An \code{scPred} object}
@@ -12,6 +12,8 @@ projectNewData(object, newData, informative = TRUE)
 \item{newData}{A matrix object with genes as rows and cells as columns}
 
 \item{informative}{Perfoms rotation using only informative principal components}
+
+\item{seurat}{Performs Seurat scaling?}
 }
 \value{
 A data frame with the projection

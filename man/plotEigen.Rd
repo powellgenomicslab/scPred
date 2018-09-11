@@ -5,7 +5,7 @@
 \title{Plot PCA}
 \usage{
 plotEigen(object, group = NULL, pc = c(1, 2), predGroup = NULL,
-  geom = c("points", "density_2d", "both"), marginal = NULL)
+  geom = c("points", "density_2d", "both"))
 }
 \arguments{
 \item{object}{\code{scPred} object}
