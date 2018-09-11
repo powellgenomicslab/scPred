@@ -100,7 +100,8 @@ getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig
                 rotation = object@dr$pca@gene.loadings, 
                 sdev = object@dr$pca@sdev, 
                 center = rowMeans(as.matrix(object@data)), 
-                scale = apply(as.matrix(object@data), 1, sd))
+                scale = apply(as.matrix(object@data), 1, sd),
+                seurat = TRUE)
     
     # Create scPred object
     object <- new("scPred", 
