@@ -99,8 +99,8 @@ getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig
     svd <- list(x = pca, 
                 rotation = object@dr$pca@gene.loadings, 
                 sdev = object@dr$pca@sdev, 
-                center = rowMeans(object@data), 
-                scale = apply(object@data, 1, sd))
+                center = rowMeans(as.matrix(object@data)), 
+                scale = apply(as.matrix(object@data), 1, sd))
     
     # Create scPred object
     object <- new("scPred", 
@@ -108,7 +108,7 @@ getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig
                   metadata = object@meta.data,
                   expVar = expVar, 
                   pseudo = FALSE, 
-                  trainData = object@data)
+                  trainData = as.matrix(object@data))
   }
   
   # Select informative principal components
