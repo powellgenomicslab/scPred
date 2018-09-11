@@ -31,18 +31,23 @@ scPredict <- function(object, newData = NULL, threshold = 0.9,
   if(!is(object, "scPred")){
     stop("'object' must be of class 'scPred'")
   }
-  
    
   if(is.null(newData) & (nrow(object@projection) == 0)){ # Neither newData nor projection
-    stop("No newData or pre-computed projection.")
+    
+    stop("No newData or pre-computed projection")
+    
   }else if(is.null(newData) & nrow(object@projection)){ # No newData and projection
+    
     message("Using projection stored in object as prediction set")
     useProj <- TRUE
+    
   }else if(!is.null(newData) & nrow(object@projection)){ # NewData and projection
+    
     if(!is(newData, "matrix")){
       stop("'predData' object must be a matrix")
     }
     message("newData provided and projection stored in scPred object. Set 'useProj = TRUE' to override default projection execution")
+    
   }
   
   if(length(object@features) == 0){
@@ -95,7 +100,7 @@ scPredict <- function(object, newData = NULL, threshold = 0.9,
   
   object@predictions <- finalPrediction
   
-  if(returnProj & useProj){
+  if(returnProj & !useProj){
     object@projection <- projection
   }
   
