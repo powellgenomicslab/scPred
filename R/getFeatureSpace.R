@@ -76,8 +76,41 @@ getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig
   
   # Filter principal components by variance ---------------------------------
   
-  i <- object@expVar > varLim
-  pca <- getPCA(object)[,i]
+  if(is(object, "scPred")){ # scPred object
+    
+    # Get PCA
+    i <- object@expVar > varLim
+    pca <- getPCA(object)[,i]
+    
+    # Get variance explained
+    expVar <- object@expVar
+    
+  }else{ # seurat object
+    
+    # Get PCA
+    i <- object@dr[["pca"]]@sdev > varLim
+    pca <- object@dr[["pca"]]@cell.embeddings[,i]
+    
+    # Get variance explained
+    expVar <- object@dr[["pca"]]@sdev**2/sum(object@dr[["pca"]]@sdev**2)
+    names(expVar) <- colnames(pca)
+    
+    # Create svd slot for scPred object
+    svd <- list(x = pca, 
+                rotation = object@dr$pca@gene.loadings, 
+                sdev = object@dr$pca@sdev, 
+                center = rowMeans(object@scale.data), 
+                scale = apply(object@scale.data, 1, sd))
+    
+    # Create scPred object
+    object <- new("scPred", 
+                  svd = svd, 
+                  metadata = object@meta.data,
+                  expVar = expVar, 
+                  pseudo = FALSE, 
+                  trainData = object@scale.data)
+  }
+  
   
   if(length(levels(classes)) == 2){
     message("First factor level in '", pVar, "' metadata column considered as positive class")
