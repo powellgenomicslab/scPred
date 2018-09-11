@@ -5,7 +5,7 @@
 \title{Train a prediction model}
 \usage{
 trainModel(object, model = "svmRadial", resampleMethod = "cv",
-  number = 10, seed = NULL, metric = c("ROC", "Accuracy", "Kappa"),
+  number = 10, seed = 66, metric = c("ROC", "Accuracy", "Kappa"),
   returnData = TRUE, savePredictions = "final")
 }
 \arguments{
@@ -20,7 +20,7 @@ Default: support vector machine with polynomial kernel}
 
 \item{number}{Number of iterations for resample method. See \code{trainControl} function}
 
-\item{seed}{Numeric seed for resample model}
+\item{seed}{Numeric seed for resample method}
 
 \item{returnData}{If \code{TRUE}, training data is returned}
 
