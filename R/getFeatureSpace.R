@@ -55,7 +55,15 @@ getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig
     stop("Invalid multiple testing correction method. See ?p.adjust function")
   }
   
-  classes <- metadata(object)[[pVar]]
+  if(is(object, "scPred")){
+    classes <- metadata(object)[[pVar]]
+  }else{
+    classes <- object@meta.data[[pVar]]
+  }
+  
+  if(is.null(classes)){
+    stop("Prediction variable is not stored in metadata slot")
+  }
   
   if(!is.factor(classes)){
     stop("Prediction variable must be a factor object")
