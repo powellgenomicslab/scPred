@@ -47,8 +47,8 @@ getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig
   
   # Validations -------------------------------------------------------------
   
-  if(!is(object, "scPred")){
-    stop("Invalid class for object: must be 'scPred'")
+  if(!is(object, "scPred") & !is(object, "seurat")){
+    stop("Invalid class for object: must be 'scPred' or 'seurat'")
   }
   
   if(!any(correction %in% stats::p.adjust.methods)){
