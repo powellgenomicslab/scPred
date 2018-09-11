@@ -3,6 +3,7 @@
 #' @param object An \code{scPred} object
 #' @param newData A matrix object with genes as rows and cells as columns
 #' @param informative Perfoms rotation using only informative principal components
+#' @param seurat Performs Seurat scaling?
 #' @return A data frame with the projection
 #' @keywords test, validation, projection
 #' @importFrom methods is
@@ -19,7 +20,7 @@
 #' 
 
 
-projectNewData <- function(object, newData, informative = TRUE){
+projectNewData <- function(object, newData, informative = TRUE, seurat = FALSE){
   
   if(!is(newData, "matrix")){
     stop("'newData' must be a matrix")
@@ -55,8 +56,18 @@ projectNewData <- function(object, newData, informative = TRUE){
   
   
   
+  # Scale data
+  if(seurat){
+    newSubScale <- t(scaleDataSeurat(newSub, 
+                                   genes.use = rownames(refSub), 
+                                   center = newCenter, 
+                                   scale = newScale))
+  }else{
+    newSubScale <- as.matrix(scale(t(newSub), newCenter, newScale))
+  }
+  
   # Perform linear transformation
-  newDataProj <- scale(t(newSub), newCenter, newScale) %*% refSub
+  newDataProj <- newSubScale %*% refSub
   
   newDataProj
   
