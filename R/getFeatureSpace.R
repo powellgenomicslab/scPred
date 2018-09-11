@@ -17,7 +17,7 @@
 #' \item cumExpVar: All principal components are ranked accoriding to their frequency of ocurrence and their variance explained. 
 #' This column contains the cumulative variance explained across the ranked principal components
 #' }
-#' \item \code{pVar}: Column name from metadata to use as the variable to predict using
+#' \item \code{pVar}(seurat): Column name from metadata to use as the variable to predict using
 #' the informative principal components. Informative principal components are selected based on this variable.
 #' }
 #' @keywords informative, significant, features
@@ -129,8 +129,11 @@ getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig
     
   }
   
-  # Assigned feature space to `features` slot
+  # Assign feature space to `features` slot
   object@features <- res
+  # Assign prediction variable name
+  object@pVar <- pVar
+  
   message("DONE!")
   
   object
