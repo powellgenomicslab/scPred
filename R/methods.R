@@ -149,8 +149,7 @@ setGeneric("plotEigen", def = function(object,
                                        group = NULL, 
                                        pc = c(1,2), 
                                        predGroup = NULL, 
-                                       geom = c("points", "density_2d", "both"), 
-                                       marginal = NULL) {
+                                       geom = c("points", "density_2d", "both")) {
   standardGeneric("plotEigen")
 })
 
@@ -204,14 +203,14 @@ setMethod("plotEigen", signature("scPred"), function(object,
   
   if(length(object@projection)){
     
-    if(any(!namesPC %in% names(object@projection))){
+    if(any(!namesPC %in% colnames(object@projection))){
       message("Performing projection of non-informative principal components...")
       pcaPred <- projectNewData(object, object@predData, informative = FALSE)
     }else{
       pcaPred <-  object@projection
     }
     
-    pcaPred <- pcaPred[namesPC]
+    pcaPred <- as.data.frame(subsetMatrix(pcaPred, namesPC))
     pcaPred$dataset <- "Prediction"
     
     if(!is.null(group)){
