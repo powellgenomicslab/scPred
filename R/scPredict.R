@@ -57,7 +57,8 @@ scPredict <- function(object, newData = NULL, threshold = 0.9,
   if(!useProj){
     projection <- projectNewData(object = object,
                                  newData = newData,
-                                 informative = informative)
+                                 informative = informative, 
+                                 seurat = if(!is.null(object@svd$seurat)){TRUE}else{FALSE})
   }else{
     projection <- object@projection
   }
