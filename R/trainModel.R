@@ -6,7 +6,7 @@
 #' https://topepo.github.io/caret/available-models.html
 #' Default: support vector machine with polynomial kernel
 #' @param resampleMethod Resample model used in \code{trainControl} function. Default: K-fold cross validation 
-#' @param seed Numeric seed for resample model
+#' @param seed Numeric seed for resample method
 #' @param number Number of iterations for resample method. See \code{trainControl} function
 #' @param returnData If \code{TRUE}, training data is returned
 #' @param savePredictions an indicator of how much of the hold-out predictions for each resample should be 
@@ -36,30 +36,44 @@ trainModel <- function(object,
                        model = "svmRadial",
                        resampleMethod = "cv",
                        number = 10,
-                       seed = NULL,
+                       seed = 66,
                        metric = c("ROC", "Accuracy", "Kappa"),
                        returnData = TRUE,
                        savePredictions = "final"){
   
-  # Validate class
+
+  # Validations -------------------------------------------------------------
+  
+  # Check class
   if(!is(object, "scPred")){
     stop("object must be 'scPred'")
   }
   
+  # Check metadata
   if(nrow(object@metadata) == 0){
     stop("No metadata has been assigned to object")
   }
   
+  # Validate if features have been determined
   if(length(object@features) == 0){
-    stop("No features have been determined. Use 'getInformativePCs' function")
+    stop("No features have been determined. Use 'getFeatureSpace()' function")
   }
   
   
   classes <- metadata(object)[[object@pVar]]
+  
+  if(is.null(classes)){
+    stop("Prediction variable is not contained in metadata")
+  }
+  
+  
   metric <- match.arg(metric)
   
+  
+  # Train a prediction model for each class
+  
   if(length(levels(classes)) == 2){
-    modelsRes <-  .trainModelByClass(levels(classes)[1],
+    modelsRes <-  .trainModel(levels(classes)[1],
                                      classes,
                                      object,
                                      model,
@@ -74,7 +88,7 @@ trainModel <- function(object,
     
     
   }else{
-    modelsRes <- lapply(levels(classes), .trainModelByClass,
+    modelsRes <- lapply(levels(classes), .trainModel,
                         classes,
                         object,
                         model,
@@ -91,7 +105,7 @@ trainModel <- function(object,
   object
 }
 
-.trainModelByClass <- function(positiveClass,
+.trainModel <- function(positiveClass,
                                classes,
                                object,
                                model,
