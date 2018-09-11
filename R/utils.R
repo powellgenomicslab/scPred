@@ -41,3 +41,55 @@ subsetMatrix <- function(x, s, by.col = TRUE, drop = FALSE, verbose = FALSE, ...
   x
     
 }
+
+scaleDataSeurat <- function(
+  data,
+  genes.use = NULL,
+  center,
+  scale,
+  scale.max = 10
+){
+  
+  if(is.null(genes.use)){
+    genes.use <- rownames(x = data)
+  }
+  
+  genes.use <- rownames(x = data)
+  genes.use <- intersect(x = genes.use, y = rownames(x = data))
+  data.use <-  data[genes.use, ]
+  
+  scale.data <- matrix(
+    data = NA,
+    nrow = length(x = genes.use),
+    ncol = ncol(x = data)
+  )
+  
+  
+  dimnames(x = scale.data) <- dimnames(x = data.use)
+  
+  bin.size <- 1000
+  max.bin <- floor(length(genes.use)/bin.size) + 1
+  message("Scaling data matrix")
+  pb <- txtProgressBar(min = 0, max = max.bin, style = 3, file = stderr())
+  for (i in 1:max.bin) {
+    my.inds <- ((bin.size * (i - 1)):(bin.size * i - 1)) + 1
+    my.inds <- my.inds[my.inds <= length(x = genes.use)]
+
+    new.data <- t(
+      x = scale(
+        x = t(x = as.matrix(x = data.use[genes.use[my.inds], ])),
+        center = center[genes.use[my.inds]],
+        scale = scale[genes.use[my.inds]]
+      )
+    )
+    
+    new.data[new.data > scale.max] <- scale.max
+    scale.data[genes.use[my.inds], ] <- new.data
+    setTxtProgressBar(pb, i)
+  }
+  close(pb)
+  
+  scale.data[is.na(scale.data)] <- 0
+  
+  scale.data
+}
