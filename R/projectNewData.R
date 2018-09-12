@@ -20,7 +20,7 @@
 #' 
 
 
-projectNewData <- function(object, newData, informative = TRUE, seurat = FALSE){
+projectNewData <- function(object, newData, informative = TRUE, seurat = FALSE, returnLoadings = FALSE){
   
   if(!is(newData, "matrix")){
     stop("'newData' must be a matrix")
@@ -69,6 +69,10 @@ projectNewData <- function(object, newData, informative = TRUE, seurat = FALSE){
   # Perform linear transformation
   newDataProj <- newSubScale %*% refSub
   
-  newDataProj
+  if(returnLoadings){
+    list(proj = newDataProj, loadings = refSub)
+  }else{
+    newDataProj
+  }
   
 }
