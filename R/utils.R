@@ -1,4 +1,4 @@
-.intersectLoadings <- function(ref, new){
+.intersectMat <- function(ref, new){
   
   # Get gene names from loadings reference
   refRows <- rownames(ref)

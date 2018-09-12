@@ -35,7 +35,7 @@ projectNewData <- function(object, newData, informative = TRUE, seurat = FALSE){
   }
   
   
-  res <- .intersectLoadings(ref = getLoadings(object), new =  newData)
+  res <- .intersectMat(ref = getLoadings(object), new =  newData)
   refSub <- res$ref
   newSub <- res$new
   rm(res)
