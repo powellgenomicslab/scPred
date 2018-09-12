@@ -87,6 +87,17 @@ getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig
     
   }else{ # seurat object
     
+    # Check if a PCA has been computed
+    if(!("pca" %in% names(object@dr))){
+      stop("No PCA has been computet yet. See RunPCA() function")
+    }
+    
+    # Check if available was normalized
+    if (!("NormalizeData" %in% names(object@calc.params))) {
+      warning("NormalizeData() has not been run. Normalization is required to stabilize the variance.\n")
+    }
+    
+    
     # Get PCA
     i <- object@dr[["pca"]]@sdev > varLim
     pca <- object@dr[["pca"]]@cell.embeddings[,i]
