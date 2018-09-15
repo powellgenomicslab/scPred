@@ -17,7 +17,7 @@
 #' \item cumExpVar: All principal components are ranked accoriding to their frequency of ocurrence and their variance explained. 
 #' This column contains the cumulative variance explained across the ranked principal components
 #' }
-#' \item \code{pVar}(seurat): Column name from metadata to use as the variable to predict using
+#' \item \code{pVar}: Column name from metadata to use as the variable to predict using
 #' the informative principal components. Informative principal components are selected based on this variable.
 #' }
 #' @keywords informative, significant, features
@@ -71,6 +71,26 @@ getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig
     stop("Not all levels are included in prediction variable")
   }else if(length(levels(classes)) == 1){
     stop("No training is possible with only one classification class. Check prediction variable")
+  }
+  
+  # Assign prediction variable name
+  object@pVar <- pVar
+  
+  uniqueClasses <- unique(classes)
+  isValidName <- uniqueClasses == make.names(uniqueClasses)
+
+  if(!all(isValidName)){
+    
+    invalidClasses <- paste0(uniqueClasses[!isValidName], collapse = "\n")
+    message("Not all the classes are valid R variable names\n")
+    message("The following classes are renamed: \n", invalidClasses)
+    classes <- make.names(classes)
+    classes <- factor(classes, levels = unique(classes))
+    newPvar<- paste0(pVar, ".valid")
+    object@metadata[[newPvar]] <- classes
+    object@pVar <- newPvar
+    message("\nSee new classes in '", pVar, ".valid' column in metadata:")
+    message(paste0(levels(classes)[!isValidName], collapse = "\n"), "\n")
   }
   
   
@@ -136,17 +156,30 @@ getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig
     
   }else{
     
-    res <- lapply(levels(classes), .getFeatures, expVar, classes, pca, correction, sig)
+    res <- pblapply(levels(classes), .getFeatures, expVar, classes, pca, correction, sig)
     names(res) <- levels(classes)
     
   }
   
+  
+  nFeatures <- unlist(lapply(res, nrow))
+  
+  noFeatures <- nFeatures == 0
+  
+  if(any(noFeatures)){
+    
+    warning("\nWarning: No features were found for classes:\n",
+            paste0(names(res)[noFeatures], collapse = "\n"), "\n")
+    res[[names(res)[noFeatures]]] <- NULL
+ 
+  }
+  
+  
+  
   # Assign feature space to `features` slot
   object@features <- res
-  # Assign prediction variable name
-  object@pVar <- pVar
   
-  message("DONE!")
+  message("\nDONE!")
   
   object
   
