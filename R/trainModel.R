@@ -15,6 +15,7 @@
 #' @return A list of  \code{train} objects for each cell class (e.g. cell type). See \code{train} function for details.
 #' @keywords train, model
 #' @importFrom methods is
+#' @importFrom pbapply pblapply
 #' @export
 #' @author
 #' José Alquicira Hernández
@@ -60,7 +61,7 @@ trainModel <- function(object,
   }
   
   
-  classes <- metadata(object)[[object@pVar]]
+  classes <- names(object@features)
   
   if(is.null(classes)){
     stop("Prediction variable is not contained in metadata")
@@ -71,10 +72,9 @@ trainModel <- function(object,
   
   
   # Train a prediction model for each class
-  
-  if(length(levels(classes)) == 2){
-    modelsRes <-  .trainModel(levels(classes)[1],
-                                     classes,
+
+  if(length(classes) == 2){
+    modelsRes <-  .trainModel(classes[1],
                                      object,
                                      model,
                                      resampleMethod,
@@ -84,12 +84,11 @@ trainModel <- function(object,
                                      returnData,
                                      savePredictions)
     modelsRes <- list(modelsRes)
-    names(modelsRes) <- levels(classes)[1]
+    names(modelsRes) <- classes[1]
     
     
   }else{
-    modelsRes <- lapply(levels(classes), .trainModel,
-                        classes,
+    modelsRes <- pblapply(classes, .trainModel,
                         object,
                         model,
                         resampleMethod,
@@ -98,7 +97,7 @@ trainModel <- function(object,
                         number,
                         returnData,
                         savePredictions)
-    names(modelsRes) <- levels(classes)
+    names(modelsRes) <- classes
   }
   
   object@train <- modelsRes
@@ -106,7 +105,6 @@ trainModel <- function(object,
 }
 
 .trainModel <- function(positiveClass,
-                               classes,
                                object,
                                model,
                                resampleMethod,
@@ -128,9 +126,8 @@ trainModel <- function(object,
   # According to twoClassSummary() documentation
   ## "If assumes that the first level of the factor variables corresponds to a relevant result 
   ## but the lev argument can be used to change this."
-  
-  i <- classes != positiveClass
-  response <- as.character(classes)
+  response <-  as.character(object@metadata[[object@pVar]])
+  i <- response != positiveClass
   response[i] <- "other"
   response <- factor(response, levels = c(positiveClass, "other"))
   
