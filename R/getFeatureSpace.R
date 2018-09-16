@@ -22,6 +22,7 @@
 #' }
 #' @keywords informative, significant, features
 #' @importFrom methods is
+#' @importFrom pbapply pblapply
 #' @export
 #' @author
 #' José Alquicira Hernández
@@ -73,25 +74,6 @@ getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig
     stop("No training is possible with only one classification class. Check prediction variable")
   }
   
-  # Assign prediction variable name
-  object@pVar <- pVar
-  
-  uniqueClasses <- unique(classes)
-  isValidName <- uniqueClasses == make.names(uniqueClasses)
-
-  if(!all(isValidName)){
-    
-    invalidClasses <- paste0(uniqueClasses[!isValidName], collapse = "\n")
-    message("Not all the classes are valid R variable names\n")
-    message("The following classes are renamed: \n", invalidClasses)
-    classes <- make.names(classes)
-    classes <- factor(classes, levels = unique(classes))
-    newPvar<- paste0(pVar, ".valid")
-    object@metadata[[newPvar]] <- classes
-    object@pVar <- newPvar
-    message("\nSee new classes in '", pVar, ".valid' column in metadata:")
-    message(paste0(levels(classes)[!isValidName], collapse = "\n"), "\n")
-  }
   
   
   # Filter principal components by variance ---------------------------------
@@ -143,6 +125,29 @@ getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig
                   trainData = as.matrix(object@data))
   }
   
+  
+  
+  
+  uniqueClasses <- unique(classes)
+  isValidName <- uniqueClasses == make.names(uniqueClasses)
+  
+  if(!all(isValidName)){
+    
+    invalidClasses <- paste0(uniqueClasses[!isValidName], collapse = "\n")
+    message("Not all the classes are valid R variable names\n")
+    message("The following classes are renamed: \n", invalidClasses)
+    classes <- make.names(classes)
+    classes <- factor(classes, levels = unique(classes))
+    newPvar <- paste0(pVar, ".valid")
+    object@metadata[[newPvar]] <- classes
+    message("\nSee new classes in '", pVar, ".valid' column in metadata:")
+    message(paste0(levels(classes)[!isValidName], collapse = "\n"), "\n")
+    pVar <- newPvar
+  }
+  
+  
+  
+  
   # Select informative principal components
   # If only 2 classes are present in prediction variable, train one model for the positive class
   # The positive class will be the first level of the factor variable
@@ -178,6 +183,10 @@ getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig
   
   # Assign feature space to `features` slot
   object@features <- res
+  
+  
+  # Assign prediction variable name
+  object@pVar <- pVar
   
   message("\nDONE!")
   
