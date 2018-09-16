@@ -43,8 +43,14 @@ scPredict <- function(object, newData = NULL, threshold = 0.9,
     
   }else if(!is.null(newData) & nrow(object@projection)){ # NewData and projection
     
-    if(!is(newData, "matrix")){
-      stop("'predData' object must be a matrix")
+    if(is(newData, "seurat")){
+      
+      newData <- as.matrix(newData@data)
+      
+    }else if (!is(newData, "matrix")){
+      
+      stop("'newData' object must be a matrix or seurat object")
+      
     }
     message("newData provided and projection stored in scPred object. Set 'useProj = TRUE' to override default projection execution")
     
