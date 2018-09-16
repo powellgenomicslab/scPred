@@ -29,32 +29,37 @@ setMethod("show", signature("scPred"), function(object) {
   }
   
   if(length(object@features) != 0){
+    
     cat("- Informative PCs per class\n")
-    for(i in seq_len(length(object@features))){
-      cat(sprintf("      %s = %i\n", names(object@features)[i], nrow(object@features[[i]])))
-    }
+    object@features %>% 
+    sapply(nrow) %>% 
+    as.data.frame() %>% 
+    set_colnames("Features") %>% 
+    print()
     
   }
   
   if(length(object@train) != 0){
+    
     cat("- Training\n")
     cat(sprintf("      Model: %s\n", object@train[[1]]$modelInfo$label))
-    for(i in seq_len(length(object@train))){
-      cat(sprintf("      Class -> %s\n", names(object@train)[i]))
-      bestModelIndex <- as.integer(rownames(object@train[[i]]$bestTune))
-      
-      if(object@train[[i]]$metric == "ROC"){
-        metrics <- round(object@train[[i]]$results[bestModelIndex,c("ROC", "Sens", "Spec")], 3)
-        cat(sprintf("      AUROC = %s, Sensitivity = %s, Specificity = %s\n", 
-                    metrics$ROC, metrics$Sens, metrics$Spec))
+    
+    data.frame(names(object@train))
+    
+    getMetrics <- function(x, roc = TRUE){
+      if(roc){
+        round(x$results[bestModelIndex,c("ROC", "Sens", "Spec")], 3)
       }else{
-        metrics <- round(object@train[[i]]$results[bestModelIndex,c("Accuracy", "Kappa")], 3)
-        cat(sprintf("      Accuracy = %s, Kappa = %s\n", 
-                    metrics$Accuracy, metrics$Kappa))
-        
-        
+        round(x$results[bestModelIndex,c("Accuracy", "Kappa")], 3)
       }
     }
+    
+    if(object@train[[1]]$metric == "ROC"){
+      print(t(sapply(object@train, getMetrics)))
+    }else{
+      print(t(sapply(object@train, getMetrics, roc = FALSE)))
+    }
+    
   }
   
   
