@@ -8,29 +8,35 @@ setMethod("show", signature("scPred"), function(object) {
   
   cat("'scPred' object\n")
   
-  cat("- Expression data\n")
+  cat("\n- Expression data\n")
   nCells <- nrow(object@svd$x)
   nPCs <- ncol(object@svd$x)
   
-  cat(sprintf("      Cells =  %i\n", nCells))
-  cat(sprintf("      Genes =  %i\n", nrow(getLoadings(object))))
+  cat(sprintf("      Cell embeddings =  %i\n", nCells))
+  cat(sprintf("      Gene loadings =  %i\n", nrow(getLoadings(object))))
   cat(sprintf("      PCs =  %i\n", nPCs))
   
   
   if(length(object@metadata) > 0){
-    cat("- Metadata information\n")
+    cat("\n- Metadata information\n")
     cat(sprintf("      %s\n", paste0(colnames(object@metadata), collapse = ", ")))
+    
+    if(length(object@pVar) != 0){
+      cat(sprintf("      Prediction variable = %s\n", object@pVar))
+      object@metadata[[object@pVar]] %>% 
+        table() %>% 
+        as.data.frame() %>% 
+        column_to_rownames(".") %>% 
+        set_colnames("Counts") %>% 
+        print()
+    }
   }
   
-  if(length(object@pVar) != 0 & length(object@metadata) > 0){
-    cat("- Prediction\n")
-    cat(sprintf("      Variable = %s\n", object@pVar))
-    
-  }
+
   
   if(length(object@features) != 0){
     
-    cat("- Informative PCs per class\n")
+    cat("\n- Informative PCs per class\n")
     object@features %>% 
     sapply(nrow) %>% 
     as.data.frame() %>% 
@@ -41,7 +47,7 @@ setMethod("show", signature("scPred"), function(object) {
   
   if(length(object@train) != 0){
     
-    cat("- Training\n")
+    cat("\n- Training information\n")
     cat(sprintf("      Model: %s\n", object@train[[1]]$modelInfo$label))
     
     data.frame(names(object@train))
