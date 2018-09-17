@@ -45,8 +45,8 @@ subsetMatrix <- function(x, s, by.col = TRUE, drop = FALSE, verbose = FALSE, ...
 scaleDataSeurat <- function(
   data,
   genes.use = NULL,
-  center,
-  scale,
+  center = NULL,
+  scale = NULL,
   scale.max = 10
 ){
   
@@ -75,13 +75,24 @@ scaleDataSeurat <- function(
     my.inds <- ((bin.size * (i - 1)):(bin.size * i - 1)) + 1
     my.inds <- my.inds[my.inds <= length(x = genes.use)]
 
-    new.data <- t(
-      x = scale(
-        x = t(x = as.matrix(x = data.use[genes.use[my.inds], ])),
-        center = center[genes.use[my.inds]],
-        scale = scale[genes.use[my.inds]]
+    if(is.null(center)){
+      new.data <- t(
+        x = scale(
+          x = t(x = as.matrix(x = data.use[genes.use[my.inds], ])),
+          center = TRUE,
+          scale = TRUE
+        )
       )
-    )
+    }else{
+      new.data <- t(
+        x = scale(
+          x = t(x = as.matrix(x = data.use[genes.use[my.inds], ])),
+          center = center[genes.use[my.inds]],
+          scale = scale[genes.use[my.inds]]
+        )
+      )
+    }
+
     
     new.data[new.data > scale.max] <- scale.max
     scale.data[genes.use[my.inds], ] <- new.data
