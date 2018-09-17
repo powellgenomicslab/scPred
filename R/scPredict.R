@@ -11,6 +11,7 @@
 #' indicating the classification based on the provided threshold
 #' @keywords prediction, new, test, validation
 #' @importFrom methods is
+#' @importFrom pbapply pblapply
 #' @export
 #' @author
 #' José Alquicira Hernández
@@ -71,7 +72,8 @@ scPredict <- function(object, newData = NULL, threshold = 0.9,
   
   classes <- names(object@features)
   
-  res <- lapply(classes, .predictClass, object, projection)
+  message("Predicting cell types")
+  res <- pblapply(classes, .predictClass, object, projection)
   names(res) <- levels(classes)
   res <- as.data.frame(res)
   row.names(res) <- rownames(projection)
