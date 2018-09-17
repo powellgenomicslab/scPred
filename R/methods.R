@@ -538,11 +538,11 @@ setMethod("getAccuracy", signature("scPred"), function(object, var){
     stop("No metadata for prediction dataset has been stored")
   }
   
-  if(!pVar %in% names(object@predMeta)){
+  if(!var %in% names(object@predMeta)){
     stop("Variable not present in metadata")
   }
   
-  true <- as.character(object@predMeta[[pVar]])
+  response <- as.character(object@predMeta[[var]])
   predictions <- object@predictions["predClass"]
   
   truePred <- cbind(predictions, response)
