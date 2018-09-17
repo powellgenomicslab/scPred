@@ -53,6 +53,9 @@ setMethod("show", signature("scPred"), function(object) {
     data.frame(names(object@train))
     
     getMetrics <- function(x, roc = TRUE){
+      
+      bestModelIndex <- as.integer(rownames(x$bestTune))
+      
       if(roc){
         round(x$results[bestModelIndex,c("ROC", "Sens", "Spec")], 3)
       }else{
@@ -507,3 +510,61 @@ setMethod("plotExp", signature("scPred"), function(object, gene, pc = c(1,2), lo
 })
 
 
+
+
+#' @title Get accuracy
+#' @description Returns the accuracy per group (recall) given a known "true" for the prediction dataset
+#' @param object \code{scPred} object
+#' @param var Variable in \code{predMeta} slot containing them true classes. True classes will be compared to
+#' the classifications provided by scPred in the \code{predictions} slot
+#' @importFrom methods setMethod
+#' @export
+
+setGeneric("getAccuracy", def = function(object, var) {
+  standardGeneric("getAccuracy")
+})
+
+#' @title Get accuracy
+#' @description Returns the accuracy per group (recall) given a known "true" for the prediction dataset
+#' @param object \code{scPred} object
+#' @param var Variable in \code{predMeta} slot containing them true classes. True classes will be compared to
+#' the classifications provided by scPred in the \code{predictions} slot
+#' @importFrom methods setMethod
+#' @export
+
+setMethod("getAccuracy", signature("scPred"), function(object, var){
+  
+  if(length(object@predMeta) == 0){
+    stop("No metadata for prediction dataset has been stored")
+  }
+  
+  if(!pVar %in% names(object@predMeta)){
+    stop("Variable not present in metadata")
+  }
+  
+  true <- as.character(object@predMeta[[pVar]])
+  predictions <- object@predictions["predClass"]
+  
+  truePred <- cbind(predictions, response)
+  
+  # Get accuracy
+  
+  res <- as.data.frame(table(truePred$response))
+  names(res) <- c("true", "total")
+  
+  truePred %>% 
+    set_colnames(c("prediction", "true")) %>% 
+    mutate(result = if_else(prediction == true, "correct", "incorrect")) %>% 
+    group_by(true, result) %>% 
+    summarise(n = n()) %>% 
+    filter(result == "correct") %>% 
+    select(-result) -> counts
+  
+  
+  left_join(res, counts, by = "true") %>% 
+    select(true, n, total) %>% 
+    mutate(n = if_else(is.na(n), 0, as.numeric(n))) %>% 
+    mutate(accuracy = n/total) %>% 
+    column_to_rownames("true")
+  
+})
