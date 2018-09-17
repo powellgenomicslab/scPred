@@ -27,7 +27,7 @@ setMethod("show", signature("scPred"), function(object) {
         table() %>% 
         as.data.frame() %>% 
         column_to_rownames(".") %>% 
-        set_colnames("Counts") %>% 
+        set_colnames("n") %>% 
         print()
     }
   }
@@ -203,12 +203,13 @@ setMethod("plotEigen", signature("scPred"), function(object,
     }
     
     if(!is(object@metadata[[group]], "factor")){
-      stop("'group' variable must be a factor variable")
+      metadata <- as.factor(make.names(object@metadata[[group]]))
+    }else{
+      metadata <- as.factor(make.names(as.character(object@metadata[[group]])))
     }
     
-    metadata <- object@metadata[group]
     pca <- cbind(pca, metadata)
-    
+    names(pca)[4] <- group 
   }
   
   
@@ -221,7 +222,7 @@ setMethod("plotEigen", signature("scPred"), function(object,
       message("Performing projection of non-informative principal components...")
       pcaPred <- projectNewData(object, object@predData, informative = FALSE)
     }else{
-      pcaPred <-  object@projection
+      pcaPred <- object@projection
     }
     
     pcaPred <- as.data.frame(subsetMatrix(pcaPred, namesPC))
@@ -229,7 +230,7 @@ setMethod("plotEigen", signature("scPred"), function(object,
     
     if(!is.null(group)){
       if(!is.null(predGroup)){
-        pcaPred[group] <- predGroup
+        pcaPred[group] <- as.factor(make.names(predGroup))
         
       }else{
         pcaPred[group] <- "Unknown" 
@@ -542,7 +543,7 @@ setMethod("getAccuracy", signature("scPred"), function(object, var){
     stop("Variable not present in metadata")
   }
   
-  response <- as.character(object@predMeta[[var]])
+  response <- make.names(as.character(object@predMeta[[var]]))
   predictions <- object@predictions["predClass"]
   
   truePred <- cbind(predictions, response)
