@@ -32,6 +32,12 @@ scPredict <- function(object, newData = NULL, threshold = 0.9,
   if(!is(object, "scPred")){
     stop("'object' must be of class 'scPred'")
   }
+  
+  if(is(newData, "seurat")){
+    
+    newData <- as.matrix(newData@data)
+    
+  }
    
   if(is.null(newData) & (nrow(object@projection) == 0)){ # Neither newData nor projection
     
@@ -44,11 +50,7 @@ scPredict <- function(object, newData = NULL, threshold = 0.9,
     
   }else if(!is.null(newData) & nrow(object@projection)){ # NewData and projection
     
-    if(is(newData, "seurat")){
-      
-      newData <- as.matrix(newData@data)
-      
-    }else if (!is(newData, "matrix")){
+    if (!is(newData, "matrix")){
       
       stop("'newData' object must be a matrix or seurat object")
       
