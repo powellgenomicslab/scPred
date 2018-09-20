@@ -161,9 +161,11 @@ setMethod("getLoadings", signature("scPred"), function(object) {
 
 setGeneric("plotEigen", def = function(object, 
                                        group = NULL, 
-                                       pc = c(1,2), 
+                                       pc1 = 1,
+                                       pc2 = 2,
                                        predGroup = NULL, 
-                                       geom = c("points", "density_2d", "both")) {
+                                       geom = c("points", "density_2d", "both"),
+                                       plotPred = TRUE) {
   standardGeneric("plotEigen")
 })
 
@@ -180,14 +182,32 @@ setGeneric("plotEigen", def = function(object,
 
 setMethod("plotEigen", signature("scPred"), function(object, 
                                                      group = NULL, 
-                                                     pc = c(1,2), 
+                                                     pc1 = 1, 
+                                                     pc2 = 2,
                                                      predGroup = NULL,
-                                                     geom = c("both", "points", "density_2d")){
+                                                     geom = c("both", "points", "density_2d"),
+                                                     plotPred = TRUE){
   
   geom <- match.arg(geom)
   
+  pc <- c(pc1, pc2)
+  
   namesPC <- paste0("PC", pc)
-  pca <- as.data.frame(subsetMatrix(getPCA(object), namesPC))
+  
+  pca <- getPCA(object)
+  allpcs <- colnames(pca)                    
+  
+  pcsInEigen <- namesPC %in% allpcs
+  if(!all(pcsInEigen)){
+    label <- paste0(namesPC[!pcsInEigen], collapse = " and ")
+    stop(label, " not present in SVD results")
+  }
+                      
+  pca <- as.data.frame(subsetMatrix(pca, namesPC))
+  
+  pca
+  
+  
   
   pca$dataset <- "Train"
   
@@ -203,9 +223,9 @@ setMethod("plotEigen", signature("scPred"), function(object,
     }
     
     if(!is(object@metadata[[group]], "factor")){
-      metadata <- as.factor(make.names(object@metadata[[group]]))
+      metadata <- object@metadata[[group]]
     }else{
-      metadata <- as.factor(make.names(as.character(object@metadata[[group]])))
+      metadata <- as.factor(as.character(object@metadata[[group]]))
     }
     
     pca <- cbind(pca, metadata)
@@ -230,7 +250,8 @@ setMethod("plotEigen", signature("scPred"), function(object,
     
     if(!is.null(group)){
       if(!is.null(predGroup)){
-        pcaPred[group] <- as.factor(make.names(predGroup))
+        predVar <- object@predMeta[[predGroup]]
+        pcaPred[group] <- factor(predVar, levels = unique(predVar))
         
       }else{
         pcaPred[group] <- "Unknown" 
@@ -265,10 +286,9 @@ setMethod("plotEigen", signature("scPred"), function(object,
     scale_color_brewer(palette = "Set1") +
     theme_bw()
   
-  if(any("Prediction" == pcaAll$dataset)){
+  if(any("Prediction" == pcaAll$dataset) & plotPred){
     p <- p + facet_wrap(~dataset)
   }
-  
   
   p
   
