@@ -67,11 +67,8 @@ getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig
   }
   
   if(!is.factor(classes)){
-    stop("Prediction variable must be a factor object")
-  }else if(!all(levels(classes) %in% unique(classes))){
-    stop("Not all levels are included in prediction variable")
-  }else if(length(levels(classes)) == 1){
-    stop("No training is possible with only one classification class. Check prediction variable")
+    message("Transforming prediction variable to factor object...")
+    classes <- as.factor(classes)
   }
   
   
