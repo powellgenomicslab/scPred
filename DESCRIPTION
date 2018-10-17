@@ -18,7 +18,8 @@ Depends:
     pROC,
     ggplot2,
     tibble,
-    ggExtra
+    ggExtra,
+    pbapply
 Imports:
     irlba,
     dplyr,
@@ -29,7 +30,6 @@ Imports:
     pROC,
     ggplot2,
     tibble,
-    ggExtra
 VignetteBuilder: knitr
 RoxygenNote: 6.0.1
 Suggests: knitr,
