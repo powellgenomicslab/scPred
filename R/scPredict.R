@@ -33,6 +33,10 @@ scPredict <- function(object, newData = NULL, threshold = 0.9,
     stop("'object' must be of class 'scPred'")
   }
   
+  if(!length(object@train)){
+    stop("No models have been trained!")
+  }
+  
   if(is(newData, "seurat")){
     
     newData <- as.matrix(newData@data)
@@ -59,7 +63,7 @@ scPredict <- function(object, newData = NULL, threshold = 0.9,
     
   }
   
-  if(length(object@features) == 0){
+  if(!length(object@features)){
     stop("No informative principal components have been obtained yet.\nSee getInformativePCs() function")
   }
   
