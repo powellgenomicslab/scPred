@@ -2,6 +2,8 @@
 #' @description Generic display function for \linkS4class{scPred} objects. Displays summary of the
 #' object such as number of cells, genes, significant features.
 #' @importFrom methods setMethod
+#' @importFrom tibble column_to_rownames
+#' @importFrom magrittr set_colnames
 #' @export
 
 setMethod("show", signature("scPred"), function(object) {
@@ -588,4 +590,149 @@ setMethod("getAccuracy", signature("scPred"), function(object, var){
     mutate(accuracy = n/total) %>% 
     column_to_rownames("true")
   
+})
+
+#' @title Gets contingency table
+#' @description If the \code{predMeta} slot contains a column with the true classes of the cells,
+#' builds a contingency table by using this column as reference and comparing it to the predicted classes
+#' obtained with \code{scPredict}. If an independent column with predicted classes is in the prediction
+#' metadata, this column instead of the default classes assigned by \code{scPred} can be provided using the
+#' \code{pred} parameter.
+#' @param object \code{scPred} object
+#' @param true Column name in \code{predMeta} slot that corresponds to the true known classes 
+#' @param pred Column name in \code{predMeta} slot that corresponds to the predicted classes
+#' if they  have been assigned independently from the \code{scPredict()} function
+#' @param fill Value to fill contingency table ff unique cell classes from the true and the 
+#' predicted columns do not match.
+#' @param prop Return proportions or counts? Default: proportions
+#' @param digits If proportions are returned, number of digits to round numbers
+#' @return A contingency table 
+#' @export
+#' @importFrom dplyr group_by_ summarise
+#' @importFrom tidyr spread
+#' @importFrom magrittr "%>%"
+#' @importFrom tibble column_to_rownames
+#' @author José Alquicira Hernández
+#' 
+
+
+setGeneric("crossTab", def = function(object, true, pred = NULL, fill = 0, prop = TRUE, digits = 2) {
+  standardGeneric("crossTab")
+})
+
+#' @title Gets contingency table
+#' @description If the \code{predMeta} slot contains a column with the true classes of the cells,
+#' builds a contingency table by using this column as reference and comparing it to the predicted classes
+#' obtained with \code{scPredict}. If an independent column with predicted classes is in the prediction
+#' metadata, this column instead of the default classes assigned by \code{scPred} can be provided using the
+#' \code{pred} parameter.
+#' @param object \code{scPred} object
+#' @param true Column name in \code{predMeta} slot that corresponds to the true known classes 
+#' @param pred Column name in \code{predMeta} slot that corresponds to the predicted classes
+#' if they  have been assigned independently from the \code{scPredict()} function
+#' @param fill Value to fill contingency table ff unique cell classes from the true and the 
+#' predicted columns do not match.
+#' @param prop Return proportions or counts? Default: proportions
+#' @param digits If proportions are returned, number of digits to round numbers
+#' @return A contingency table 
+#' @export
+#' @importFrom dplyr group_by_ summarise
+#' @importFrom tidyr spread
+#' @importFrom magrittr "%>%"
+#' @importFrom tibble column_to_rownames
+#' @author José Alquicira Hernández
+#' 
+
+setMethod("crossTab", signature("scPred"), 
+          function(object, true, pred = NULL, fill = 0, prop = TRUE, digits = 2){
+  
+  res <- processPreds(object = object, true = true, pred = pred)
+  predictions <- res$predictions
+  true <- res$true
+  pred <- res$pred
+  
+  predictions %>% 
+    group_by_(pred, true) %>% 
+    summarise(n = n()) %>% 
+    spread(key = true, value = "n", fill = fill) %>% 
+    as.data.frame() %>% 
+    column_to_rownames(pred) -> x
+  
+  if(prop){
+    row_names <- rownames(x)
+    x <- mapply(function(x,d){x/d}, x, colSums(x))
+    rownames(x) <- row_names
+    x %>% 
+      round(digits) %>% 
+      as.data.frame() -> x
+    
+  }
+  x
+})
+
+
+
+#' @title Plot prediction probabilities
+#' @description Plots the probability distributions according to a grouping variable. 
+#' @param object \code{scPred} object
+#' @param facet Column name in \code{predMeta} slot
+#' if they have been assigned independently from the \code{scPredict()} function
+#' @return A distribution probability plot divided into facets representing the groups contained in the
+#' provided facet column name and colors to the corresponding probabilities for each class. If no grouping
+#' variable is provided to the \code{facet} parameter, distributions are divided according to the predicted classes
+#' by default
+#' @export
+#' @author José Alquicira Hernández
+#' 
+
+
+setGeneric("plotPredProbs", def = function(object, facet = NULL){
+  standardGeneric("plotPredProbs")
+})
+
+
+
+#' @title Plot prediction probabilities
+#' @description Plots the probability distributions according to a grouping variable. 
+#' @param object \code{scPred} object
+#' @param facet Column name in \code{predMeta} slot
+#' if they have been assigned independently from the \code{scPredict()} function
+#' @return A distribution probability plot divided into facets representing the groups contained in the
+#' provided facet column name and colors to the corresponding probabilities for each class. If no grouping
+#' variable is provided to the \code{facet} parameter, distributions are divided according to the predicted classes
+#' by default
+#' @export
+#' @author José Alquicira Hernández
+#' 
+
+
+setMethod("plotPredProbs", signature("scPred"), function(object, facet = NULL) {
+  
+  if(nrow(object@predMeta) == 0){
+    stop("No prediction metadata has been assigned to scPred object")
+  }
+  
+  if(is.null(facet)){
+    predictions <- getPredictions(object)
+    facet <- "predClass"
+    
+  }else{
+    res  <- processPreds(object, true = facet)
+    predictions <- res$predictions
+    fill <- res$true
+  }
+  
+  n <- length(object@train)
+  
+  
+  predictions %>% 
+    gather(key = "Class", value = "prob", seq_len(n)) %>% 
+    ggplot() +
+    aes_string(x = "prob", fill = "Class") +
+    geom_histogram(color = "black") +
+    facet_wrap(as.formula(paste("~", facet)), scales = "free") +
+    scale_fill_manual(values = getPalette(n)) +
+    theme_bw() +
+    xlab("Probability") +
+    ylab("Number of cells")
 })
