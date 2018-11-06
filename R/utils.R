@@ -104,3 +104,18 @@ scaleDataSeurat <- function(
   
   scale.data
 }
+
+
+getPalette <- function(n){
+  
+  if(n < 6){
+    c("#29BF12", "#00A5CF", "#DE1A1A", "#574AE2", "#FFBF00")
+  }else if(n < 9){
+    c("#558aa6", "#B1740F", "#D5006A", "#08585A", "#FFFD98", "#9449d2", "#BBBE64", "#D7263D")
+  }else if(n < 13){
+    c("#943CB4", "#194D44", "yellow", "#5B6DC8", "#3CA437", "#6B244C", "#6ACDC5", "#DE1A1A", "#BBB53E", "#2A297A", "#995533", "#D590DA")
+  }else{
+    stop("Too many classes")
+  }
+  
+}

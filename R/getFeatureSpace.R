@@ -22,6 +22,9 @@
 #' }
 #' @keywords informative, significant, features
 #' @importFrom methods is
+#' @importFrom tidyr gather
+#' @importFrom magrittr "%>%"
+#' @importFrom dplyr mutate arrange filter
 #' @importFrom pbapply pblapply
 #' @export
 #' @author
