@@ -1,4 +1,11 @@
-AlignSubspaceSeurat <- function (object, reduction.type = "cca", grouping.var, dims.align, 
+#' @title Align low-dimensional space using Seurat algorithm
+#' @description Uses the manifold-alignment Seurat algorithm to align the training eigenspace and the prediction projection
+#' See ?AlignSubspace() for more details. Note: this helper function is a modified version from Seurat.
+#' @author José Alquicira Hernández
+#' @importFrom  pbapply pbsapply
+
+
+.alignSubspaceSeurat <- function (object, reduction.type = "pca.scpred", grouping.var = "dataset_dummy", dims.align, 
           num.possible.genes = 2000, num.genes = 30, show.plots = FALSE, 
           verbose = TRUE, ...) 
 {

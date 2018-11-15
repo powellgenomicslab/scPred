@@ -6,6 +6,19 @@
 \usage{
 alignDataset(object, prediction)
 }
+\arguments{
+\item{object}{\code{scPred} object}
+
+\item{prediction}{A seurat object containing the prediction dataset. \code{data} slot must be filled with the 
+after running NormalizeData() function}
+}
+\value{
+A matrix with the aligned projection
+}
 \description{
-Aligns train and test datasets in a low dimensional space using the dynamic time warping alogorithm implemented in Seurat
+Aligns train and test datasets in a low dimensional space using the 
+dynamic time warping algorithm implemented in Seurat
+}
+\author{
+José Alquicira Hernández
 }
