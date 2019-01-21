@@ -31,7 +31,7 @@ getTrainPred <- function(object){
 #' @param ... Extra arguments for \code{plot_grid} function
 #' @return A plot with the probability distributions. Each panel corresponds to a trained model (cell class)
 #' and the positive class to the class of interest
-#' @importFrom cowplot plot_grid
+#' @importFrom cowplot plot_grid get_legend
 #' @export
 #' @author José Alquicira Hernández
 

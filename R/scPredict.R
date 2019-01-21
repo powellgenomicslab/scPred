@@ -11,6 +11,8 @@
 #' indicating the classification based on the provided threshold
 #' @keywords prediction, new, test, validation
 #' @importFrom methods is
+#' @importFrom tibble rownames_to_column column_to_rownames
+#' @importFrom dplyr mutate select 
 #' @importFrom pbapply pblapply
 #' @export
 #' @author
