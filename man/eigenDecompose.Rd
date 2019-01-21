@@ -4,21 +4,27 @@
 \alias{eigenDecompose}
 \title{Eigendecompose gene expression matrix}
 \usage{
-eigenDecompose(expData, n = 10, pseudo = TRUE)
+eigenDecompose(expData, n = 10, pseudo = TRUE, returnData = TRUE,
+  seed = 66)
 }
 \arguments{
+\item{expData}{A matrix object with genes as rows and cells as columns. Unique row names for genes must be provided}
+
 \item{n}{Number of principal components to be computed}
 
 \item{pseudo}{Whether to perform a \code{log2(data + 1)} transformation on expression data}
 
-\item{expdata}{A matrix object with cells as rows and genes (loci) as columns. Unique row names for genes must be provided}
+\item{returnData}{Return training data?}
+
+\item{seed}{Numeric seed for computing the eigenvalues and eigenvectors using the Lanczos algorithm}
 }
 \value{
-A scPred object with three filled slots
+A scPred object with three or four filled slots
 \itemize{
-\item \code{pca}: results from \code{prcomp_irlba} function
+\item \code{svd}: results from \code{prcomp_irlba} function
 \item \code{expVar}: explained variance by each principal component
 \item \code{pseudo}: \code{TRUE} if a pseudo-log2 transformation was performed
+\item \code{trainData}: if \code{returnData} is TRUE, the training data is returned
 }
 }
 \description{
@@ -33,9 +39,9 @@ Performs principal component analysis from a gene expression matrix. Data is cen
 class1 <- matrix(rnbinom(10000, 1, 0.1),  ncol = 100)
 class2 <- matrix(rnbinom(10000, 1, 0.15),  ncol = 100)
 
-# Create gene expression matris (rows = cells, colums = genes)
+# Create gene expression matrix (rows = cells, colums = genes)
 
-expTrain <- rbind(class1, class2)
+expTrain <- cbind(class1, class2)
 
 # Eigendecompose gene expression matrix
 
@@ -47,6 +53,6 @@ plotEigen(object)
 José Alquicira Hernández
 }
 \keyword{decomposition,}
-\keyword{pca}
 \keyword{singular}
+\keyword{svd}
 \keyword{value}

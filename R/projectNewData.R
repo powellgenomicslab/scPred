@@ -1,8 +1,9 @@
 #' @title Project new data onto training principal components
 #' @description Projects a new dataset into the principal components obtained from a training dataset
 #' @param object An \code{scPred} object
-#' @param newData A matrix object with cells as rows and genes (loci) as columns
+#' @param newData A matrix object with genes as rows and cells as columns
 #' @param informative Perfoms rotation using only informative principal components
+#' @param seurat Performs Seurat scaling?
 #' @return A data frame with the projection
 #' @keywords test, validation, projection
 #' @importFrom methods is
@@ -12,14 +13,14 @@
 #' @examples 
 #' 
 #' # Prjects training discriminant principal axes onto test dataset. 
-#' ## By settint "informative = FALSE", all principal components
+#' ## By setting "informative = FALSE", all principal components
 #' ## (including non-informative) are projected.
 #' 
 #' projection <- projectNewData(object, expTest, informative = FALSE)
 #' 
 
 
-projectNewData <- function(object, newData, informative = TRUE){
+projectNewData <- function(object, newData, informative = TRUE, seurat = FALSE, returnLoadings = FALSE){
   
   if(!is(newData, "matrix")){
     stop("'newData' must be a matrix")
@@ -33,25 +34,14 @@ projectNewData <- function(object, newData, informative = TRUE){
     newData <- log2(newData + 1)
   }
   
-  new <- colnames(newData)
-  ref <- rownames(getLoadings(object))
   
-  
-  if(!(all(new %in% ref) & all(ref %in% new))){ # Subset genes if necesary
-    newSub <- newData[,new %in% ref] 
-    refSub <- getLoadings(object)[ref %in% new, ]
-    newSub <- newSub[, match(rownames(refSub), colnames(newSub))]
-  }else if(!all(new == ref)){ # Order new data according to loadings matrix
-    newSub <- newData[, match(ref, new)]
-    refSub <- getLoadings(object)
-  }else{ # Use data directly if genes match and are ordered
-    newSub <- newData
-    refSub <- getLoadings(object)
-  }
-  
-  # Get new centers and scales for gene features
-  newCenter <- object@pca$center[names(object@pca$center) %in% colnames(newSub)]
-  newScale <- object@pca$scale[names(object@pca$scale) %in% colnames(newSub)]
+  res <- .intersectMat(ref = getLoadings(object), new =  newData)
+  refSub <- res$ref
+  newSub <- res$new
+  rm(res)
+
+  newCenter <- object@svd$center[names(object@svd$center) %in% rownames(newSub)]
+  newScale <- object@svd$scale[names(object@svd$scale) %in% rownames(newSub)]
   
   if(informative){
   informativePCs  <- object@features %>% 
@@ -66,9 +56,23 @@ projectNewData <- function(object, newData, informative = TRUE){
   
   
   
-  # Perform linear transformation
-  newDataProj <- scale(newSub, newCenter, newScale) %*% refSub
+  # Scale data
+  if(seurat){
+    newSubScale <- t(scaleDataSeurat(newSub, 
+                                   genes.use = rownames(refSub), 
+                                   center = newCenter, 
+                                   scale = newScale))
+  }else{
+    newSubScale <- as.matrix(scale(t(newSub), newCenter, newScale))
+  }
   
-  as.data.frame(newDataProj)
+  # Perform linear transformation
+  newDataProj <- newSubScale %*% refSub
+  
+  if(returnLoadings){
+    list(proj = newDataProj, loadings = refSub)
+  }else{
+    newDataProj
+  }
   
 }

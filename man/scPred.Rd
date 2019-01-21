@@ -4,7 +4,7 @@
 \name{scPred}
 \alias{scPred}
 \alias{scPred-class}
-\title{Definition of 'eigenPred' class}
+\title{Definition of 'scPred' class}
 \description{
 An S4 class to contain principal component analysis of a gene expression matrix, metadata, training, and
 prediction information.
@@ -12,13 +12,15 @@ prediction information.
 \section{Slots}{
 
 \describe{
-\item{\code{pca}}{Principal component analysis performed with \code{prcomp_irlba()} function}
+\item{\code{sva}}{Singular value decomposition performed with \code{prcomp_irlba()} function}
 
 \item{\code{metadata}}{A dataframe with:
 \itemize{
 \item row names: ids matching the column names of the gene expression matrix
-\item columns: associated metadata such as cell type, conditions, sample or batch. 
+\item columns: associated metadata such as cell type, conditions, sample, or batch. 
 }}
+
+\item{\code{trainData}}{Training gene expression data}
 
 \item{\code{expVar}}{Explained variance by each principoal component}
 
@@ -36,6 +38,10 @@ This column contains the cumulative variance explained across the ranked princip
 
 \item{\code{train}}{A list with all trained models using the \code{caret} package. Each model correspond to a cell type}
 
-\item{\code{pseudo}}{TRUE of a \code{log2(data + 1)} transformation was performed before performing the PCA}
+\item{\code{projection}}{A matrix containing the prediction data projection}
+
+\item{\code{predictions}}{A data frame with the prediction results containing probabilities for each class}
+
+\item{\code{pseudo}}{TRUE if a \code{log2(data + 1)} transformation was performed before performing the PCA}
 }}
 

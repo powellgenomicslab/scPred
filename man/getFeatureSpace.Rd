@@ -8,7 +8,7 @@ getFeatureSpace(object, pVar, varLim = 0.01, correction = "fdr",
   sig = 0.05)
 }
 \arguments{
-\item{object}{An \code{scPred} object}
+\item{object}{An \code{scPred} or \code{seurat} object}
 
 \item{pVar}{Prediction variable corresponding to a column in \code{metadata} slot}
 
@@ -19,7 +19,7 @@ getFeatureSpace(object, pVar, varLim = 0.01, correction = "fdr",
 \item{sig}{Significance level to determine principal components explaining class identity}
 }
 \value{
-A \code{scPred} object with two additional filled slots:
+An \code{scPred} object with two additional filled slots:
 \itemize{
 \item \code{features}: A data frame with significant principal components the following information:
 \itemize{

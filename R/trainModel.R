@@ -6,7 +6,7 @@
 #' https://topepo.github.io/caret/available-models.html
 #' Default: support vector machine with polynomial kernel
 #' @param resampleMethod Resample model used in \code{trainControl} function. Default: K-fold cross validation 
-#' @param seed Numeric seed for resample model
+#' @param seed Numeric seed for resample method
 #' @param number Number of iterations for resample method. See \code{trainControl} function
 #' @param returnData If \code{TRUE}, training data is returned
 #' @param savePredictions an indicator of how much of the hold-out predictions for each resample should be 
@@ -16,6 +16,7 @@
 #' @return A list of  \code{train} objects for each cell class (e.g. cell type). See \code{train} function for details.
 #' @keywords train, model
 #' @importFrom methods is
+#' @importFrom pbapply pblapply
 #' @export
 #' @author
 #' José Alquicira Hernández
@@ -37,32 +38,45 @@ trainModel <- function(object,
                        model = "svmRadial",
                        resampleMethod = "cv",
                        number = 10,
-                       seed = NULL,
+                       seed = 66,
                        metric = c("ROC", "Accuracy", "Kappa"),
                        returnData = TRUE,
                        savePredictions = "final",
                        allowParallel = TRUE){
   
-  # Validate class
+
+  # Validations -------------------------------------------------------------
+  
+  # Check class
   if(!is(object, "scPred")){
     stop("object must be 'scPred'")
   }
   
+  # Check metadata
   if(nrow(object@metadata) == 0){
     stop("No metadata has been assigned to object")
   }
   
+  # Validate if features have been determined
   if(length(object@features) == 0){
-    stop("No features have been determined. Use 'getInformativePCs' function")
+    stop("No features have been determined. Use 'getFeatureSpace()' function")
   }
   
   
-  classes <- metadata(object)[[object@pVar]]
+  classes <- names(object@features)
+  
+  if(is.null(classes)){
+    stop("Prediction variable is not contained in metadata")
+  }
+  
+  
   metric <- match.arg(metric)
   
-  if(length(levels(classes)) == 2){
-    modelsRes <-  .trainModelByClass(levels(classes)[1],
-                                     classes,
+  
+  # Train a prediction model for each class
+
+  if(length(classes) == 2){
+    modelsRes <-  .trainModel(classes[1],
                                      object,
                                      model,
                                      resampleMethod,
@@ -73,12 +87,11 @@ trainModel <- function(object,
                                      savePredictions,
                                      allowParallel)
     modelsRes <- list(modelsRes)
-    names(modelsRes) <- levels(classes)[1]
+    names(modelsRes) <- classes[1]
     
     
   }else{
-    modelsRes <- lapply(levels(classes), .trainModelByClass,
-                        classes,
+    modelsRes <- pblapply(classes, .trainModel,
                         object,
                         model,
                         resampleMethod,
@@ -86,17 +99,21 @@ trainModel <- function(object,
                         metric,
                         number,
                         returnData,
+<<<<<<< HEAD
                         savePredictions,
                         allowParallel)
     names(modelsRes) <- levels(classes)
+=======
+                        savePredictions)
+    names(modelsRes) <- classes
+>>>>>>> development
   }
   
   object@train <- modelsRes
   object
 }
 
-.trainModelByClass <- function(positiveClass,
-                               classes,
+.trainModel <- function(positiveClass,
                                object,
                                model,
                                resampleMethod,
@@ -111,17 +128,16 @@ trainModel <- function(object,
     message("No informative principal components were identified for class: ", positiveClass)
   }
   
-  
-  features <- getPCA(object)[, as.character(object@features[[positiveClass]]$PC), drop = FALSE]
-  
+  namesPC <- as.character(object@features[[positiveClass]]$PC)
+  features <- subsetMatrix(getPCA(object), namesPC)
+
   
   # Get and refactor response variable according to positive class
   # According to twoClassSummary() documentation
   ## "If assumes that the first level of the factor variables corresponds to a relevant result 
   ## but the lev argument can be used to change this."
-  
-  i <- classes != positiveClass
-  response <- as.character(classes)
+  response <-  as.character(object@metadata[[object@pVar]])
+  i <- response != positiveClass
   response[i] <- "other"
   response <- factor(response, levels = c(positiveClass, "other"))
   
@@ -145,7 +161,7 @@ trainModel <- function(object,
                            allowParallel = allowParallel)
   }
   
-  fit <- train(x = as.matrix(features), 
+  fit <- train(x = features, 
                y = response, 
                method = model,
                metric = metric,

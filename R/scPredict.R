@@ -3,10 +3,17 @@
 #' @param object An \code{scPred} object with metadata and informative features and trained model(s).
 #' @param newData A matrix object with cells as rows and genes (loci) as columns
 #' @param threshold Threshold used for probabilities to classify cells into classes
+#' @param returnProj Set to TRUE to return computed projection
+#' @param returnData Returns prediction data (\code{newData})
+#' @param informative Set to TRUE to project only informative components
+#' @param useProj If a projection matrix is already stored in the \code{scPred} object, perform predictions using this matrix as input
 #' @return A data frame with prediction probabilities associated to each class and a \code{predClass} column, 
 #' indicating the classification based on the provided threshold
 #' @keywords prediction, new, test, validation
 #' @importFrom methods is
+#' @importFrom tibble rownames_to_column column_to_rownames
+#' @importFrom dplyr mutate select 
+#' @importFrom pbapply pblapply
 #' @export
 #' @author
 #' José Alquicira Hernández
@@ -20,28 +27,61 @@
 
 
 
-scPredict <- function(object, newData, threshold = 0.9){
+scPredict <- function(object, newData = NULL, threshold = 0.9, 
+                      returnProj = TRUE, returnData = FALSE, informative = TRUE,
+                      useProj = FALSE){
   
   if(!is(object, "scPred")){
     stop("'object' must be of class 'scPred'")
   }
   
-  if(!(is(newData, "matrix") | is(newData, "data.frame"))){
-    stop("'predData' object must be a dataframe or a matrix")
+  if(!length(object@train)){
+    stop("No models have been trained!")
   }
   
-  if(length(object@features) == 0){
+  if(is(newData, "seurat")){
+    
+    newData <- as.matrix(newData@data)
+    
+  }
+   
+  if(is.null(newData) & (nrow(object@projection) == 0)){ # Neither newData nor projection
+    
+    stop("No newData or pre-computed projection")
+    
+  }else if(is.null(newData) & nrow(object@projection)){ # No newData and projection
+    
+    message("Using projection stored in object as prediction set")
+    useProj <- TRUE
+    
+  }else if(!is.null(newData) & nrow(object@projection)){ # NewData and projection
+    
+    if (!is(newData, "matrix")){
+      
+      stop("'newData' object must be a matrix or seurat object")
+      
+    }
+    message("newData provided and projection stored in scPred object. Set 'useProj = TRUE' to override default projection execution")
+    
+  }
+  
+  if(!length(object@features)){
     stop("No informative principal components have been obtained yet.\nSee getInformativePCs() function")
   }
   
-  projection <- projectNewData(object = object,
-                               newData = newData,
-                               informative = TRUE)
-  
+  if(!useProj){
+    projection <- projectNewData(object = object,
+                                 newData = newData,
+                                 informative = informative, 
+                                 seurat = if(!is.null(object@svd$seurat)){TRUE}else{FALSE})
+  }else{
+    projection <- object@projection
+  }
   
   classes <- names(object@features)
   
-  res <- lapply(classes, .predictClass, object, projection)
+  message("Predicting cell types")
+  res <- pblapply(classes, .predictClass, object, projection)
   names(res) <- levels(classes)
   res <- as.data.frame(res)
   row.names(res) <- rownames(projection)
@@ -75,7 +115,22 @@ scPredict <- function(object, newData, threshold = 0.9){
     select(-probability, -prePrediction) %>% 
     column_to_rownames("id") -> finalPrediction
   
-  return(finalPrediction)
+  object@predictions <- finalPrediction
+  
+  if(returnProj & !useProj){
+    object@projection <- projection
+  }
+  
+  
+  if(returnData & !is.null(newData)){
+    if(object@pseudo){
+      object@predData <- log2(newData + 1)
+    }else{
+      object@predData <- newData
+    }
+  }
+  
+  return(object)
   
   
 }
@@ -84,13 +139,13 @@ scPredict <- function(object, newData, threshold = 0.9){
 .predictClass <- function(positiveClass, object, projection){
   # Get features for positive class
   featureList <- object@features[[positiveClass]]
-  features <- projection[,as.character(featureList$PC)]
-  
+  features <- subsetMatrix(projection, as.character(featureList$PC))
+
   # Perform presictions
   prediction <- predict(object@train[[positiveClass]], 
                         newdata = features, 
                         type = "prob")
   
-  prediction[,1, drop = FALSE]
+  prediction[ , 1, drop = FALSE]
   
 }

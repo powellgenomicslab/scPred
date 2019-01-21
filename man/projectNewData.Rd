@@ -4,14 +4,17 @@
 \alias{projectNewData}
 \title{Project new data onto training principal components}
 \usage{
-projectNewData(object, newData, informative = TRUE)
+projectNewData(object, newData, informative = TRUE, seurat = FALSE,
+  returnLoadings = FALSE)
 }
 \arguments{
 \item{object}{An \code{scPred} object}
 
-\item{newData}{A matrix object with cells as rows and genes (loci) as columns}
+\item{newData}{A matrix object with genes as rows and cells as columns}
 
 \item{informative}{Perfoms rotation using only informative principal components}
+
+\item{seurat}{Performs Seurat scaling?}
 }
 \value{
 A data frame with the projection
@@ -22,7 +25,7 @@ Projects a new dataset into the principal components obtained from a training da
 \examples{
 
 # Prjects training discriminant principal axes onto test dataset. 
-## By settint "informative = FALSE", all principal components
+## By setting "informative = FALSE", all principal components
 ## (including non-informative) are projected.
 
 projection <- projectNewData(object, expTest, informative = FALSE)

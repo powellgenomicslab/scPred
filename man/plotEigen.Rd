@@ -4,8 +4,19 @@
 \alias{plotEigen}
 \title{Plot PCA}
 \usage{
-plotEigen(object, group = NULL, pc = c(1, 2), geom = c("points",
-  "density_2d", "both"), marginal = TRUE)
+plotEigen(object, group = NULL, pc1 = 1, pc2 = 2, predGroup = NULL,
+  geom = c("points", "density_2d", "both"), plotPred = TRUE)
+}
+\arguments{
+\item{object}{\code{scPred} object}
+
+\item{group}{Groupping variable included in metadata}
+
+\item{predGroup}{Equivalent of \code{group} parameter for prediction dataset. Projection and predMeta slots must be filled}
+
+\item{geom}{ggplot geom}
+
+\item{pc}{Vector of length 2 with the dimensions to plot}
 }
 \description{
 Plots PCA with raw results or group by a variable

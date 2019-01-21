@@ -1,12 +1,12 @@
 #' @title Get informative principal components
 #' @description Given a prediction variable, finds a feature set of class-informative principal components. 
 #' A Wilcoxon rank sum test is used to determine a difference between the score distributions of cell classes from the prediction variable.
-#' @param object An \code{scPred} object
+#' @param object An \code{scPred} or \code{seurat} object
 #' @param pVar Prediction variable corresponding to a column in \code{metadata} slot
 #' @param varLim Threshold to filter principal components based on variance explained.
 #' @param correction Multiple testing correction method. Default: false discovery rate. See \code{p.adjust} function 
 #' @param sig Significance level to determine principal components explaining class identity
-#' @return A \code{scPred} object with two additional filled slots:
+#' @return An \code{scPred} object with two additional filled slots:
 #' \itemize{
 #' \item \code{features}: A data frame with significant principal components the following information:
 #' \itemize{
@@ -22,6 +22,10 @@
 #' }
 #' @keywords informative, significant, features
 #' @importFrom methods is
+#' @importFrom tidyr gather
+#' @importFrom magrittr "%>%"
+#' @importFrom dplyr mutate arrange filter
+#' @importFrom pbapply pblapply
 #' @export
 #' @author
 #' José Alquicira Hernández
@@ -47,64 +51,170 @@ getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig
   
   # Validations -------------------------------------------------------------
   
-  if(!is(object, "scPred")){
-    stop("Invalid class for object: must be 'scPred'")
+  if(!is(object, "scPred") & !is(object, "seurat")){
+    stop("Invalid class for object: must be 'scPred' or 'seurat'")
   }
   
   if(!any(correction %in% stats::p.adjust.methods)){
     stop("Invalid multiple testing correction method. See ?p.adjust function")
   }
   
-  classes <- metadata(object)[[pVar]]
+  if(is(object, "scPred")){
+    classes <- metadata(object)[[pVar]]
+  }else{
+    classes <- object@meta.data[[pVar]]
+  }
+  
+  if(is.null(classes)){
+    stop("Prediction variable is not stored in metadata slot")
+  }
   
   if(!is.factor(classes)){
-    stop("Prediction variable must be a factor object")
-  }else if(!all(levels(classes) %in% unique(classes))){
-    stop("Not all levels are included in prediction variable")
-  }else if(length(levels(classes)) == 1){
-    stop("No training is possible with only one classification class. Check prediction variable")
+    message("Transforming prediction variable to factor object...")
+    classes <- as.factor(classes)
   }
+  
   
   
   # Filter principal components by variance ---------------------------------
   
-  i <- object@expVar > varLim
-  pca <- getPCA(object)[,i]
-  
-  if(length(levels(classes)) == 2){
-    message("First factor level in '", pVar, "' metadata column considered as positive class")
-    res <- .getPcByClass(levels(classes)[1], object, classes, pca, correction, sig)
-    res <- list(res)
-    names(res) <- levels(classes)[1]
-  }else{
-    res <- lapply(levels(classes), .getPcByClass, object, classes, pca, correction, sig)
-    names(res) <- levels(classes)
+  if(is(object, "scPred")){ # scPred object
+    
+    # Get PCA
+    i <- object@expVar > varLim
+    pca <- getPCA(object)[,i]
+    
+    # Get variance explained
+    expVar <- object@expVar
+    
+  }else{ # seurat object
+    
+    # Check if a PCA has been computed
+    if(!("pca" %in% names(object@dr))){
+      stop("No PCA has been computet yet. See RunPCA() function")
+    }
+    
+    # Check if available was normalized
+    if (!("NormalizeData" %in% names(object@calc.params))) {
+      warning("NormalizeData() has not been run. Normalization is required to stabilize the variance.\n")
+    }
+    
+    
+    # Get PCA
+    i <- object@dr[["pca"]]@sdev > varLim
+    pca <- object@dr[["pca"]]@cell.embeddings[,i]
+    
+    # Get variance explained
+    expVar <- object@dr[["pca"]]@sdev**2/sum(object@dr[["pca"]]@sdev**2)
+    names(expVar) <- colnames(pca)
+    
+    # Create svd slot for scPred object
+    svd <- list(x = pca, 
+                rotation = object@dr$pca@gene.loadings, 
+                sdev = object@dr$pca@sdev, 
+                center = rowMeans(as.matrix(object@data)), 
+                scale = apply(as.matrix(object@data), 1, sd),
+                seurat = TRUE)
+    
+    # Create scPred object
+    object <- new("scPred", 
+                  svd = svd, 
+                  metadata = object@meta.data,
+                  expVar = expVar, 
+                  pseudo = FALSE, 
+                  trainData = as.matrix(object@data))
   }
   
+  
+  
+  
+  uniqueClasses <- unique(classes)
+  isValidName <- uniqueClasses == make.names(uniqueClasses)
+  
+  if(!all(isValidName)){
+    
+    invalidClasses <- paste0(uniqueClasses[!isValidName], collapse = "\n")
+    message("Not all the classes are valid R variable names\n")
+    message("The following classes are renamed: \n", invalidClasses)
+    classes <- make.names(classes)
+    classes <- factor(classes, levels = unique(classes))
+    newPvar <- paste0(pVar, ".valid")
+    object@metadata[[newPvar]] <- classes
+    message("\nSee new classes in '", pVar, ".valid' column in metadata:")
+    message(paste0(levels(classes)[!isValidName], collapse = "\n"), "\n")
+    pVar <- newPvar
+  }
+  
+  
+  
+  
+  # Select informative principal components
+  # If only 2 classes are present in prediction variable, train one model for the positive class
+  # The positive class will be the first level of the factor variable
+  
+  if(length(levels(classes)) == 2){
+    
+    message("First factor level in '", pVar, "' metadata column considered as positive class")
+    res <- .getFeatures(levels(classes)[1], expVar, classes, pca, correction, sig)
+    res <- list(res)
+    names(res) <- levels(classes)[1]
+    
+  }else{
+    
+    res <- pblapply(levels(classes), .getFeatures, expVar, classes, pca, correction, sig)
+    names(res) <- levels(classes)
+    
+  }
+  
+  
+  nFeatures <- unlist(lapply(res, nrow))
+  
+  noFeatures <- nFeatures == 0
+  
+  if(any(noFeatures)){
+    
+    warning("\nWarning: No features were found for classes:\n",
+            paste0(names(res)[noFeatures], collapse = "\n"), "\n")
+    res[[names(res)[noFeatures]]] <- NULL
+ 
+  }
+  
+  
+  
+  # Assign feature space to `features` slot
   object@features <- res
+  
+  
+  # Assign prediction variable name
   object@pVar <- pVar
   
-  message("DONE!")
+  message("\nDONE!")
+  
   object
   
 }
 
-.getPcByClass <- function(positiveClass, object, classes, pca, correction, sig){
+.getFeatures <- function(positiveClass, expVar, classes, pca, correction, sig){
   
+  # Set non-positive classes to "other"
   i <- classes != positiveClass
   newClasses <- as.character(classes)
   newClasses[i] <- "other"
   newClasses <- factor(newClasses, levels = c(positiveClass, "other"))
   
+  # Get indices for positive and negative class cells
+  positiveCells <- newClasses == positiveClass
+  negativeCells <- newClasses == "other"
   
-  lapply(pca, function(pc) wilcox.test(pc[newClasses == positiveClass], pc[newClasses == "other"])) %>% 
-    lapply('[[', "p.value") %>% 
+  # Get informative features
+  apply(pca, 2, function(pc) wilcox.test(pc[positiveCells], pc[negativeCells])) %>%
+    lapply('[[', "p.value") %>% # Extract p-values
     as.data.frame() %>% 
-    gather(key = "PC", value = "pValue") %>% 
-    mutate(pValueAdj = p.adjust(pValue, method = correction, n = nrow(.))) %>% 
+    gather(key = "PC", value = "pValue") %>%
+    mutate(pValueAdj = p.adjust(pValue, method = correction, n = nrow(.))) %>% # Perform multiple test correction
     arrange(pValueAdj) %>% 
-    filter(pValueAdj < sig) %>% 
-    mutate(expVar = object@expVar[match(PC, names(object@expVar))]) %>% 
+    filter(pValueAdj < sig) %>% # Filter significant features by p-value
+    mutate(expVar = expVar[match(PC, names(expVar))]) %>% # Get explained variance for each feature
     mutate(PC = factor(PC, levels = PC), cumExpVar = cumsum(expVar)) -> sigPCs
   
   sigPCs
