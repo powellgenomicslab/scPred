@@ -13,14 +13,10 @@ export(getTrainPred)
 export(getTrainResults)
 export(metadata)
 export(plotEigen)
-<<<<<<< HEAD
-export(plotLoadings)
-=======
 export(plotExp)
 export(plotLoadings)
 export(plotPredProbs)
 export(plotTrainProbs)
->>>>>>> development
 export(projectNewData)
 export(scPredict)
 export(trainModel)
@@ -32,13 +28,9 @@ exportMethods(getPCA)
 exportMethods(getPredictions)
 exportMethods(getTrainResults)
 exportMethods(plotEigen)
-<<<<<<< HEAD
-exportMethods(plotLoadings)
-=======
 exportMethods(plotExp)
 exportMethods(plotLoadings)
 exportMethods(plotPredProbs)
->>>>>>> development
 exportMethods(show)
 importFrom(Seurat,SetDimReduction)
 importFrom(cowplot,get_legend)
