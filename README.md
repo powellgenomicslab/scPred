@@ -8,7 +8,7 @@ For more details see our pre-print on **bioRxiv**:
 
 [scPred: Single cell prediction using singular value decomposition and machine learning classification](https://www.biorxiv.org/content/early/2018/07/15/369538)
 
-This [introduction to scPred](https://joseah.github.io/scPred_docs/) shows a basic workflow for cell type prediction.
+This [introduction to scPred](https://joseah.github.io/post/introduction-to-scpred/) shows a basic workflow for cell type prediction.
 
 # Authors
 
