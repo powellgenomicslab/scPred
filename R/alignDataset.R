@@ -6,7 +6,7 @@
 #' after running NormalizeData() function
 #' @return A matrix with the aligned projection
 #' @author José Alquicira Hernández
-#' @importFrom Seurat SetDimReduction
+#' @importFrom Seurat CreateDimReducObject
 #' @export
 
 alignDataset <- function(object, prediction){
@@ -71,17 +71,15 @@ alignDataset <- function(object, prediction){
   new.type <- "pca.scpred"
   
   # Set dimension reduction slot
-  align <- SetDimReduction(object = align, 
-                                     reduction.type = new.type, 
-                                     slot = "cell.embeddings", 
-                                     new.data = embeddings)
-  align <- SetDimReduction(object = align, 
-                                    reduction.type = new.type, 
-                                    slot = "gene.loadings", 
-                                    new.data = res$loadings)
+
   
-  align <- SetDimReduction(object = align, reduction.type = new.type, 
-                                     slot = "key", new.data = "PC")
+  align <- CreateDimReducObject(
+    embeddings = embeddings,
+    loadings = res$loadings,
+    assay = new.type,
+    stdev = sdev,
+    key = "PC"
+  )
   
   # Add merged data to align object
   align@data <- trainPred
