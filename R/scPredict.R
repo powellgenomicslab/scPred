@@ -39,11 +39,6 @@ scPredict <- function(object, newData = NULL, threshold = 0.9,
     stop("No models have been trained!")
   }
   
-  if(is(newData, "seurat")){
-    
-    newData <- as.matrix(newData@data)
-    
-  }
    
   if(is.null(newData) & (nrow(object@projection) == 0)){ # Neither newData nor projection
     
@@ -86,18 +81,18 @@ scPredict <- function(object, newData = NULL, threshold = 0.9,
   res <- as.data.frame(res)
   row.names(res) <- rownames(projection)
   
-  # if(length(classes) == 1){
-  #   classes <- levels(object@metadata[[object@pVar]])
-  #   res[[classes[2]]] <- 1 - res[[classes[1]]]
-  #   
-  #   res$class <- ifelse(res[,1] > threshold, classes[1], 
-  #                       ifelse(res[,2] > threshold, classes[2], "unassigned")) %>% 
-  #     as.factor()
-  #   
-  #   res[,2] <- NULL 
-  #   names(res) <- c("probability", "class")
-  #   return(res)
-  # }
+  if(length(classes) == 1){
+    classes <- levels(object@metadata[[object@pVar]])
+    res[[classes[2]]] <- 1 - res[[classes[1]]]
+
+    res$class <- ifelse(res[,1] > threshold, classes[1],
+                        ifelse(res[,2] > threshold, classes[2], "unassigned")) %>%
+      as.factor()
+
+    res[,2] <- NULL
+    names(res) <- c("probability", "class")
+    return(res)
+  }
   
   i <- apply(res, 1, which.max)
   
