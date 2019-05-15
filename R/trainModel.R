@@ -34,39 +34,51 @@
 
 
 trainModel <- function(object,
-model = "svmRadial",
-resampleMethod = "cv",
-number = 10,
-seed = 66,
-metric = c("ROC", "Accuracy", "Kappa"),
-returnData = TRUE,
-savePredictions = "final"){
+                       model = "svmRadial",
+                       resampleMethod = "cv",
+                       number = 5,
+                       seed = 66,
+                       metric = c("PR", "ROC", "Accuracy", "Kappa"),
+                       imbalance = 0.1,
+                       returnData = FALSE,
+                       savePredictions = "final",
+                       allowParallel = FALSE){
     
     
     # Validations -------------------------------------------------------------
     
     # Check class
-    if(!is(object, "scPred")){
-        stop("object must be 'scPred'")
+    if(!any(is(object, "scPred") | is(object, "Seurat"))){
+        stop("object must be 'scPred' or 'Seurat'")
     }
     
-    # Check metadata
-    if(nrow(object@metadata) == 0){
-        stop("No metadata has been assigned to object")
+    if(is(object, "scPred")){
+        
+        # Check metadata
+        if(nrow(object@metadata) == 0){
+            stop("No metadata has been assigned to object")
+        }
+        
+        # Validate if features have been determined
+        if(length(object@features) == 0){
+            stop("No features have been determined. Use 'getFeatureSpace()' function")
+        }
+        
+        
+        classes <- names(object@features)
+        
+        if(is.null(classes)){
+            stop("Prediction variable is not contained in metadata")
+        }
+        
+    }else{
+        
+        if(is.null(object@misc$scPred)){
+            stop("No features have been determined. Use 'getFeatureSpace()' function")
+        }
+        classes <- names(object@misc$scPred$features)
+        
     }
-    
-    # Validate if features have been determined
-    if(length(object@features) == 0){
-        stop("No features have been determined. Use 'getFeatureSpace()' function")
-    }
-    
-    
-    classes <- names(object@features)
-    
-    if(is.null(classes)){
-        stop("Prediction variable is not contained in metadata")
-    }
-    
     
     metric <- match.arg(metric)
     
@@ -75,58 +87,92 @@ savePredictions = "final"){
     
     if(length(classes) == 2){
         modelsRes <-  .trainModel(classes[1],
-        object,
-        model,
-        resampleMethod,
-        seed,
-        metric,
-        number,
-        returnData,
-        savePredictions)
+                                  object,
+                                  model,
+                                  resampleMethod,
+                                  seed,
+                                  metric,
+                                  imbalance,
+                                  number,
+                                  returnData,
+                                  savePredictions,
+                                  allowParallel)
         modelsRes <- list(modelsRes)
         names(modelsRes) <- classes[1]
         
         
     }else{
         modelsRes <- pblapply(classes, .trainModel,
-        object,
-        model,
-        resampleMethod,
-        seed,
-        metric,
-        number,
-        returnData,
-        savePredictions)
+                              object,
+                              model,
+                              resampleMethod,
+                              seed,
+                              metric,
+                              imbalance,
+                              number,
+                              returnData,
+                              savePredictions,
+                              allowParallel)
         names(modelsRes) <- classes
     }
     
-    object@train <- modelsRes
+    if(inherits(object, "scPred")){
+        object@train <- modelsRes
+    }else{
+        object@misc$scPred$train <- modelsRes
+    }
     object
 }
 
 .trainModel <- function(positiveClass,
-object,
-model,
-resampleMethod,
-seed,
-metric,
-number,
-returnData,
-savePredictions){
+                        object,
+                        model,
+                        resampleMethod,
+                        seed,
+                        metric,
+                        imbalance,
+                        number,
+                        returnData,
+                        savePredictions, 
+                        allowParallel){
     
-    if(nrow(object@features[[positiveClass]]) == 0){
-        message("No informative principal components were identified for class: ", positiveClass)
+    
+    if(is(object, "scPred")){
+        
+        if(nrow(object@features[[positiveClass]]) == 0){
+            message("No informative principal components were identified for class: ", positiveClass)
+        }
+        
+        namesPC <- as.character(object@features[[positiveClass]]$PC)
+        features <- subsetMatrix(getPCA(object), namesPC)
+        
+        
+        # Get and refactor response variable according to positive class
+        # According to twoClassSummary() documentation
+        ## "If assumes that the first level of the factor variables corresponds to a relevant result
+        ## but the lev argument can be used to change this."
+        response <-  as.character(object@metadata[[object@pVar]])
+
+        
+    }else{
+        
+        if(nrow(object@misc$scPred$features[[positiveClass]]) == 0){
+            message("No informative principal components were identified for class: ", positiveClass)
+        }
+        
+        namesPC <- as.character(object@misc$scPred$features[[positiveClass]]$PC)
+        features <- subsetMatrix(Embeddings(object), namesPC)
+        response <-  as.character(object[[object@misc$scPred$pVar, drop = TRUE]])
+        
     }
     
-    namesPC <- as.character(object@features[[positiveClass]]$PC)
-    features <- subsetMatrix(getPCA(object), namesPC)
+    classWeight <- table(response)/ length(response)
+    
+    if(classWeight[1] < imbalance){
+        metric <- "PR"
+    }
     
     
-    # Get and refactor response variable according to positive class
-    # According to twoClassSummary() documentation
-    ## "If assumes that the first level of the factor variables corresponds to a relevant result
-    ## but the lev argument can be used to change this."
-    response <-  as.character(object@metadata[[object@pVar]])
     i <- response != positiveClass
     response[i] <- "other"
     response <- factor(response, levels = c(positiveClass, "other"))
@@ -136,26 +182,49 @@ savePredictions){
     
     if(metric == "ROC"){
         trCtrl <- trainControl(classProbs = TRUE,
-        method = resampleMethod,
-        number = number,
-        summaryFunction = twoClassSummary,
-        returnData = returnData,
-        savePredictions = savePredictions,
-        allowParallel = FALSE)
+                               method = resampleMethod,
+                               number = number,
+                               summaryFunction = twoClassSummary,
+                               returnData = returnData,
+                               savePredictions = savePredictions,
+                               allowParallel = allowParallel)
+        
+    }else if(metric == "PR"){
+        trCtrl <- trainControl(classProbs = TRUE,
+                               method = resampleMethod,
+                               number = number,
+                               summaryFunction = prSummary,
+                               returnData = returnData,
+                               savePredictions = savePredictions,
+                               allowParallel = allowParallel)
+        metric <- "AUC"
     }else{
         trCtrl <- trainControl(classProbs = TRUE,
-        method = resampleMethod,
-        number = number,
-        returnData = returnData,
-        savePredictions = savePredictions,
-        allowParallel = FALSE)
+                               method = resampleMethod,
+                               number = number,
+                               returnData = returnData,
+                               savePredictions = savePredictions,
+                               allowParallel = allowParallel)
     }
     
+    
+    if(metric == "AUC"){
     fit <- train(x = features,
-    y = response,
-    method = model,
-    metric = metric,
-    trControl = trCtrl)
+                 y = response,
+                 method = "svmRadialWeights",
+                 metric = metric,
+                 trControl = trCtrl,
+                 tuneGrid = expand.grid(sigma = .05,
+                                        C = c(.25, .5, 1),
+                                        Weight = 1:2))
+    }else{
+        fit <- train(x = features,
+                     y = response,
+                     method = model,
+                     metric = metric,
+                     trControl = trCtrl)
+    }
+    
     fit
 }
 
