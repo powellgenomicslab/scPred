@@ -51,8 +51,8 @@ getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig
   
   # Validations -------------------------------------------------------------
   
-  if(!is(object, "scPred") & !is(object, "seurat")){
-    stop("Invalid class for object: must be 'scPred' or 'seurat'")
+  if(!is(object, "scPred") & !is(object, "Seurat")){
+    stop("Invalid class for object: must be 'scPred' or 'Seurat'")
   }
   
   if(!any(correction %in% stats::p.adjust.methods)){
@@ -62,7 +62,7 @@ getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig
   if(is(object, "scPred")){
     classes <- metadata(object)[[pVar]]
   }else{
-    classes <- object@meta.data[[pVar]]
+    classes <- object[[pVar, drop = TRUE]]
   }
   
   if(is.null(classes)){
@@ -73,9 +73,7 @@ getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig
     message("Transforming prediction variable to factor object...")
     classes <- as.factor(classes)
   }
-  
-  
-  
+
   # Filter principal components by variance ---------------------------------
   
   if(is(object, "scPred")){ # scPred object
@@ -90,39 +88,25 @@ getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig
   }else{ # seurat object
     
     # Check if a PCA has been computed
-    if(!("pca" %in% names(object@dr))){
+    if(!("pca" %in% names(object@reductions))){
       stop("No PCA has been computet yet. See RunPCA() function")
     }
     
     # Check if available was normalized
-    if (!("NormalizeData" %in% names(object@calc.params))) {
-      warning("NormalizeData() has not been run. Normalization is required to stabilize the variance.\n")
-    }
+    
+    assay <- DefaultAssay(object)
+    cellEmbeddings <- Embeddings(object)
     
     
-    # Get PCA
-    i <- object@dr[["pca"]]@sdev > varLim
-    pca <- object@dr[["pca"]]@cell.embeddings[,i]
-    
-    # Get variance explained
-    expVar <- object@dr[["pca"]]@sdev**2/sum(object@dr[["pca"]]@sdev**2)
-    names(expVar) <- colnames(pca)
-    
-    # Create svd slot for scPred object
-    svd <- list(x = pca, 
-                rotation = object@dr$pca@gene.loadings, 
-                sdev = object@dr$pca@sdev, 
-                center = rowMeans(as.matrix(object@data)), 
-                scale = apply(as.matrix(object@data), 1, sd),
-                seurat = TRUE)
+    # Subset PCA
+    expVar <- Stdev(object)**2/sum(Stdev(object)**2)
+    names(expVar) <- colnames(Embeddings(object))
+    i <-  expVar > varLim
     
     # Create scPred object
-    object <- new("scPred", 
-                  svd = svd, 
-                  metadata = object@meta.data,
-                  expVar = expVar, 
-                  pseudo = FALSE, 
-                  trainData = as.matrix(object@data))
+    pca <- Embeddings(object)[,i]
+    
+    
   }
   
   
@@ -166,7 +150,7 @@ getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig
     
   }
   
-  
+
   nFeatures <- unlist(lapply(res, nrow))
   
   noFeatures <- nFeatures == 0
@@ -179,16 +163,26 @@ getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig
  
   }
   
+  message("\nDONE!")
   
   
   # Assign feature space to `features` slot
+  if(inherits(object, "Seurat")){
+    
+    # Create scPred object
+    scPredObject <- list(expVar = expVar,
+                  features = res,
+                  pVar = pVar,
+                  pseudo = FALSE)
+    
+    object@misc <- list(scPred = scPredObject)
+    
+  }else{
+  
+  
   object@features <- res
-  
-  
-  # Assign prediction variable name
   object@pVar <- pVar
-  
-  message("\nDONE!")
+  }
   
   object
   
