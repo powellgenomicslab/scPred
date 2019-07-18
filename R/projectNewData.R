@@ -22,8 +22,8 @@
 
 projectNewData <- function(object, newData, informative = TRUE, seurat = FALSE, returnLoadings = FALSE){
   
-  if(!is(newData, "matrix")){
-    stop("'newData' must be a matrix")
+  if(!is(newData, "Matrix")){
+    stop("'newData' must be a sparse Matrix")
   }
   
   if(!is(object, "scPred")){
@@ -63,7 +63,7 @@ projectNewData <- function(object, newData, informative = TRUE, seurat = FALSE, 
                                    center = newCenter, 
                                    scale = newScale))
   }else{
-    newSubScale <- as.matrix(scale(t(newSub), newCenter, newScale))
+    newSubScale <- as.matrix(scale(Matrix::t(newSub), newCenter, newScale))
   }
   
   # Perform linear transformation
