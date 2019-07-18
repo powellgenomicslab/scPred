@@ -15,6 +15,7 @@
 #' @keywords singular value decomposition, svd
 #' @importFrom methods is
 #' @importFrom methods new
+#' @importFrom Matrix Matrix
 #' @export
 #' @author José Alquicira Hernández
 #' @examples 
@@ -91,7 +92,7 @@ eigenDecompose <- function(expData, n = 10, pseudo = TRUE, returnData = TRUE, se
   svd <- svd[c("x", "rotation", "center", "scale", "sdev")]
   
   if(returnData){
-    return(new("scPred", svd = svd, expVar = varianceExplained, pseudo = pseudo, trainData = t(expData)))
+    return(new("scPred", svd = svd, expVar = varianceExplained, pseudo = pseudo, trainData = Matrix(t(expData))))
     
   }else{
     return(new("scPred", svd = svd, expVar = varianceExplained, pseudo = pseudo)) 
