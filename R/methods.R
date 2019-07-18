@@ -26,11 +26,11 @@ setMethod("show", signature("scPred"), function(object) {
         if(length(object@pVar) != 0){
             cat(sprintf("      Prediction variable = %s\n", object@pVar))
             object@metadata[[object@pVar]] %>%
-            table() %>%
-            as.data.frame() %>%
-            column_to_rownames(".") %>%
-            set_colnames("n") %>%
-            print()
+                table() %>%
+                as.data.frame() %>%
+                column_to_rownames(".") %>%
+                `colnames<-`("n") %>%
+                print()
         }
     }
     
@@ -40,10 +40,10 @@ setMethod("show", signature("scPred"), function(object) {
         
         cat("\n- Informative PCs per class\n")
         object@features %>%
-        sapply(nrow) %>%
-        as.data.frame() %>%
-        set_colnames("Features") %>%
-        print()
+            sapply(nrow) %>%
+            as.data.frame() %>%
+            `colnames<-`("Features") %>%
+            print()
         
     }
     
@@ -52,24 +52,22 @@ setMethod("show", signature("scPred"), function(object) {
         cat("\n- Training information\n")
         cat(sprintf("      Model: %s\n", object@train[[1]]$modelInfo$label))
         
-        data.frame(names(object@train))
         
-        getMetrics <- function(x, roc = TRUE){
+        getMetrics <- function(x, metric){
             
             bestModelIndex <- as.integer(rownames(x$bestTune))
             
-            if(roc){
-                round(x$results[bestModelIndex,c("ROC", "Sens", "Spec")], 3)
-            }else{
-                round(x$results[bestModelIndex,c("Accuracy", "Kappa")], 3)
+            if(metric == "ROC"){
+                round(x$results[bestModelIndex, c("ROC", "Sens", "Spec")], 3)
+            }else if(metric == "Accuracy"){
+                round(x$results[bestModelIndex, c("Accuracy", "Kappa")], 3)
+            }else if(metric == "AUC"){
+                round(x$results[bestModelIndex, c("AUC", "Precision", "Recall", "F")], 3)
             }
         }
         
-        if(object@train[[1]]$metric == "ROC"){
-            print(t(sapply(object@train, getMetrics)))
-        }else{
-            print(t(sapply(object@train, getMetrics, roc = FALSE)))
-        }
+        metric <- object@train[[1]]$metric 
+        print(t(sapply(object@train, getMetrics, metric)))
         
     }
     
