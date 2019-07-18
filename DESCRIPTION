@@ -11,7 +11,8 @@ LazyData: true
 Depends:
     irlba,
     caret,
-    kernlab
+    kernlab,
+    MLmetrics
 Imports:
     irlba,
     dplyr,
