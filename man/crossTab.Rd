@@ -15,7 +15,7 @@ crossTab(object, true, pred = NULL, fill = 0, prop = TRUE,
 \item{pred}{Column name in \code{predMeta} slot that corresponds to the predicted classes
 if they  have been assigned independently from the \code{scPredict()} function}
 
-\item{fill}{Value to fill contingency table ff unique cell classes from the true and the 
+\item{fill}{Value to fill contingency table ff unique cell classes from the true and the
 predicted columns do not match.}
 
 \item{prop}{Return proportions or counts? Default: proportions}
