@@ -5,14 +5,15 @@
 \title{Train a prediction model}
 \usage{
 trainModel(object, model = "svmRadial", resampleMethod = "cv",
-  number = 10, seed = 66, metric = c("ROC", "Accuracy", "Kappa"),
-  returnData = TRUE, savePredictions = "final")
+  number = 5, seed = 66, metric = c("ROC", "PR", "Accuracy",
+  "Kappa"), imbalance = 0.1, returnData = FALSE,
+  savePredictions = "final", allowParallel = FALSE)
 }
 \arguments{
-\item{object}{An \code{scPred} object with informative PCs obtained using 
+\item{object}{An \code{scPred} object with informative PCs obtained using
 the \code{getInformativePCs} function}
 
-\item{model}{Classification model supported via \code{caret} package. A list of all models can be found here: 
+\item{model}{Classification model supported via \code{caret} package. A list of all models can be found here:
 https://topepo.github.io/caret/available-models.html
 Default: support vector machine with polynomial kernel}
 
@@ -24,7 +25,7 @@ Default: support vector machine with polynomial kernel}
 
 \item{returnData}{If \code{TRUE}, training data is returned}
 
-\item{savePredictions}{an indicator of how much of the hold-out predictions for each resample should be 
+\item{savePredictions}{an indicator of how much of the hold-out predictions for each resample should be
 saved. Values can be either "all", "final", or "none". A logical value can also be used that convert to
  "all" (for true) or "none" (for false). "final" saves the predictions for the optimal tuning parameters.}
 }
@@ -40,8 +41,8 @@ Trains a prediction model from an \code{scPred} object
 ## A numeric seed is provided for the K-fold cross validation
 ## The metric ROC is used to select the best tuned model. "Accuracy" and "Kappa" may be used too.
 
-object <- trainModel(object = object, 
-                     seed = 1234, 
+object <- trainModel(object = object,
+                     seed = 1234,
                      metric = "ROC")
 
 }
