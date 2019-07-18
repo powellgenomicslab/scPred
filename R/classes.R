@@ -32,8 +32,8 @@
 
 setClass("scPred", representation(svd = "list",
                                     metadata = "data.frame",
-                                    trainData = "matrix",
-                                    predData = "matrix",
+                                    trainData = "dgCMatrix",
+                                    predData = "dgCMatrix",
                                     expVar = "numeric",
                                     pVar = "character",
                                     features = "list",
