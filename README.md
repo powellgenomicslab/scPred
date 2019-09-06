@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/206724827.svg)](https://zenodo.org/badge/latestdoi/206724827)
+
 # scPred: Single cell prediction using singular value decomposition and machine learning classification
 
 
