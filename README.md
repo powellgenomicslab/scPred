@@ -6,7 +6,7 @@
 `scPred` is a general method to predict cell types based on variance structure decomposition.
 It selects the most cell type-informative principal components from a dataset and trains a prediction model for each cell type. The principal training axes are projected onto the test dataset to obtain the PCs scores for the test dataset and the trained model(s) is/are used to classify single cells.
 
-For more details see our pre-print on **bioRxiv**:
+For more details see our paper in **Genome Biology**:
 
 [scPred: accurate supervised method for cell-type classification from single-cell RNA-seq data](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-019-1862-5)
 
