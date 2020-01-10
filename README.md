@@ -1,6 +1,6 @@
 [![DOI](https://zenodo.org/badge/206724827.svg)](https://zenodo.org/badge/latestdoi/206724827)
 
-# scPred: Single cell prediction using singular value decomposition and machine learning classification
+# scPred: accurate supervised method for cell-type classification from single-cell RNA-seq data
 
 
 `scPred` is a general method to predict cell types based on variance structure decomposition.
@@ -8,12 +8,6 @@ It selects the most cell type-informative principal components from a dataset an
 
 For more details see our pre-print on **bioRxiv**:
 
-[scPred: Single cell prediction using singular value decomposition and machine learning classification](https://www.biorxiv.org/content/early/2018/07/15/369538)
+[scPred: accurate supervised method for cell-type classification from single-cell RNA-seq data](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-019-1862-5)
 
 This [introduction to scPred](https://joseah.github.io/post/introduction-to-scpred/) shows a basic workflow for cell type prediction.
-
-# Authors
-
-- [José Alquicira-Hernández](https://graduate-school.uq.edu.au/profile/530/jose)
-- [Quan Nguyen](https://imb.uq.edu.au/profile/1672/quan-nguyen)
-- [Joseph E Powell](https://qbi.uq.edu.au/profile/469/joseph-powell)
