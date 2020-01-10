@@ -48,7 +48,7 @@ plotTrainProbs <- function(object, ...){
       ylab("Number of cells") +
       labs(fill = "Prediction") +
       scale_fill_manual(values = c("#1874CD", "#EE2C2C")) +
-      theme_bw()
+      theme_classic()
     
   }
   

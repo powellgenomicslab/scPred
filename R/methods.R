@@ -284,7 +284,7 @@ plotPred = TRUE){
     }
     p <- p +
     scale_color_brewer(palette = "Set1") +
-    theme_bw()
+    theme_classic()
     
     if(any("Prediction" == pcaAll$dataset) & plotPred){
         p <- p + facet_wrap(~dataset)
@@ -384,7 +384,7 @@ setMethod("plotLoadings", signature("scPred"), function(object, pc = 1, n = 10){
     geom_segment(aes_string(xend = "gene", yend = mean(top[[pc]]))) +
     coord_flip() +
     scale_color_brewer(palette = "Set1") +
-    theme_bw() +
+    theme_classic() +
     theme(legend.position = "none")
     
     
@@ -520,7 +520,7 @@ setMethod("plotExp", signature("scPred"), function(object, gene, pc = c(1,2), lo
     geom_point(aes(color = gene)) +
     scale_color_gradient(low = low, high = high) +
     ggtitle(gene) +
-    theme_bw() -> p
+    theme_classic() -> p
     
     if(any("Prediction" == pcaAll$dataset)){
         p <- p + facet_wrap(~dataset)
@@ -732,5 +732,6 @@ setMethod("plotPredProbs", signature("scPred"), function(object, facet = NULL) {
     scale_fill_manual(values = getPalette(n)) +
     theme_bw() +
     xlab("Probability") +
-    ylab("Number of cells")
+    ylab("Number of cells") +
+    theme_classic()
 })
