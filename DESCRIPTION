@@ -23,7 +23,8 @@ Imports:
     pROC,
     ggplot2,
     tibble,
-    pbapply
+    pbapply,
+    cowplot
 VignetteBuilder: knitr
 RoxygenNote: 6.1.1
 Suggests: Seurat
