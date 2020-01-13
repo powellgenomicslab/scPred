@@ -6,8 +6,13 @@
 #' https://topepo.github.io/caret/available-models.html
 #' Default: support vector machine with polynomial kernel
 #' @param resampleMethod Resample model used in \code{trainControl} function. Default: K-fold cross validation
-#' @param seed Numeric seed for resample method
 #' @param number Number of iterations for resample method. See \code{trainControl} function
+#' @param seed Numeric seed for resample method
+#' @param metric Performance metric to be used to select best model: `ROC` (area under the ROC curve), 
+#' `PR` (area under the precision-recall curve), `Accuracy`, and `Kappa`
+#' @param imbalance Proportion of cell type compositions to be considered as an imbalance issue. By default,
+#' if a cell type is only present in 0.1 (10%) or less from the whole population, scPred will attempt to 
+#' train a weighted SVM to account for class imbalance. Set to `1` to avoid this step
 #' @param returnData If \code{TRUE}, training data is returned
 #' @param savePredictions an indicator of how much of the hold-out predictions for each resample should be
 #' saved. Values can be either "all", "final", or "none". A logical value can also be used that convert to
@@ -168,8 +173,9 @@ trainModel <- function(object,
     
     classWeight <- table(response)/ length(response)
     
-    if(classWeight[1] < imbalance){
+    if(any(classWeight < imbalance)){
         metric <- "PR"
+        model <- "svmRadialWeights"
     }
     
     
