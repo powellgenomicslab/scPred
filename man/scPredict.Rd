@@ -4,13 +4,20 @@
 \alias{scPredict}
 \title{Predict cell classes from a new dataset using a trained model}
 \usage{
-scPredict(object, newData = NULL, threshold = 0.9, returnProj = TRUE,
-  returnData = FALSE, informative = TRUE, useProj = FALSE)
+scPredict(
+  object,
+  newData = NULL,
+  threshold = 0.9,
+  returnProj = TRUE,
+  returnData = FALSE,
+  informative = TRUE,
+  useProj = FALSE
+)
 }
 \arguments{
 \item{object}{An \code{scPred} object with metadata and informative features and trained model(s).}
 
-\item{newData}{A matrix object with cells as rows and genes (loci) as columns}
+\item{newData}{A matrix object with genes (loci) as rows and cells as columns}
 
 \item{threshold}{Threshold used for probabilities to classify cells into classes}
 

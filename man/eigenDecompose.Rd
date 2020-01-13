@@ -4,8 +4,7 @@
 \alias{eigenDecompose}
 \title{Eigendecompose gene expression matrix}
 \usage{
-eigenDecompose(expData, n = 10, pseudo = TRUE, returnData = TRUE,
-  seed = 66)
+eigenDecompose(expData, n = 10, pseudo = TRUE, returnData = TRUE, seed = 66)
 }
 \arguments{
 \item{expData}{A matrix object with genes as rows and cells as columns. Unique row names for genes must be provided}

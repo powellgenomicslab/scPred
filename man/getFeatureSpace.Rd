@@ -4,8 +4,7 @@
 \alias{getFeatureSpace}
 \title{Get informative principal components}
 \usage{
-getFeatureSpace(object, pVar, varLim = 0.01, correction = "fdr",
-  sig = 0.05)
+getFeatureSpace(object, pVar, varLim = 0.01, correction = "fdr", sig = 0.05)
 }
 \arguments{
 \item{object}{An \code{scPred} or \code{seurat} object}

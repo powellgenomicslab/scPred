@@ -4,10 +4,18 @@
 \alias{trainModel}
 \title{Train a prediction model}
 \usage{
-trainModel(object, model = "svmRadial", resampleMethod = "cv",
-  number = 5, seed = 66, metric = c("ROC", "PR", "Accuracy",
-  "Kappa"), imbalance = 0.1, returnData = FALSE,
-  savePredictions = "final", allowParallel = FALSE)
+trainModel(
+  object,
+  model = "svmRadial",
+  resampleMethod = "cv",
+  number = 5,
+  seed = 66,
+  metric = c("ROC", "PR", "Accuracy", "Kappa"),
+  imbalance = 0.1,
+  returnData = FALSE,
+  savePredictions = "final",
+  allowParallel = FALSE
+)
 }
 \arguments{
 \item{object}{An \code{scPred} object with informative PCs obtained using

@@ -4,8 +4,13 @@
 \alias{projectNewData}
 \title{Project new data onto training principal components}
 \usage{
-projectNewData(object, newData, informative = TRUE, seurat = FALSE,
-  returnLoadings = FALSE)
+projectNewData(
+  object,
+  newData,
+  informative = TRUE,
+  seurat = FALSE,
+  returnLoadings = FALSE
+)
 }
 \arguments{
 \item{object}{An \code{scPred} object}

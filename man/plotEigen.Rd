@@ -4,8 +4,15 @@
 \alias{plotEigen}
 \title{Plot PCA}
 \usage{
-plotEigen(object, group = NULL, pc1 = 1, pc2 = 2, predGroup = NULL,
-  geom = c("points", "density_2d", "both"), plotPred = TRUE)
+plotEigen(
+  object,
+  group = NULL,
+  pc1 = 1,
+  pc2 = 2,
+  predGroup = NULL,
+  geom = c("points", "density_2d", "both"),
+  plotPred = TRUE
+)
 }
 \arguments{
 \item{object}{\code{scPred} object}

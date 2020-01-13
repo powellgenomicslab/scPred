@@ -4,8 +4,7 @@
 \alias{crossTab}
 \title{Gets contingency table}
 \usage{
-crossTab(object, true, pred = NULL, fill = 0, prop = TRUE,
-  digits = 2)
+crossTab(object, true, pred = NULL, fill = 0, prop = TRUE, digits = 2)
 }
 \arguments{
 \item{object}{\code{scPred} object}
