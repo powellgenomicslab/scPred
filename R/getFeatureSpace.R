@@ -123,7 +123,11 @@ getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig
     classes <- make.names(classes)
     classes <- factor(classes, levels = unique(classes))
     newPvar <- paste0(pVar, ".valid")
-    object@metadata[[newPvar]] <- classes
+    if(is(object, "scPred")){
+      object@metadata[[newPvar]] <- classes
+    }else{
+      object@meta.data[[newPvar]] <- classes
+    }
     message("\nSee new classes in '", pVar, ".valid' column in metadata:")
     message(paste0(levels(classes)[!isValidName], collapse = "\n"), "\n")
     pVar <- newPvar

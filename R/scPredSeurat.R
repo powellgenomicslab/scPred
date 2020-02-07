@@ -9,8 +9,8 @@
 #' @return A matrix:.
 #' \itemize{
 #' \item Probabilities of each cell type for all cells in the \code{new} object
-#' \item \code{prediction} Cell type predicted based on probability threshold
-#' \item \code{generic} Cell type predicted based on maximum probability acroos all models
+#' \item \code{prediction} Cell type predicted based on probability threshold calculated from training step orprovided by user
+#' \item \code{generic} Cell type predicted based on maximum probability across all models
 #' }
 #' @importFrom magrittr "%>%"
 #' @export
@@ -92,6 +92,7 @@ scPredSeurat <- function(reference, new, threshold = NULL, weight = TRUE, ...){
   res$prediction <- pred
   
   # Return results
+  res <- AddMetaData(new, res)
   res
    
 }
@@ -148,7 +149,7 @@ scPredSeurat <- function(reference, new, threshold = NULL, weight = TRUE, ...){
   
   
   props %>% 
-    filter(!!rlang::parse_expr(subsetRule)) %>% 
+    #filter(!!rlang::parse_expr(subsetRule)) %>% 
     select(other, obs) %>% 
     group_by(obs) %>% 
     summarize(median = median(other)) %>% 
