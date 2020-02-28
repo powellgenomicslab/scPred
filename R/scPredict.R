@@ -1,19 +1,18 @@
 #' @title Predict cell classes from a new dataset using a trained model
-#' @description Predicts cell classes for a new dataset based on a training model, a reference \code{eigenPred} object
-#' @param object An \code{scPred} object with metadata and informative features and trained model(s).
-#' @param newData A matrix object with genes (loci) as rows and cells as columns
+#' @description Predicts cell classes for a new dataset based on trained model(s)
+#' @param reference An \code{Seurat} object with trained model(s).
+#' @param new A seurat object
 #' @param threshold Threshold used for probabilities to classify cells into classes
-#' @param returnProj Set to TRUE to return computed projection
-#' @param returnData Returns prediction data (\code{newData})
-#' @param informative Set to TRUE to project only informative components
-#' @param useProj If a projection matrix is already stored in the \code{scPred} object, perform predictions using this matrix as input
-#' @return A data frame with prediction probabilities associated to each class and a \code{predClass} column, 
-#' indicating the classification based on the provided threshold
+#' @param returnProj Return aligned  projection
+#' @param informative Align only informative components
+#' @return A Aeurat object with addtional metadata columns with prediction probabilities associated to each class, a \code{prediction} column, 
+#' indicating the classification based on the provided threshold and a \code{generic_class} column predctide label without "Unassigned" cells.
 #' @keywords prediction, new, test, validation
 #' @importFrom methods is
 #' @importFrom tibble rownames_to_column column_to_rownames
 #' @importFrom dplyr mutate select 
 #' @importFrom pbapply pblapply
+#' @importFrom harmony HarmonyMatrix
 #' @export
 #' @author
 #' José Alquicira Hernández
@@ -22,162 +21,208 @@
 #' # Get class probabilities for cells in a new dataset. A 'predClass' columns with 
 #' cell classes is returned depending on the threshold parameter.
 #' 
-#' prediction <- scPredict(object = object, newData = expTest, threshold = 0.9)
+#' new <- scPredict(reference, new)
 #' 
 
 
 
-scPredict <- function(object, newData = NULL, threshold = 0.9, 
-                      returnProj = TRUE, returnData = FALSE, informative = TRUE,
-                      useProj = FALSE){
-
+scPredict <- function(reference, new, 
+                      threshold = NULL, 
+                      returnProj = TRUE, 
+                      informative = TRUE,
+                      weight = TRUE, 
+                      ...){
+  
   # Function validations ----------------------------------------------------
   
   # Validate if provided object is an scPred object
-  if(!is(object, "scPred")){
-    stop("'object' must be of class 'scPred'")
+  if(!(is(reference, "scPred") | is(reference, "Seurat"))) stop("'object' must be of class 'scPred' or 'Seurat'")
+  if(!"scPred" %in% names(reference@misc)) stop("No models have been trained!")
+  if(!is(new, "Seurat")) stop("Both reference and new data must be Seurat objects")
+  
+  
+  message("Matching reference with new dataset...")
+  
+  # Subset data
+  ref_loadings <- Seurat::Loadings(reference)
+  ref_embeddings <- Seurat::Embeddings(reference)
+  new_genes <- rownames(new)
+  
+  # Get genes
+  reference_genes <- Seurat::VariableFeatures(reference)
+  
+  
+  # Get intersection between reference and new datasets
+  shared_genes <- intersect(reference_genes, new_genes)
+  message(paste(length(reference_genes), "highly variable genes present in reference"))
+  message(paste(length(shared_genes), "genes shared between reference HVGs and new dataset"))
+  message(paste0(round(length(shared_genes)/length(reference_genes) * 100, 2), 
+                 "% of genes in the reference are present in new dataset"))
+  
+  
+  # Subset shared genes from reference
+  ref_loadings <- ref_loadings[shared_genes, ]
+  
+  
+  # Scale new data
+  new <- Seurat::ScaleData(new, features = reference_genes, ...)
+  
+  
+  ## Subset shared genes from new dataset
+  
+  new_data <- Seurat::GetAssayData(new, "scale.data")
+  new_data <- new_data[shared_genes, ]
+  new_data <- new_data[match(shared_genes, rownames(new_data)), ]
+  
+  # all(rownames(new_data) == shared_genes)
+  
+  new_embeddings <- t(new_data) %*% ref_loadings
+  
+  
+  dataset <- factor(c(rep("reference", nrow(ref_embeddings)), rep("new", nrow(new_embeddings))), 
+                    levels = c("reference", "new"))
+  
+  rownames(ref_embeddings) <- paste0("ref_", rownames(ref_embeddings))
+  rownames(new_embeddings) <- paste0("new_", rownames(new_embeddings))
+  
+  
+  
+  eigenspace <- as.data.frame(rbind(ref_embeddings, new_embeddings))
+  meta_data <- data.frame(rownames(eigenspace), dataset = dataset)
+  harmony_embeddings <- HarmonyMatrix(eigenspace, meta_data, 'dataset', do_pca = FALSE)
+  new_embeddings_aligned <- harmony_embeddings[dataset == "new", ]
+  
+  # Classify cells using all trained models 
+  cellTypeModelNames <- names(reference@misc$scPred$features)
+  res <- sapply(cellTypeModelNames, .predictCellClass, model, reference, new_embeddings_aligned)
+  
+  # Gather results
+  res <- Reduce(cbind, res) %>% as.data.frame()
+  colnames(res) <- cellTypeModelNames
+  rownames(res) <- colnames(new)
+  
+  classes <- levels(reference[[reference@misc$scPred$pVar, drop = TRUE]])
+  #plot(res$Lymphoid, col = as.factor(test$CellType))
+  # If there is only 2 classes, compute complementary probability for negative class
+  if(length(cellTypeModelNames) == 1){
+    
+    res_comp <- 1 - res[,1]
+    negClass <- classes[classes != names(res)]
+    res[[negClass]] <- res_comp
+    
+  }else if(weight){
+    # Make sum of probabilities across models equal to zero
+    res <- res/rowSums(res)
   }
   
-  # Validate if scPred models have been trained already
-  if(!length(object@train)){
-    stop("No models have been trained!")
-  }
+  # Extract maximum probability for each class
+  max_props <- as.data.frame(t(apply(res, 1, function(x) c(index = which.max(x),  max = x[which.max(x)]))))
+  names(max_props) <- c("index", "max")
   
-  # Predictions are only possible if new data is provided. The new data can be a gene expression
-  # matrix or a loading projection that has been computed independently.
-  # Validate if new data is provided. If only a projection is found in the @projection slot,
-  # this one is used as the prediction/test data
-  if(is.null(newData) & (nrow(object@projection) == 0)){ # Neither newData nor projection
+  
+  # Store classification based on maximum probability
+  max_props$generic_class <- names(res)[max_props$index]
+  res <- cbind(res, max_props)
+  
+  
+  # Classify cells according to probability threshold
+  
+  if(is.null(threshold)){
+    classThreshold <- sapply(cellTypeModelNames, .getThreshold, reference)
     
-    stop("No newData or pre-computed projection")
-    
-  }else if(is.null(newData) & nrow(object@projection)){ # No newData and projection
-    
-    message("Using projection stored in object as prediction set")
-    useProj <- TRUE
-    
-  }else if(!is.null(newData) & nrow(object@projection)){ # NewData and projection
-    
-    if (!(is(newData, "matrix") | is(newData, "Matrix"))){
-      stop("'newData' object must be a matrix or seurat object")
+    if(length(classThreshold) == 1){
+      classThreshold <- c(classThreshold, classThreshold)
+      names(classThreshold) <- classes
     }
-    message("newData provided and projection stored in scPred object. Set 'useProj = TRUE' to override default projection execution")
-  }
-  
-  # Evaluate if there are identified features stored in the scPred object
-  if(!length(object@features)){
-    stop("No informative principal components have been obtained yet.\nSee getInformativePCs() function")
-  }
-  
-  # Convert newData to sparse Matrix object
-  if(is(newData, "matrix")){
-    newData <- Matrix(newData)
-  }
-  
-  # Data projection ---------------------------------------------------------
-
-  # By default, projection of training loadings is automatically done. This option can be override
-  # with the `useProj` argument to use an independent projection stored directly in the object.  
-  if(!useProj){
-    projection <- projectNewData(object = object,
-                                 newData = newData,
-                                 informative = informative, 
-                                 seurat = if(!is.null(object@svd$seurat)){TRUE}else{FALSE})
+    
+    pred <- ifelse(res$max > classThreshold[res$generic_class], 
+                   as.character(res$generic_class), 
+                   "unassigned")
+    
   }else{
-    projection <- object@projection
+    
+    pred <- ifelse(res$max > threshold, res$generic_class , "unassigned")
   }
   
-  # Get cell classes used for training
-  classes <- names(object@features)
+  names(pred) <- colnames(new)
   
-
-  # Cell class prediction ---------------------------------------------------
+  # Format results
+  res$prediction <- pred
+  res$index <- NULL
   
-  # For all cell classes which a training models has been trained for, get
-  # the prediction probability for each cell in the `projection` object
+  names(res) <- paste0("scPred_", names(res))
   
-  message("Predicting cell types")
-  res <- pblapply(classes, .predictClass, object, projection)
-  names(res) <- levels(classes)
-  
-  # Gather results in a dataframe
-  res <- as.data.frame(res)
-  row.names(res) <- rownames(projection)
-  
-  if(length(classes) == 1){
-    
-    # If only one model was trained (positive and negative classes present in prediction
-    # variable only), get the probability for the negative class using the complement rule
-    # P(negative_class) = 1 - positive_class
-    allClasses <-  unique(object@metadata[[object@pVar]])
-    positiveClass <- classes
-    negativeClass <- as.character(allClasses[!allClasses %in% classes])
-    res[[negativeClass]] <- 1 - res[[positiveClass]]
-    
-    # Assign cells according to their associated probabilities
-    res$predClass <- ifelse(res[,1] > threshold, positiveClass,
-                        ifelse(res[,2] > threshold, negativeClass, "unassigned")) %>%
-      as.factor()
-    
-    # Save results to `@predictions` slot
-    object@predictions <- res
-    
-    
-  }else{
-    
-    # If more than one model was trained (there are 3 classes or more in the prediction variable),
-    # obtain the maximum probability for each cell and assign the respective class to that cell.
-    
-    i <- apply(res, 1, which.max)
-    
-    prob <- c()
-    for(j in seq_len(nrow(res))){
-      prob[j] <- res[j,i[j]]
-    }
-    
-    predictions <- data.frame(res, probability = prob, prePrediction = names(res)[i])
-    rownames(predictions) <- rownames(projection)
-    
-    
-    predictions %>% 
-      rownames_to_column("id") %>% 
-      mutate(predClass = ifelse(probability > threshold, as.character(prePrediction), "unassigned")) %>%
-      select(-probability, -prePrediction) %>% 
-      column_to_rownames("id") -> finalPrediction
-    
-    # Save results to `@predictions` slot
-    object@predictions <- finalPrediction
-  }
-  
-  if(returnProj & !useProj){
-    object@projection <- projection
-  }
-  
-  
-  if(returnData & !is.null(newData)){
-    if(object@pseudo){
-      object@predData <- log2(newData + 1)
-    }else{
-      object@predData <- newData
-    }
-  }
-  
-  return(object)
+  # Return results
+  res <- AddMetaData(new, res)
+  rownames(new_embeddings_aligned) <- gsub("^new_", "", rownames(new_embeddings_aligned))
+  res@reductions[["scPred"]] <- CreateDimReducObject(embeddings = new_embeddings_aligned, 
+                                                     key = "harmony_",
+                                                     assay = DefaultAssay(object = new))
+  res
   
   
 }
 
 
-.predictClass <- function(positiveClass, object, projection){
-  # Get features for positive class
-  featureList <- object@features[[positiveClass]]
-  features <- subsetMatrix(projection, as.character(featureList$PC))
+
+
+.predictCellClass <-  function(cellType, model, reference, testEmbeddings){
   
-  # Perform presictions
-  prediction <- predict(object@train[[positiveClass]], 
-                        newdata = features, 
+  # Extract features for a given cell type
+  as.character(reference@misc$scPred$features[[cellType]]$PC) -> features
+  
+  # Format test cell embeddings
+  testEmbeddings %>% 
+    colnames() %>% 
+    gsub("Project", "", .) %>% 
+    `colnames<-`(testEmbeddings, .) -> testEmbeddings
+  
+  # Extract cell type model
+  model <- reference@misc$scPred$train[[cellType]]
+  
+  # Perform predictions based on informative PCs
+  prediction <- predict(model, 
+                        newdata = subsetMatrix(testEmbeddings, features), 
                         type = "prob")
   
-  prediction[ , 1, drop = FALSE]
+  # Add cell names to results
+  rownames(prediction) <- rownames(testEmbeddings)
+  
+  # Return positive-class probability
+  prediction[,1, drop = FALSE]
   
 }
+
+
+#' @title Get thresholds from training models
+#' @description Calculates the threshold to classify a cell type.
+#' @param cellType Cell type of interest
+#' @param reference A \code{Seurat} object used as reference to perform predictions
+#' @importFrom magrittr "%>%"
+#' @importFrom dplyr select
+#' @importFrom dplyr filter
+#' @importFrom dplyr group_by
+#' @importFrom dplyr summarize
+#' @importFrom dplyr pull
+
+.getThreshold <- function(cellType, reference){
+  props <- as.data.frame(reference@misc$scPred$train[[cellType]]$pred)
+  bestTune <- reference@misc$scPred$train[[cellType]]$bestTune
+  
+  mapply(bestTune, names(bestTune), 
+         FUN = function(par, name) paste0(name, " == ", par)) %>% 
+    paste0(collapse = " & ") -> subsetRule 
+  
+  
+  props %>% 
+    #filter(!!rlang::parse_expr(subsetRule)) %>% 
+    select(other, obs) %>% 
+    group_by(obs) %>% 
+    summarize(median = median(other)) %>% 
+    pull(median) %>% 
+    mean() 
+}
+
+
+
+

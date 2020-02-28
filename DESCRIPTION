@@ -12,7 +12,8 @@ Depends:
     irlba,
     caret,
     kernlab,
-    MLmetrics
+    MLmetrics,
+    harmony
 Imports:
     irlba,
     dplyr,
