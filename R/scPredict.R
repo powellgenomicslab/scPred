@@ -36,16 +36,17 @@ scPredict <- function(reference, new,
   # Function validations ----------------------------------------------------
   
   # Validate if provided object is an scPred object
-  if(!(is(reference, "scPred") | is(reference, "Seurat"))) stop("'object' must be of class 'scPred' or 'Seurat'")
-  if(!"scPred" %in% names(reference@misc)) stop("No models have been trained!")
+  if(!is(reference, "Seurat")) stop("'object' must be of class 'scPred' or 'Seurat'")
+  if(!"scPred" %in% names(reference@misc)) stop("No feature space has been determined!")
+  if(!length(reference@misc$scPred@train)) stop("No models have been trained!")
   if(!is(new, "Seurat")) stop("Both reference and new data must be Seurat objects")
   
   
   message("Matching reference with new dataset...")
   
   # Subset data
-  ref_loadings <- Seurat::Loadings(reference)
-  ref_embeddings <- Seurat::Embeddings(reference)
+  ref_loadings <- Loadings(reference, reduction = "pca")
+  ref_embeddings <- Seurat::Embeddings(reference, reduction = "pca")
   new_genes <- rownames(new)
   
   # Get genes
@@ -65,7 +66,7 @@ scPredict <- function(reference, new,
   
   
   # Scale new data
-  new <- Seurat::ScaleData(new, features = reference_genes, ...)
+  new <- ScaleData(new, features = reference_genes, ...)
   
   
   ## Subset shared genes from new dataset
@@ -93,7 +94,7 @@ scPredict <- function(reference, new,
   new_embeddings_aligned <- harmony_embeddings[dataset == "new", ]
   
   # Classify cells using all trained models 
-  cellTypeModelNames <- names(reference@misc$scPred$features)
+  cellTypeModelNames <- names(reference@misc$scPred@features)
   res <- sapply(cellTypeModelNames, .predictCellClass, model, reference, new_embeddings_aligned)
   
   # Gather results
@@ -101,7 +102,7 @@ scPredict <- function(reference, new,
   colnames(res) <- cellTypeModelNames
   rownames(res) <- colnames(new)
   
-  classes <- levels(reference[[reference@misc$scPred$pVar, drop = TRUE]])
+  classes <- levels(reference[[reference@misc$scPred@pVar, drop = TRUE]])
   #plot(res$Lymphoid, col = as.factor(test$CellType))
   # If there is only 2 classes, compute complementary probability for negative class
   if(length(cellTypeModelNames) == 1){
@@ -169,7 +170,7 @@ scPredict <- function(reference, new,
 .predictCellClass <-  function(cellType, model, reference, testEmbeddings){
   
   # Extract features for a given cell type
-  as.character(reference@misc$scPred$features[[cellType]]$PC) -> features
+  as.character(reference@misc$scPred@features[[cellType]]$PC) -> features
   
   # Format test cell embeddings
   testEmbeddings %>% 
@@ -178,7 +179,7 @@ scPredict <- function(reference, new,
     `colnames<-`(testEmbeddings, .) -> testEmbeddings
   
   # Extract cell type model
-  model <- reference@misc$scPred$train[[cellType]]
+  model <- reference@misc$scPred@train[[cellType]]
   
   # Perform predictions based on informative PCs
   prediction <- predict(model, 
@@ -206,8 +207,8 @@ scPredict <- function(reference, new,
 #' @importFrom dplyr pull
 
 .getThreshold <- function(cellType, reference){
-  props <- as.data.frame(reference@misc$scPred$train[[cellType]]$pred)
-  bestTune <- reference@misc$scPred$train[[cellType]]$bestTune
+  props <- as.data.frame(reference@misc$scPred@train[[cellType]]$pred)
+  bestTune <- reference@misc$scPred@train[[cellType]]$bestTune
   
   mapply(bestTune, names(bestTune), 
          FUN = function(par, name) paste0(name, " == ", par)) %>% 
