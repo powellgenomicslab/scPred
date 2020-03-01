@@ -13,11 +13,11 @@ crossTab(
 )
 }
 \arguments{
-\item{object}{\code{scPred} object}
+\item{object}{\code{Seurat} object}
 
-\item{true}{Column name in \code{predMeta} slot that corresponds to the true known classes}
+\item{true}{Column name in \code{meta.data} slot that corresponds to the true known classes}
 
-\item{pred}{Column name in \code{predMeta} slot that corresponds to the predicted classes
+\item{pred}{Column name in \code{meta.data} slot that corresponds to the predicted classes
 if they  have been assigned independently from the \code{scPredict()} function}
 
 \item{output}{Return counts, fraction, or proportions? Default: counts}
