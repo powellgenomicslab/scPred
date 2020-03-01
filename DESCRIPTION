@@ -1,21 +1,21 @@
 Package: scPred
 Type: Package
-Title: scPred - Single cell prediction using singular value decomposition and machine learning classification
+Title: scPred - accurate supervised method for cell-type classification from single-cell RNA-seq data
 Version: 0.0.0.9000
-Author: c(person("Jose", "Alquicira-Hernandez", email = "j.alquicira@imb.uq.edu.au", rol = "aut, cre"), person("Quan", "Nguyen", email = "quan.nguyen@imb.uq.edu.au", rol = "aut"))
-Maintainer: Jose Alquicira-Hernandez <j.alquicira@imb.uq.edu.au>
+Author: c(person("Jose", "Alquicira-Hernandez", email = "j.alquicira@garvan.au", rol = "aut, cre"), person("Quan", "Nguyen", email = "quan.nguyen@imb.uq.edu.au", rol = "aut"))
+Maintainer: Jose Alquicira-Hernandez <j.alquicira@garvan.org.au>
 Description: Provides a series of functions to train a prediction model based on gene expression data to classify single cells
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
+biocViews:
 Depends:
-    irlba,
+    Seurat,
     caret,
     kernlab,
     MLmetrics,
     harmony
 Imports:
-    irlba,
     dplyr,
     tidyr,
     magrittr,
@@ -24,7 +24,5 @@ Imports:
     pROC,
     ggplot2,
     tibble,
-    pbapply,
-    cowplot
+    pbapply
 RoxygenNote: 7.0.2
-Suggests: Seurat
