@@ -1,12 +1,11 @@
 #' @title Predict cell classes from a new dataset using a trained model
 #' @description Predicts cell classes for a new dataset based on trained model(s)
-#' @param reference An \code{Seurat} object with trained model(s).
-#' @param new A seurat object
+#' @param reference An \code{Seurat} object with trained model(s) using \code{scPred}.
+#' @param new A seurat object containing cells to be classified
 #' @param threshold Threshold used for probabilities to classify cells into classes
-#' @param returnProj Return aligned  projection
-#' @param informative Align only informative components
-#' @return A Aeurat object with addtional metadata columns with prediction probabilities associated to each class, a \code{prediction} column, 
-#' indicating the classification based on the provided threshold and a \code{generic_class} column predctide label without "Unassigned" cells.
+#' @param weight If TRUE, probabilities from binary classifiers are weighted to sum 1.
+#' @return A Seurat object with addtional metadata columns with prediction probabilities associated to each class, a \code{prediction} column, 
+#' indicating the classification based on the provided threshold and a \code{generic_class} column without "unassigned" labels.
 #' @keywords prediction, new, test, validation
 #' @importFrom methods is
 #' @importFrom tibble rownames_to_column column_to_rownames
@@ -18,18 +17,15 @@
 #' José Alquicira Hernández
 #' @examples 
 #' 
-#' # Get class probabilities for cells in a new dataset. A 'predClass' columns with 
-#' cell classes is returned depending on the threshold parameter.
 #' 
 #' new <- scPredict(reference, new)
 #' 
 
 
 
-scPredict <- function(reference, new, 
+scPredict <- function(reference, 
+                      new, 
                       threshold = NULL, 
-                      returnProj = TRUE, 
-                      informative = TRUE,
                       weight = TRUE, 
                       ...){
   
@@ -46,7 +42,7 @@ scPredict <- function(reference, new,
   
   # Subset data
   ref_loadings <- Loadings(reference, reduction = "pca")
-  ref_embeddings <- Seurat::Embeddings(reference, reduction = "pca")
+  ref_embeddings <- Embeddings(reference, reduction = "pca")
   new_genes <- rownames(new)
   
   # Get genes
@@ -87,10 +83,15 @@ scPredict <- function(reference, new,
   rownames(new_embeddings) <- paste0("new_", rownames(new_embeddings))
   
   
-  
   eigenspace <- as.data.frame(rbind(ref_embeddings, new_embeddings))
   meta_data <- data.frame(rownames(eigenspace), dataset = dataset)
-  harmony_embeddings <- HarmonyMatrix(eigenspace, meta_data, 'dataset', do_pca = FALSE)
+  
+  harmony_embeddings <- HarmonyMatrix(eigenspace, 
+                                      meta_data, 
+                                      'dataset', 
+                                      do_pca = FALSE, 
+                                      reference_values = "reference")
+  
   new_embeddings_aligned <- harmony_embeddings[dataset == "new", ]
   
   # Classify cells using all trained models 
