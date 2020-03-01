@@ -18,37 +18,37 @@ trainModel(
 )
 }
 \arguments{
-\item{object}{An \code{scPred} object with informative PCs obtained using
-the \code{getInformativePCs} function}
+\item{object}{An \code{Seurat} object with informative PCs obtained using
+the \code{getFeatureSpace} function}
 
 \item{model}{Classification model supported via \code{caret} package. A list of all models can be found here:
 https://topepo.github.io/caret/available-models.html
 Default: support vector machine with polynomial kernel}
 
-\item{resampleMethod}{Resample model used in \code{trainControl} function. Default: K-fold cross validation}
+\item{resampleMethod}{Resample model used in \code{trainControl} function from \code{caret}. 
+Default: K-fold cross validation}
 
 \item{number}{Number of iterations for resample method. See \code{trainControl} function}
 
-\item{seed}{Numeric seed for resample method}
+\item{seed}{Numeric seed for resample method. Fixed to ensure reproducibility}
 
 \item{metric}{Performance metric to be used to select best model: `ROC` (area under the ROC curve), 
 `PR` (area under the precision-recall curve), `Accuracy`, and `Kappa`}
 
-\item{imbalance}{Proportion of cell type compositions to be considered as an imbalance issue. By default,
-if a cell type is only present in 0.1 (10%) or less from the whole population, scPred will attempt to 
+\item{imbalance}{Proportion of cell type composition to be considered as an imbalance issue. By default,
+if a cell type is present only in 0.1 (10%) or less from the whole population, scPred will attempt to 
 train a weighted SVM to account for class imbalance. Set to `1` to avoid this step}
 
-\item{returnData}{If \code{TRUE}, training data is returned}
+\item{returnData}{If \code{TRUE}, training data is returned within \code{scPred} object.}
 
-\item{savePredictions}{an indicator of how much of the hold-out predictions for each resample should be
-saved. Values can be either "all", "final", or "none". A logical value can also be used that convert to
- "all" (for true) or "none" (for false). "final" saves the predictions for the optimal tuning parameters.}
+\item{savePredictions}{Specifies the set of hold-out predictions for each resample that should be
+returned. Values can be either "all", "final", or "none".}
 }
 \value{
-A list of  \code{train} objects for each cell class (e.g. cell type). See \code{train} function for details.
+A list of \code{train} objects for each cell class (e.g. cell type). See \code{train} function for details.
 }
 \description{
-Trains a prediction model from an \code{scPred} object
+Trains a prediction model from an \code{scPred} object stored in a \code{Seurat} object
 }
 \examples{
 
@@ -56,13 +56,14 @@ Trains a prediction model from an \code{scPred} object
 ## A numeric seed is provided for the K-fold cross validation
 ## The metric ROC is used to select the best tuned model. "Accuracy" and "Kappa" may be used too.
 
-object <- trainModel(object = object,
+pbmc_small <- getFeatureSpace(pbmc_small, "RNA_snn_res.0.8")
+pbmc_small <- trainModel(object = pbmc_small,
                      seed = 1234,
                      metric = "ROC")
 
 }
 \author{
-José Alquicira Hernández
+Jose Alquicira Hernandez
 }
 \keyword{model}
 \keyword{train,}

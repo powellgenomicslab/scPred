@@ -4,44 +4,28 @@
 \alias{scPredict}
 \title{Predict cell classes from a new dataset using a trained model}
 \usage{
-scPredict(
-  object,
-  newData = NULL,
-  threshold = 0.9,
-  returnProj = TRUE,
-  returnData = FALSE,
-  informative = TRUE,
-  useProj = FALSE
-)
+scPredict(reference, new, threshold = NULL, weight = TRUE, ...)
 }
 \arguments{
-\item{object}{An \code{scPred} object with metadata and informative features and trained model(s).}
+\item{reference}{An \code{Seurat} object with trained model(s) using \code{scPred}.}
 
-\item{newData}{A matrix object with genes (loci) as rows and cells as columns}
+\item{new}{A seurat object containing cells to be classified}
 
 \item{threshold}{Threshold used for probabilities to classify cells into classes}
 
-\item{returnProj}{Set to TRUE to return computed projection}
-
-\item{returnData}{Returns prediction data (\code{newData})}
-
-\item{informative}{Set to TRUE to project only informative components}
-
-\item{useProj}{If a projection matrix is already stored in the \code{scPred} object, perform predictions using this matrix as input}
+\item{weight}{If TRUE, probabilities from binary classifiers are weighted to sum 1.}
 }
 \value{
-A data frame with prediction probabilities associated to each class and a \code{predClass} column, 
-indicating the classification based on the provided threshold
+A Seurat object with addtional metadata columns with prediction probabilities associated to each class, a \code{prediction} column, 
+indicating the classification based on the provided threshold and a \code{generic_class} column without "unassigned" labels.
 }
 \description{
-Predicts cell classes for a new dataset based on a training model, a reference \code{eigenPred} object
+Predicts cell classes for a new dataset based on trained model(s)
 }
 \examples{
 
-# Get class probabilities for cells in a new dataset. A 'predClass' columns with 
-cell classes is returned depending on the threshold parameter.
 
-prediction <- scPredict(object = object, newData = expTest, threshold = 0.9)
+new <- scPredict(reference, new)
 
 }
 \author{

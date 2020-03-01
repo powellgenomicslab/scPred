@@ -12,19 +12,9 @@ prediction information.
 \section{Slots}{
 
 \describe{
-\item{\code{sva}}{Singular value decomposition performed with \code{prcomp_irlba()} function}
+\item{\code{pVar}}{Column name from metadata to use as the variable to predict using}
 
-\item{\code{metadata}}{A dataframe with:
-\itemize{
-\item row names: ids matching the column names of the gene expression matrix
-\item columns: associated metadata such as cell type, conditions, sample, or batch. 
-}}
-
-\item{\code{trainData}}{Training gene expression data}
-
-\item{\code{expVar}}{Explained variance by each principoal component}
-
-\item{\code{pVar}}{Column name from metadata to use as the variable to predict using
+\item{\code{expVar}}{Explained variance by each principoal component 
 the informative principal components}
 
 \item{\code{features}}{A data frame with the following information:
@@ -37,11 +27,5 @@ This column contains the cumulative variance explained across the ranked princip
 }}
 
 \item{\code{train}}{A list with all trained models using the \code{caret} package. Each model correspond to a cell type}
-
-\item{\code{projection}}{A matrix containing the prediction data projection}
-
-\item{\code{predictions}}{A data frame with the prediction results containing probabilities for each class}
-
-\item{\code{pseudo}}{TRUE if a \code{log2(data + 1)} transformation was performed before performing the PCA}
 }}
 
