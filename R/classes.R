@@ -1,15 +1,8 @@
 #' @title Definition of 'scPred' class
 #' @description An S4 class to contain principal component analysis of a gene expression matrix, metadata, training, and
 #' prediction information.
-#' @slot sva Singular value decomposition performed with \code{prcomp_irlba()} function
-#' @slot metadata A dataframe with:
-#' \itemize{
-#' \item row names: ids matching the column names of the gene expression matrix
-#' \item columns: associated metadata such as cell type, conditions, sample, or batch. 
-#' }
-#' @slot trainData Training gene expression data
-#' @slot expVar Explained variance by each principoal component 
 #' @slot pVar Column name from metadata to use as the variable to predict using
+#' @slot expVar Explained variance by each principoal component 
 #' the informative principal components
 #' @slot features A data frame with the following information:
 #' \itemize{
@@ -20,9 +13,6 @@
 #' This column contains the cumulative variance explained across the ranked principal components
 #' }
 #' @slot train A list with all trained models using the \code{caret} package. Each model correspond to a cell type
-#' @slot projection A matrix containing the prediction data projection
-#' @slot predictions A data frame with the prediction results containing probabilities for each class 
-#' @slot pseudo TRUE if a \code{log2(data + 1)} transformation was performed before performing the PCA 
 #' @name scPred
 #' @rdname scPred
 #' @aliases scPred-class
@@ -30,21 +20,14 @@
 #' 
 
 
-setClass("scPred", representation(svd = "list",
-                                    metadata = "data.frame",
-                                    trainData = "dgCMatrix",
-                                    predData = "dgCMatrix",
-                                    expVar = "numeric",
-                                    pVar = "character",
-                                    features = "list",
-                                    train = "list",
-                                    projection = "matrix",
-                                    predictions = "data.frame",
-                                    predMeta = "data.frame",
-                                    pseudo = "logical"),
-         prototype(svd = list(), 
-                   metadata = data.frame(),
-                   features = data.frame()))
+setClass("scPred", representation(pVar = "character",
+                                  expVar = "numeric",
+                                  features = "list",
+                                  train = "list"),
+         prototype(pVar = character(),
+                   expVar = numeric(),
+                   features = data.frame(),
+                   train = list()))
 
 
 
