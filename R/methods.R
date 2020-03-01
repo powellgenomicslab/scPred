@@ -55,38 +55,6 @@ setMethod("show", signature("scPred"), function(object) {
 })
 
 
-#' @title Get training probabilities
-#' @description Gets training probabilities for each trained model
-#' @importFrom methods setMethod
-#' @export
-
-setGeneric("getTrainResults", def = function(object) {
-    standardGeneric("getTrainResults")
-})
-
-#' @title Get training probabilities
-#' @description Gets training probabilities for each trained model
-#' @importFrom methods setMethod
-#' @export
-
-setMethod("getTrainResults", signature("Seurat"), function(object){
-    
-    if(length(object@misc$scPred@train) == 0){
-        stop("No models have been trained")
-    }
-    
-    
-    if(ncol(object@misc$scPred@train[[1]]$pred) == 0){
-        stop('No training results were calculated. Set savePredictions = "final" and returnData = TRUE')
-    }
-    
-    probs <- lapply(names(object@misc$scPred@train), function(model) extractProb(object@misc$scPred@train[model]))
-    names(probs) <- names(object@misc$scPred@train)
-    probs
-    
-})
-
-
 #' @title Gets contingency table
 #' @description Creates a cross table using two columns from the metadata
 #' @param object \code{Seurat} object
