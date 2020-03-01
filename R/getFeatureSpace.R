@@ -1,24 +1,20 @@
-#' @title Get informative principal components
-#' @description Given a prediction variable, finds a feature set of class-informative principal components. 
-#' A Wilcoxon rank sum test is used to determine a difference between the score distributions of cell classes from the prediction variable.
-#' @param object An \code{scPred} or \code{seurat} object
-#' @param pVar Prediction variable corresponding to a column in \code{metadata} slot
-#' @param varLim Threshold to filter principal components based on variance explained.
-#' @param correction Multiple testing correction method. Default: false discovery rate. See \code{p.adjust} function 
+#' @title Get discriminant feature space
+#' @description Given a prediction variable, finds a feature set of class-informative principal components that
+#' explain variance differences between cell types. 
+#' @param object A \code{seurat} object
+#' @param pVar Column in \code{meta.data} slot containing the cell-type labels of each single cell
+#' @param varLim Threshold used to filter principal components based on their individual variance explained.
+#' @param correction Multiple testing correction method used. Default: false discovery rate. See \code{p.adjust} function 
 #' @param sig Significance level to determine principal components explaining class identity
-#' @return An \code{scPred} object with two additional filled slots:
-#' \itemize{
-#' \item \code{features}: A data frame with significant principal components the following information:
+#' @return An \code{Seurat} object along with a \code{scPred} object stored in the \code{@misc} slot 
+#' containing a data.frame of significant features with the following columns:
 #' \itemize{
 #' \item PC: Principal component
-#' \item pValue: p-value obtained from Mann-Whitney test
+#' \item pValue: p-value obtained from Wilcoxon rank sum test
 #' \item pValueAdj: Adjusted p-value according to \code{correction} parameter
-#' \item expVar: Explained variance by the principal component
-#' \item cumExpVar: All principal components are ranked accoriding to their frequency of ocurrence and their variance explained. 
+#' \item expVar: Explained variance for each principal component
+#' \item cumExpVar: All principal components are ranked according to their significance and variance explained. 
 #' This column contains the cumulative variance explained across the ranked principal components
-#' }
-#' \item \code{pVar}: Column name from metadata to use as the variable to predict using
-#' the informative principal components. Informative principal components are selected based on this variable.
 #' }
 #' @keywords informative, significant, features
 #' @importFrom methods is
@@ -28,19 +24,10 @@
 #' @importFrom pbapply pblapply
 #' @export
 #' @author
-#' José Alquicira Hernández
+#' Jose Alquicira Hernandez
 #' 
 #' @examples 
-#' 
-#' # Assign cell information to scPred object
-#' # Cell information must be a data.frame with rownames as cell ids matching the eigendecomposed 
-#' gene expression matrix rownames.
-#' 
-#' metadata(object) <- cellInfo
-#' 
-#' # Get feature space for column "cellType" in metadata slot
-#' 
-#' object <- getFeatureSpace(object = object, pVar = "cellType")
+#' pbmc_small <- getFeatureSpace(pbmc_small, "RNA_snn_res.0.8")
 #' 
 
 
@@ -51,19 +38,14 @@ getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig
   
   # Validations -------------------------------------------------------------
   
-  if(!is(object, "scPred") & !is(object, "Seurat")){
-    stop("Invalid class for object: must be 'scPred' or 'Seurat'")
+  if(!is(object, "Seurat")){
+    stop("Invalid class for object: must be 'Seurat'")
   }
   
   if(!any(correction %in% stats::p.adjust.methods)){
     stop("Invalid multiple testing correction method. See ?p.adjust function")
   }
-  
-  if(is(object, "scPred")){
-    classes <- metadata(object)[[pVar]]
-  }else{
     classes <- object[[pVar, drop = TRUE]]
-  }
   
   if(is.null(classes)){
     stop("Prediction variable is not stored in metadata slot")
@@ -76,17 +58,6 @@ getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig
 
   # Filter principal components by variance ---------------------------------
   
-  if(is(object, "scPred")){ # scPred object
-    
-    # Get PCA
-    i <- object@expVar > varLim
-    pca <- getPCA(object)[,i]
-    
-    # Get variance explained
-    expVar <- object@expVar
-    
-  }else{ # seurat object
-    
     # Check if a PCA has been computed
     if(!("pca" %in% names(object@reductions))){
       stop("No PCA has been computet yet. See RunPCA() function")
@@ -104,32 +75,24 @@ getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig
     i <-  expVar > varLim
     
     # Create scPred object
-    pca <- Embeddings(object)[,i]
+    pca <- Embeddings(object, reduction = "pca")[,i]
     
     
-  }
-  
-  
-  
-  
+  # Validate response variable values
   uniqueClasses <- unique(classes)
   isValidName <- uniqueClasses == make.names(uniqueClasses)
   
   if(!all(isValidName)){
     
-    invalidClasses <- paste0(uniqueClasses[!isValidName], collapse = "\n")
-    message("Not all the classes are valid R variable names\n")
-    message("The following classes are renamed: \n", invalidClasses)
+    invalidClasses <- paste0(uniqueClasses[!isValidName], collapse = ", ")
+    message("Not all the classes are valid R variable names")
+    message("The following classes were renamed: \n", invalidClasses)
     classes <- make.names(classes)
     classes <- factor(classes, levels = unique(classes))
     newPvar <- paste0(pVar, ".valid")
-    if(is(object, "scPred")){
-      object@metadata[[newPvar]] <- classes
-    }else{
-      object@meta.data[[newPvar]] <- classes
-    }
-    message("\nSee new classes in '", pVar, ".valid' column in metadata:")
-    message(paste0(levels(classes)[!isValidName], collapse = "\n"), "\n")
+    object@meta.data[[newPvar]] <- classes
+    message("\nSee new class names in '", pVar, ".valid' column in metadata:")
+    message(paste0(levels(classes)[!isValidName], collapse = ", "), "\n")
     pVar <- newPvar
   }
   
@@ -142,7 +105,8 @@ getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig
   
   if(length(levels(classes)) == 2){
     
-    message("First factor level in '", pVar, "' metadata column considered as positive class")
+    message("First factor level in '", pVar, "' metadata column considered as positive class:")
+    message(levels(classes)[1])
     res <- .getFeatures(levels(classes)[1], expVar, classes, pca, correction, sig)
     res <- list(res)
     names(res) <- levels(classes)[1]
@@ -170,24 +134,14 @@ getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig
   message("\nDONE!")
   
   
-  # Assign feature space to `features` slot
-  if(inherits(object, "Seurat")){
-    
+
     # Create scPred object
-    scPredObject <- list(expVar = expVar,
-                  features = res,
-                  pVar = pVar,
-                  pseudo = FALSE)
     
-    object@misc <- list(scPred = scPredObject)
-    
-  }else{
-  
-  
-  object@features <- res
-  object@pVar <- pVar
-  }
-  
+  object@misc$scPred <- new("scPred", 
+        pVar = pVar,
+        expVar = expVar,
+        features = res)
+
   object
   
 }
