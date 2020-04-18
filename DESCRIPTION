@@ -2,20 +2,19 @@ Package: scPred
 Type: Package
 Title: scPred - accurate supervised method for cell-type classification from single-cell RNA-seq data
 Version: 0.0.0.9000
-Author: c(person("Jose", "Alquicira-Hernandez", email = "j.alquicira@garvan.au", rol = "aut, cre"), person("Quan", "Nguyen", email = "quan.nguyen@imb.uq.edu.au", rol = "aut"))
+Author: c(person("Jose", "Alquicira-Hernandez", email = "j.alquicira@garvan.au", rol = "aut, cre"))
 Maintainer: Jose Alquicira-Hernandez <j.alquicira@garvan.org.au>
-Description: Provides a series of functions to train a prediction model based on gene expression data to classify single cells
-License: GPL-3
+Description: Provides a series of functions to train a prediction model based on gene expression data to classify single cells.
+License: MIT
 Encoding: UTF-8
 LazyData: true
-biocViews:
-Depends:
-    Seurat,
-    caret,
-    kernlab,
-    MLmetrics,
-    harmony
+biocViews: harmony
 Imports:
+    harmony,
+    Seurat,
+    methods,
+    stats,
+    MLmetrics,
     dplyr,
     tidyr,
     magrittr,
@@ -24,5 +23,7 @@ Imports:
     pROC,
     ggplot2,
     tibble,
-    pbapply
-RoxygenNote: 7.0.2
+    pbapply,
+    cli,
+    crayon
+RoxygenNote: 7.1.0

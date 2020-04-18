@@ -1,55 +1,91 @@
 #' @title show
+#' @description Displays scPred object info
+#' @param string list with output strings
+#' @return Prints scPred object
+#' 
+
+print.scPred <- function(string) {
+    params <- list(
+        crayon::bold(string$title),
+        crayon::green(string$pVar),
+        crayon::underline(string$pVar_value),
+        crayon::green(string$features_section),
+        crayon::blue(string$features_header),
+        string$features,
+        string$training_section
+    )
+    
+    for (p in params) {
+        cat(p)
+    }
+}
+
+
+
+#' @title show
 #' @description Generic display function for \linkS4class{scPred} objects. Displays summary of the
 #' object such as number of cells, genes, significant features.
 #' @importFrom methods setMethod
+#' @importFrom methods show
 #' @importFrom tibble column_to_rownames
 #' @importFrom magrittr set_colnames
 #' @export
 
 setMethod("show", signature("scPred"), function(object) {
     
-    cat("'scPred' object\n")
+    training_value <- NA
     
     if(length(object@pVar) != 0){
-        cat(sprintf("      Prediction variable = %s\n", object@pVar))
+        pVar <- object@pVar
     }
-    
-    
     
     if(length(object@features) != 0){
-        
-        cat("\n- Informative PCs per class\n")
         object@features %>%
-            sapply(nrow) %>%
-            as.data.frame() %>%
-            `colnames<-`("Features") %>%
-            print()
-        
+            sapply(nrow) -> nFeatures
+        features <- mapply(function(x,y){ paste0(x, "\t", y)}, nFeatures, names(nFeatures))
+        features <- paste0(paste0(features, collapse = "\n"), "\n")
     }
     
-    if(length(object@train) != 0){
-        
-        cat("\n- Training information\n")
-        cat(sprintf("      Model: %s\n", object@train[[1]]$modelInfo$label))
-        
-        
-        getMetrics <- function(x, metric){
-            
-            bestModelIndex <- as.integer(rownames(x$bestTune))
-            
-            if(metric == "ROC"){
-                round(x$results[bestModelIndex, c("ROC", "Sens", "Spec")], 3)
-            }else if(metric == "Accuracy"){
-                round(x$results[bestModelIndex, c("Accuracy", "Kappa")], 3)
-            }else if(metric == "AUC"){
-                round(x$results[bestModelIndex, c("AUC", "Precision", "Recall", "F")], 3)
-            }
-        }
-        
-        metric <- object@train[[1]]$metric 
-        print(t(sapply(object@train, getMetrics, metric)))
-        
+    # if(length(object@train) != 0){
+    #     
+    #     cat("\n- T\n")
+    #     cat(sprintf("      Model: %s\n", object@train[[1]]$modelInfo$label))
+    #     
+    #     
+    #     getMetrics <- function(x, metric){
+    #         
+    #         bestModelIndex <- as.integer(rownames(x$bestTune))
+    #         
+    #         if(metric == "ROC"){
+    #             round(x$results[bestModelIndex, c("ROC", "Sens", "Spec")], 3)
+    #         }else if(metric == "Accuracy"){
+    #             round(x$results[bestModelIndex, c("Accuracy", "Kappa")], 3)
+    #         }else if(metric == "AUC"){
+    #             round(x$results[bestModelIndex, c("AUC", "Precision", "Recall", "F")], 3)
+    #         }
+    #     }
+    #     
+    #     metric <- object@train[[1]]$metric 
+    #     print(t(sapply(object@train, getMetrics, metric)))
+    #     
+    # }
+    
+    
+    if(is.na(training_value)){
+       training_section <- crayon::red(c(cli::symbol$cross, "Training model(s)\n"))
     }
+    
+    
+    string <- list(
+        title = "'scPred' object\n",
+        pVar = c(cli::symbol$tick, " Prediction variable = "),
+        pVar_value =  c(pVar, "\n"),
+        features_section = c(cli::symbol$tick, " Discriminant PCs per cell type\n"),
+        features_header ="n\tCell Type\n", 
+        features = features,
+        training_section = training_section
+    )
+    print.scPred(string)
     
     
 })

@@ -27,13 +27,15 @@
 #' Jose Alquicira Hernandez
 #' 
 #' @examples 
+#' 
+#' library(scPred)
 #' pbmc_small <- getFeatureSpace(pbmc_small, "RNA_snn_res.0.8")
 #' 
 
 
 
 
-getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig = 0.05){
+getFeatureSpace <- function(object, pVar, varLim = 0, correction = "fdr", sig = 0.05){
   
   
   # Validations -------------------------------------------------------------
@@ -52,7 +54,6 @@ getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig
   }
   
   if(!is.factor(classes)){
-    message("Transforming prediction variable to factor object...")
     classes <- as.factor(classes)
   }
 
@@ -83,19 +84,11 @@ getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig
   isValidName <- uniqueClasses == make.names(uniqueClasses)
   
   if(!all(isValidName)){
-    
-    invalidClasses <- paste0(uniqueClasses[!isValidName], collapse = ", ")
-    message("Not all the classes are valid R variable names")
-    message("The following classes were renamed: \n", invalidClasses)
     classes <- make.names(classes)
     classes <- factor(classes, levels = unique(classes))
-    newPvar <- paste0(pVar, ".valid")
-    object@meta.data[[newPvar]] <- classes
-    message("\nSee new class names in '", pVar, ".valid' column in metadata:")
-    message(paste0(levels(classes)[!isValidName], collapse = ", "), "\n")
-    pVar <- newPvar
   }
   
+  object@meta.data[["scPred_response"]] <- classes
   
   
   
@@ -103,6 +96,7 @@ getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig
   # If only 2 classes are present in prediction variable, train one model for the positive class
   # The positive class will be the first level of the factor variable
   
+  cat(crayon::green(cli::symbol$record, " Extracting feature space for each cell type...\n"))
   if(length(levels(classes)) == 2){
     
     message("First factor level in '", pVar, "' metadata column considered as positive class:")
@@ -131,7 +125,7 @@ getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig
  
   }
   
-  message("\nDONE!")
+  cat(crayon::green("DONE!\n"))
   
   
 
@@ -159,11 +153,11 @@ getFeatureSpace <- function(object, pVar, varLim = 0.01, correction = "fdr", sig
   negativeCells <- newClasses == "other"
   
   # Get informative features
-  apply(pca, 2, function(pc) wilcox.test(pc[positiveCells], pc[negativeCells])) %>%
+  apply(pca, 2, function(pc) stats::wilcox.test(pc[positiveCells], pc[negativeCells])) %>%
     lapply('[[', "p.value") %>% # Extract p-values
     as.data.frame() %>% 
     gather(key = "PC", value = "pValue") %>%
-    mutate(pValueAdj = p.adjust(pValue, method = correction, n = nrow(.))) %>% # Perform multiple test correction
+    mutate(pValueAdj = stats::p.adjust(pValue, method = correction, n = nrow(.))) %>% # Perform multiple test correction
     arrange(pValueAdj) %>% 
     filter(pValueAdj < sig) %>% # Filter significant features by p-value
     mutate(expVar = expVar[match(PC, names(expVar))]) %>% # Get explained variance for each feature

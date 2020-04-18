@@ -4,7 +4,14 @@
 \alias{scPredict}
 \title{Predict cell classes from a new dataset using a trained model}
 \usage{
-scPredict(reference, new, threshold = NULL, weight = TRUE, ...)
+scPredict(
+  reference,
+  new,
+  threshold = NULL,
+  weight = TRUE,
+  max.iter.harmony = 20,
+  ...
+)
 }
 \arguments{
 \item{reference}{An \code{Seurat} object with trained model(s) using \code{scPred}.}
@@ -14,6 +21,8 @@ scPredict(reference, new, threshold = NULL, weight = TRUE, ...)
 \item{threshold}{Threshold used for probabilities to classify cells into classes}
 
 \item{weight}{If TRUE, probabilities from binary classifiers are weighted to sum 1.}
+
+\item{max.iter.harmony}{Maximum number of rounds to run Harmony. One round of Harmony involves one clustering and one correction step.}
 }
 \value{
 A Seurat object with addtional metadata columns with prediction probabilities associated to each class, a \code{prediction} column, 
@@ -24,9 +33,9 @@ Predicts cell classes for a new dataset based on trained model(s)
 }
 \examples{
 
-
+\dontrun{
 new <- scPredict(reference, new)
-
+}
 }
 \author{
 José Alquicira Hernández

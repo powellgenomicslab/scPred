@@ -4,7 +4,7 @@
 \alias{getFeatureSpace}
 \title{Get discriminant feature space}
 \usage{
-getFeatureSpace(object, pVar, varLim = 0.01, correction = "fdr", sig = 0.05)
+getFeatureSpace(object, pVar, varLim = 0, correction = "fdr", sig = 0.05)
 }
 \arguments{
 \item{object}{A \code{seurat} object}
@@ -34,6 +34,8 @@ Given a prediction variable, finds a feature set of class-informative principal 
 explain variance differences between cell types.
 }
 \examples{
+
+library(scPred)
 pbmc_small <- getFeatureSpace(pbmc_small, "RNA_snn_res.0.8")
 
 }
