@@ -3,7 +3,8 @@
 #' @param reference An \code{Seurat} object with trained model(s) using \code{scPred}.
 #' @param new A seurat object containing cells to be classified
 #' @param threshold Threshold used for probabilities to classify cells into classes
-#' @param weight If TRUE, probabilities from binary classifiers are weighted to sum 1.
+#' @param tolerance Probability tolerance value for threshold. This value is substracted or added from
+#' the computed probability thresholds for the cell type of interest and the remaining cell types respectively.
 #' @param max.iter.harmony Maximum number of rounds to run Harmony. One round of Harmony involves one clustering and one correction step.
 #' @return A Seurat object with addtional metadata columns with prediction probabilities associated to each class, a \code{prediction} column, 
 #' indicating the classification based on the provided threshold and a \code{generic_class} column without "unassigned" labels.
@@ -29,8 +30,9 @@
 scPredict <- function(reference, 
                       new, 
                       threshold = NULL, 
-                      weight = TRUE, 
+                      tolerance = 0.1,
                       max.iter.harmony = 20,
+                      recompute.alignment = TRUE,
                       ...){
   
   # Function validations ----------------------------------------------------
@@ -42,65 +44,95 @@ scPredict <- function(reference,
   if(!is(new, "Seurat")) stop("Both reference and new data must be Seurat objects")
   
   
-  cat(crayon::green(cli::symbol$record, " Matching reference with new dataset...\n"))
+  # Dataset alignment -------------------------------------------------------
   
-  # Subset data
-  ref_loadings <- Loadings(reference, reduction = "pca")
-  ref_embeddings <- Embeddings(reference, reduction = "pca")
-  new_genes <- rownames(new)
-  
-  # Get genes
-  reference_genes <- rownames(ref_loadings)
-  
-  
-  # Get intersection between reference and new datasets
-  shared_genes <- intersect(reference_genes, new_genes)
-  cat(crayon::cyan("\t", cli::symbol$line, paste(length(reference_genes), "genes present in reference loadings\n")))
-  cat(crayon::cyan("\t", cli::symbol$line, paste(length(shared_genes), "genes shared between reference and new dataset\n")))
-  cat(crayon::cyan("\t", cli::symbol$line, paste0(round(length(shared_genes)/length(reference_genes) * 100, 2), 
-                 "% of genes in the reference are present in new dataset\n")))
-  
-  
-  # Subset shared genes from reference
-  ref_loadings <- ref_loadings[shared_genes, ]
+  if("scPred" %in% names(new@reductions)){
+    if(recompute.alignment){
+      alignment <- TRUE
+      crayon::yellow(cli::symbol$figure_dash, "Data has already being aligned to a reference.\n") %>% 
+        cat(sep = "")
+      crayon::yellow(cli::symbol$sup_plus, "Skip data alignment using `recompute.alignment = FALSE`.\n") %>% 
+        cat(sep = "")
+    } 
+    else {
+      alignment <- FALSE
+    }
+
+  }else{
+    alignment <- TRUE
+  }
   
   
-  # Scale new data
-  new <- ScaleData(new, features = reference_genes, ...)
-  #new <- ScaleData(new, features = reference_genes)
+  
+  if(alignment){
+    
+    cat(crayon::green(cli::symbol$record, " Matching reference with new dataset...\n"))
+    
+    # Subset data
+    ref_loadings <- Loadings(reference, reduction = "pca")
+    ref_embeddings <- Embeddings(reference, reduction = "pca")
+    new_genes <- rownames(new)
+    
+    # Get genes
+    reference_genes <- rownames(ref_loadings)
+    
+    
+    # Get intersection between reference and new datasets
+    shared_genes <- intersect(reference_genes, new_genes)
+    cat(crayon::cyan("\t", cli::symbol$line, paste(length(reference_genes), "genes present in reference loadings\n")))
+    cat(crayon::cyan("\t", cli::symbol$line, paste(length(shared_genes), "genes shared between reference and new dataset\n")))
+    cat(crayon::cyan("\t", cli::symbol$line, paste0(round(length(shared_genes)/length(reference_genes) * 100, 2), 
+                                                    "% of genes in the reference are present in new dataset\n")))
+    
+    
+    # Subset shared genes from reference
+    ref_loadings <- ref_loadings[shared_genes, ]
+    
+    
+    # Scale new data
+    new <- ScaleData(new, features = reference_genes, ...)
+    #new <- ScaleData(new, features = reference_genes)
+    
+    
+    ## Subset shared genes from new dataset
+    
+    new_data <- GetAssayData(new, "scale.data")
+    new_data <- new_data[shared_genes, ]
+    new_data <- new_data[match(shared_genes, rownames(new_data)), ]
+    
+    # all(rownames(new_data) == shared_genes)
+    
+    new_embeddings <- t(new_data) %*% ref_loadings
+    
+    
+    dataset <- factor(c(rep("reference", nrow(ref_embeddings)), rep("new", nrow(new_embeddings))), 
+                      levels = c("reference", "new"))
+    
+    
+    rownames(ref_embeddings) <- paste0("ref_", rownames(ref_embeddings))
+    rownames(new_embeddings) <- paste0("new_", rownames(new_embeddings))
+    
+    
+    eigenspace <- as.data.frame(rbind(ref_embeddings, new_embeddings))
+    meta_data <- data.frame(rownames(eigenspace), dataset = dataset)
+    
+    cat(crayon::green(cli::symbol$record, " Aligning new data to reference...\n"))
+    
+    harmony_embeddings <- HarmonyMatrix(eigenspace, 
+                                        meta_data, 
+                                        'dataset', 
+                                        do_pca = FALSE, 
+                                        reference_values = "reference",
+                                        max.iter.harmony = max.iter.harmony)
+    
+    new_embeddings_aligned <- harmony_embeddings[dataset == "new", ]
+    
+  }else{
+    new_embeddings_aligned <- Embeddings(new, reduction = "scPred")
+    colnames(new_embeddings_aligned) <- gsub("harmony", "PC", colnames(new_embeddings_aligned))
+  }
   
   
-  ## Subset shared genes from new dataset
-  
-  new_data <- GetAssayData(new, "scale.data")
-  new_data <- new_data[shared_genes, ]
-  new_data <- new_data[match(shared_genes, rownames(new_data)), ]
-  
-  # all(rownames(new_data) == shared_genes)
-  
-  new_embeddings <- t(new_data) %*% ref_loadings
-  
-  
-  dataset <- factor(c(rep("reference", nrow(ref_embeddings)), rep("new", nrow(new_embeddings))), 
-                    levels = c("reference", "new"))
-  
-  rownames(ref_embeddings) <- paste0("ref_", rownames(ref_embeddings))
-  rownames(new_embeddings) <- paste0("new_", rownames(new_embeddings))
-  
-  
-  eigenspace <- as.data.frame(rbind(ref_embeddings, new_embeddings))
-  meta_data <- data.frame(rownames(eigenspace), dataset = dataset)
-  
-  cat(crayon::green(cli::symbol$record, " Aligning new data to reference...\n"))
-  
-  harmony_embeddings <- HarmonyMatrix(eigenspace, 
-                                      meta_data, 
-                                      'dataset', 
-                                      do_pca = FALSE, 
-                                      reference_values = "reference",
-                                      max.iter.harmony = max.iter.harmony)
-  
-  new_embeddings_aligned <- harmony_embeddings[dataset == "new", ]
   
   # Classify cells using all trained models 
   cellTypeModelNames <- names(reference@misc$scPred@features)
@@ -108,10 +140,6 @@ scPredict <- function(reference,
     
     # Extract features for a given cell type
     as.character(reference@misc$scPred@features[[cellType]]$PC) -> features
-    
-    # Format test cell embeddings
-    namesEmbeddings <- gsub("Project", "", colnames(testEmbeddings))
-    colnames(testEmbeddings) <- namesEmbeddings
     
     # Extract cell type model
     model <- reference@misc$scPred@train[[cellType]]
@@ -128,6 +156,7 @@ scPredict <- function(reference,
     prediction[,1, drop = FALSE]
     
   }
+  
   
   cat(crayon::green(cli::symbol$record, " Classifying cells...\n"))
   res <- sapply(cellTypeModelNames, .predictCellClass, reference, new_embeddings_aligned)
@@ -147,9 +176,6 @@ scPredict <- function(reference,
     negClass <- cellClasses[cellClasses != names(res)]
     res[[negClass]] <- res_comp
     
-  }else if(weight){
-    # Make sum of probabilities across models equal to zero
-    res <- res/rowSums(res)
   }
   
   # Extract maximum probability for each class
@@ -171,25 +197,34 @@ scPredict <- function(reference,
   
   res$no_rejection <- dict[match(res$generic_class, dict[,2]), 1]
   
-
+  
   
   # Classify cells according to probability threshold
   
   if(is.null(threshold)){
-    classThreshold <- sapply(cellTypeModelNames, .getThreshold, reference)
-    
-    if(length(classThreshold) == 1){
+    classThreshold <- getThresholds(reference, tolerance = tolerance)
+    if(ncol(classThreshold) == 1){
       cellClasses <- levels(reference$scPred_response)
-      classThreshold <- c(classThreshold, classThreshold)
+      classThreshold <- c(classThreshold[1,1], classThreshold[1,2])
       names(classThreshold) <- cellClasses
     }
     
-    dict <- cbind(dict, classThreshold)
-    dict[[res$generic_class %in% dict["scPred_response"] , "threshold"]]
+    dict <- cbind(dict, t(classThreshold))
+    # dict[[res$generic_class %in% dict["scPred_response"] , "threshold"]]
     
-    pred <- ifelse(res$max >  dict[dict$scPred_response %in% res$generic_class, "classThreshold"], 
-                   as.character(res$no_rejection), 
-                   "unassigned")
+    i_class <- which(names(res) == "generic_class")
+    i_max <- which(names(res) == "max")
+    
+    res
+    
+    pred <- apply(res, 1, function(x){
+      cutoff <- dict[dict$scPred_response == x[[i_class]], "positive"]
+      if(as.numeric(x[[i_max]]) > cutoff){
+        dict[dict$scPred_response == x[[i_class]], pVar]
+      }else{
+        "unassigned"
+      }
+    })
     
   }else{
     
@@ -217,42 +252,3 @@ scPredict <- function(reference,
   
   
 }
-
-
-
-
-
-
-
-#' @title Get thresholds from training models
-#' @description Calculates the threshold to classify a cell type.
-#' @param cellType Cell type of interest
-#' @param reference A \code{Seurat} object used as reference to perform predictions
-#' @importFrom magrittr "%>%"
-#' @importFrom dplyr select
-#' @importFrom dplyr filter
-#' @importFrom dplyr group_by
-#' @importFrom dplyr summarize
-#' @importFrom dplyr pull
-
-.getThreshold <- function(cellType, reference){
-  props <- as.data.frame(reference@misc$scPred@train[[cellType]]$pred)
-  bestTune <- reference@misc$scPred@train[[cellType]]$bestTune
-  
-  mapply(bestTune, names(bestTune), 
-         FUN = function(par, name) paste0(name, " == ", par)) %>% 
-    paste0(collapse = " & ") -> subsetRule 
-  
-  
-  props %>% 
-    #filter(!!rlang::parse_expr(subsetRule)) %>% 
-    select(other, obs) %>% 
-    group_by(obs) %>% 
-    summarize(median = median(other)) %>% 
-    pull(median) %>% 
-    mean() 
-}
-
-
-
-

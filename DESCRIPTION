@@ -14,6 +14,7 @@ Imports:
     Seurat,
     methods,
     stats,
+    robustbase,
     MLmetrics,
     dplyr,
     tidyr,

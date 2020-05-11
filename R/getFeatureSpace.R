@@ -22,6 +22,8 @@
 #' @importFrom magrittr "%>%"
 #' @importFrom dplyr mutate arrange filter
 #' @importFrom pbapply pblapply
+#' @importFrom robustbase covMcd 
+#' 
 #' @export
 #' @author
 #' Jose Alquicira Hernandez
@@ -35,7 +37,7 @@
 
 
 
-getFeatureSpace <- function(object, pVar, varLim = 0, correction = "fdr", sig = 0.05){
+getFeatureSpace <- function(object, pVar, varLim = 0, correction = "fdr", sig = 1){
   
   
   # Validations -------------------------------------------------------------
@@ -47,38 +49,39 @@ getFeatureSpace <- function(object, pVar, varLim = 0, correction = "fdr", sig = 
   if(!any(correction %in% stats::p.adjust.methods)){
     stop("Invalid multiple testing correction method. See ?p.adjust function")
   }
-    classes <- object[[pVar, drop = TRUE]]
   
-  if(is.null(classes)){
+  if(!pVar %in% names(object@meta.data)){
     stop("Prediction variable is not stored in metadata slot")
   }
+  
+  classes <- object[[pVar, drop = TRUE]]
   
   if(!is.factor(classes)){
     classes <- as.factor(classes)
   }
-
+  
   # Filter principal components by variance ---------------------------------
   
-    # Check if a PCA has been computed
-    if(!("pca" %in% names(object@reductions))){
-      stop("No PCA has been computet yet. See RunPCA() function")
-    }
-    
-    # Check if available was normalized
-    
-    assay <- DefaultAssay(object)
-    cellEmbeddings <- Embeddings(object)
-    
-    
-    # Subset PCA
-    expVar <- Stdev(object)**2/sum(Stdev(object)**2)
-    names(expVar) <- colnames(Embeddings(object))
-    i <-  expVar > varLim
-    
-    # Create scPred object
-    pca <- Embeddings(object, reduction = "pca")[,i]
-    
-    
+  # Check if a PCA has been computed
+  if(!("pca" %in% names(object@reductions))){
+    stop("No PCA has been computet yet. See RunPCA() function")
+  }
+  
+  # Check if available was normalized
+  
+  assay <- DefaultAssay(object)
+  cellEmbeddings <- Embeddings(object)
+  
+  
+  # Subset PCA
+  expVar <- Stdev(object)**2/sum(Stdev(object)**2)
+  names(expVar) <- colnames(Embeddings(object))
+  i <-  expVar > varLim
+  
+  # Create scPred object
+  pca <- Embeddings(object, reduction = "pca")[,i]
+  
+  
   # Validate response variable values
   uniqueClasses <- unique(classes)
   isValidName <- uniqueClasses == make.names(uniqueClasses)
@@ -86,10 +89,10 @@ getFeatureSpace <- function(object, pVar, varLim = 0, correction = "fdr", sig = 
   if(!all(isValidName)){
     classes <- make.names(classes)
     classes <- factor(classes, levels = unique(classes))
+    names(classes) <- Cells(object)
   }
   
   object@meta.data[["scPred_response"]] <- classes
-  
   
   
   # Select informative principal components
@@ -112,7 +115,7 @@ getFeatureSpace <- function(object, pVar, varLim = 0, correction = "fdr", sig = 
     
   }
   
-
+  
   nFeatures <- unlist(lapply(res, nrow))
   
   noFeatures <- nFeatures == 0
@@ -122,21 +125,22 @@ getFeatureSpace <- function(object, pVar, varLim = 0, correction = "fdr", sig = 
     warning("\nWarning: No features were found for classes:\n",
             paste0(names(res)[noFeatures], collapse = "\n"), "\n")
     res[[names(res)[noFeatures]]] <- NULL
- 
+    
   }
   
   cat(crayon::green("DONE!\n"))
   
   
-
-    # Create scPred object
-    
+  
+  # Create scPred object
+  
   object@misc$scPred <- new("scPred", 
-        pVar = pVar,
-        expVar = expVar,
-        features = res)
-
+                            pVar = pVar,
+                            expVar = expVar,
+                            features = res)
+  
   object
+  
   
 }
 

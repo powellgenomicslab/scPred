@@ -4,7 +4,7 @@
 \alias{getFeatureSpace}
 \title{Get discriminant feature space}
 \usage{
-getFeatureSpace(object, pVar, varLim = 0, correction = "fdr", sig = 0.05)
+getFeatureSpace(object, pVar, varLim = 0, correction = "fdr", sig = 1)
 }
 \arguments{
 \item{object}{A \code{seurat} object}

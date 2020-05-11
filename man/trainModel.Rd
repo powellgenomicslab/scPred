@@ -12,7 +12,6 @@ trainModel(
   seed = 66,
   tuneLength = 3,
   metric = c("ROC", "PR", "Accuracy", "Kappa"),
-  imbalance = 1,
   returnData = FALSE,
   savePredictions = "final",
   allowParallel = FALSE
@@ -39,10 +38,6 @@ See `?caret::train` documentation}
 
 \item{metric}{Performance metric to be used to select best model: `ROC` (area under the ROC curve), 
 `PR` (area under the precision-recall curve), `Accuracy`, and `Kappa`}
-
-\item{imbalance}{Proportion of cell type composition to be considered as an imbalance issue. By default,
-if a cell type is present only in 0.1 (10%) or less from the whole population, scPred will attempt to 
-train a weighted SVM to account for class imbalance. Set to `1` to avoid this step}
 
 \item{returnData}{If \code{TRUE}, training data is returned within \code{scPred} object.}
 

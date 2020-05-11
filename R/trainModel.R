@@ -4,7 +4,7 @@
 #' the \code{getFeatureSpace} function
 #' @param model Classification model supported via \code{caret} package. A list of all models can be found here:
 #' https://topepo.github.io/caret/available-models.html
-#' Default: support vector machine with polynomial kernel
+#' Default: support vector machine with radial kernel
 #' @param resampleMethod Resample model used in \code{trainControl} function from \code{caret}. 
 #' Default: K-fold cross validation
 #' @param number Number of iterations for resample method. See \code{trainControl} function
@@ -14,9 +14,6 @@
 #' See `?caret::train` documentation
 #' @param metric Performance metric to be used to select best model: `ROC` (area under the ROC curve), 
 #' `PR` (area under the precision-recall curve), `Accuracy`, and `Kappa`
-#' @param imbalance Proportion of cell type composition to be considered as an imbalance issue. By default,
-#' if a cell type is present only in 0.1 (10%) or less from the whole population, scPred will attempt to 
-#' train a weighted SVM to account for class imbalance. Set to `1` to avoid this step
 #' @param returnData If \code{TRUE}, training data is returned within \code{scPred} object. 
 #' @param savePredictions Specifies the set of hold-out predictions for each resample that should be
 #' returned. Values can be either "all", "final", or "none".
@@ -47,11 +44,10 @@ trainModel <- function(object,
                        seed = 66,
                        tuneLength = 3,
                        metric = c("ROC", "PR", "Accuracy", "Kappa"),
-                       imbalance = 1,
                        returnData = FALSE,
                        savePredictions = "final",
                        allowParallel = FALSE
-                       ){
+){
     
     
     # Validations -------------------------------------------------------------
@@ -72,7 +68,7 @@ trainModel <- function(object,
     # Train a prediction model for each class
     cat(crayon::green(cli::symbol$record, " Training models for each cell type...\n"))
     
-    if(length(classes) == 2){
+    if(length(classes) == 1){
         modelsRes <-  .trainModel(classes[1],
                                   object,
                                   model,
@@ -80,7 +76,6 @@ trainModel <- function(object,
                                   tuneLength,
                                   seed,
                                   metric,
-                                  imbalance,
                                   number,
                                   returnData,
                                   savePredictions,
@@ -97,7 +92,6 @@ trainModel <- function(object,
                               tuneLength,
                               seed,
                               metric,
-                              imbalance,
                               number,
                               returnData,
                               savePredictions,
@@ -118,7 +112,6 @@ trainModel <- function(object,
                         tuneLength,
                         seed,
                         metric,
-                        imbalance,
                         number,
                         returnData,
                         savePredictions, 
@@ -133,15 +126,7 @@ trainModel <- function(object,
     
     namesPC <- as.character(object@misc$scPred@features[[positiveClass]]$PC)
     features <- subsetMatrix(Embeddings(object, reduction = "pca"), namesPC)
-    response <-  as.character(object[["scPred_response", drop = TRUE]])
-    
-    
-    classWeight <- table(response)/ length(response)
-    
-    if(any(classWeight < imbalance)){
-        metric <- "PR"
-        model <- "svmRadialWeights"
-    }
+    response <-  object@meta.data[, "scPred_response", drop = TRUE] %>% as.character()
     
     
     i <- response != positiveClass
