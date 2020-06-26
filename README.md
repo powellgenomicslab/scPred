@@ -1,5 +1,5 @@
 [![DOI](https://zenodo.org/badge/206724827.svg)](https://zenodo.org/badge/latestdoi/206724827)
-[![lifecycle](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://zenodo.org/badge/latestdoi/206724827)
+[![lifecycle](https://img.shields.io/badge/lifecycle-maturing-blue.svg)]
 
 # scPred: accurate supervised method for cell-type classification from single-cell RNA-seq data
 
