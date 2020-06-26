@@ -2,6 +2,10 @@
 #' @description Trains a prediction model from an \code{scPred} object stored in a \code{Seurat} object
 #' @param object An \code{Seurat} object with informative PCs obtained using
 #' the \code{getFeatureSpace} function
+#' @param preProcess A string vector that defines a pre-processing of the predictor data. Current possibilities are 
+#' "BoxCox", "YeoJohnson", "expoTrans", "center", "scale", "range", "knnImpute", "bagImpute", "medianImpute", 
+#' "pca", "ica" and "spatialSign". The default is "center" and "scale. See preProcess and trainControl on the 
+#' procedures and how to adjust them
 #' @param model Classification model supported via \code{caret} package. A list of all models can be found here:
 #' https://topepo.github.io/caret/available-models.html
 #' Default: support vector machine with radial kernel
@@ -39,6 +43,7 @@
 
 trainModel <- function(object,
                        model = "svmRadial",
+                       preProcess = c("center", "scale"),
                        resampleMethod = "cv",
                        number = 5,
                        seed = 66,
@@ -63,7 +68,7 @@ trainModel <- function(object,
     
     classes <- names(object@misc$scPred@features)
     metric <- match.arg(metric)
-    
+    reduction <- object@misc$scPred@reduction
     
     # Train a prediction model for each class
     cat(crayon::green(cli::symbol$record, " Training models for each cell type...\n"))
@@ -72,6 +77,8 @@ trainModel <- function(object,
         modelsRes <-  .trainModel(classes[1],
                                   object,
                                   model,
+                                  reduction,
+                                  preProcess,
                                   resampleMethod,
                                   tuneLength,
                                   seed,
@@ -88,6 +95,8 @@ trainModel <- function(object,
         modelsRes <- pblapply(classes, .trainModel,
                               object,
                               model,
+                              reduction,
+                              preProcess,
                               resampleMethod,
                               tuneLength,
                               seed,
@@ -108,6 +117,8 @@ trainModel <- function(object,
 .trainModel <- function(positiveClass,
                         object,
                         model,
+                        reduction,
+                        preProcess,
                         resampleMethod,
                         tuneLength,
                         seed,
@@ -124,8 +135,8 @@ trainModel <- function(object,
         message("No informative principal components were identified for class: ", positiveClass)
     }
     
-    namesPC <- as.character(object@misc$scPred@features[[positiveClass]]$PC)
-    features <- subsetMatrix(Embeddings(object, reduction = "pca"), namesPC)
+    names_features <- as.character(object@misc$scPred@features[[positiveClass]]$feature)
+    features <- subsetMatrix(Embeddings(object, reduction = reduction), names_features)
     response <-  object@meta.data[, "scPred_response", drop = TRUE] %>% as.character()
     
     
@@ -170,13 +181,13 @@ trainModel <- function(object,
                      method = model,
                      metric = metric,
                      trControl = trCtrl,
-                     preProc = c("center", "scale"), 
+                     preProcess = preProcess, 
                      tuneLength = tuneLength)
     }else{
         fit <- train(x = features,
                      y = response,
                      method = model,
-                     preProc = c("center", "scale"),
+                     preProcess= preProcess,
                      metric = metric,
                      trControl = trCtrl, 
                      tuneLength = tuneLength)

@@ -7,6 +7,7 @@
 trainModel(
   object,
   model = "svmRadial",
+  preProcess = c("center", "scale"),
   resampleMethod = "cv",
   number = 5,
   seed = 66,
@@ -23,7 +24,12 @@ the \code{getFeatureSpace} function}
 
 \item{model}{Classification model supported via \code{caret} package. A list of all models can be found here:
 https://topepo.github.io/caret/available-models.html
-Default: support vector machine with polynomial kernel}
+Default: support vector machine with radial kernel}
+
+\item{preProcess}{A string vector that defines a pre-processing of the predictor data. Current possibilities are 
+"BoxCox", "YeoJohnson", "expoTrans", "center", "scale", "range", "knnImpute", "bagImpute", "medianImpute", 
+"pca", "ica" and "spatialSign". The default is "center" and "scale. See preProcess and trainControl on the 
+procedures and how to adjust them}
 
 \item{resampleMethod}{Resample model used in \code{trainControl} function from \code{caret}. 
 Default: K-fold cross validation}

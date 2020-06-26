@@ -11,6 +11,7 @@ scPredict(
   tolerance = 0.1,
   max.iter.harmony = 20,
   recompute.alignment = TRUE,
+  reference.scaling = TRUE,
   ...
 )
 }
@@ -25,6 +26,8 @@ scPredict(
 the computed probability thresholds for the cell type of interest and the remaining cell types respectively.}
 
 \item{max.iter.harmony}{Maximum number of rounds to run Harmony. One round of Harmony involves one clustering and one correction step.}
+
+\item{reference.scaling}{Scale new dataset based on means and stdevs from reference dataset before alignment. Otherwise, data will be independently scaled.}
 }
 \value{
 A Seurat object with addtional metadata columns with prediction probabilities associated to each class, a \code{prediction} column, 

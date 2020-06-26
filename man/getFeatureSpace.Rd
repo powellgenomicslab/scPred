@@ -4,14 +4,12 @@
 \alias{getFeatureSpace}
 \title{Get discriminant feature space}
 \usage{
-getFeatureSpace(object, pVar, varLim = 0, correction = "fdr", sig = 1)
+getFeatureSpace(object, pVar, correction = "fdr", sig = 1, reduction = "pca")
 }
 \arguments{
 \item{object}{A \code{seurat} object}
 
 \item{pVar}{Column in \code{meta.data} slot containing the cell-type labels of each single cell}
-
-\item{varLim}{Threshold used to filter principal components based on their individual variance explained.}
 
 \item{correction}{Multiple testing correction method used. Default: false discovery rate. See \code{p.adjust} function}
 

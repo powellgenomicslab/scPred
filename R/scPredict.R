@@ -6,6 +6,7 @@
 #' @param tolerance Probability tolerance value for threshold. This value is substracted or added from
 #' the computed probability thresholds for the cell type of interest and the remaining cell types respectively.
 #' @param max.iter.harmony Maximum number of rounds to run Harmony. One round of Harmony involves one clustering and one correction step.
+#' @param reference.scaling Scale new dataset based on means and stdevs from reference dataset before alignment. Otherwise, data will be independently scaled.
 #' @return A Seurat object with addtional metadata columns with prediction probabilities associated to each class, a \code{prediction} column, 
 #' indicating the classification based on the provided threshold and a \code{generic_class} column without "unassigned" labels.
 #' @keywords prediction, new, test, validation
@@ -33,6 +34,7 @@ scPredict <- function(reference,
                       tolerance = 0.1,
                       max.iter.harmony = 20,
                       recompute.alignment = TRUE,
+                      reference.scaling = TRUE,
                       ...){
   
   # Function validations ----------------------------------------------------
@@ -57,20 +59,20 @@ scPredict <- function(reference,
     else {
       alignment <- FALSE
     }
-
+    
   }else{
     alignment <- TRUE
   }
   
-  
+  reduction <- reference@misc$scPred@reduction
   
   if(alignment){
     
     cat(crayon::green(cli::symbol$record, " Matching reference with new dataset...\n"))
     
     # Subset data
-    ref_loadings <- Loadings(reference, reduction = "pca")
-    ref_embeddings <- Embeddings(reference, reduction = "pca")
+    ref_loadings <- Loadings(reference, reduction = reduction)
+    ref_embeddings <- Embeddings(reference, reduction = reduction)
     new_genes <- rownames(new)
     
     # Get genes
@@ -89,20 +91,57 @@ scPredict <- function(reference,
     ref_loadings <- ref_loadings[shared_genes, ]
     
     
-    # Scale new data
-    new <- ScaleData(new, features = reference_genes, ...)
-    #new <- ScaleData(new, features = reference_genes)
+    if(reference.scaling){
+      reference_data <- GetAssayData(reference, "data")[shared_genes,]
+      new_data <- GetAssayData(new, "data")[shared_genes,]
+      means <- Matrix::rowMeans(reference_data)
+      
+      
+      rowVar <- function(x, ...) {
+        sqrt(Matrix::rowSums((x - means)^2, ...)/(ncol(x) - 1))
+      }
+      
+      
+      stdevs  <- rowVar(reference_data)
+      new_data <- Matrix::t(new_data)
+      
+      
+      i <- stdevs == 0
+      
+      if(any(i)){
+        warning(paste0(length(i), " genes have zero variance but are present in the gene loadings. \nDid you subset or integrated this data before?"))
+        cat(crayon::yellow("Removing zero-variance genes from projection\n"))
+        
+        new_data <- new_data[,!i]
+        ref_loadings <- ref_loadings[!i,]
+        means <- means[!i]
+        stdevs <- stdevs[!i]
+        all(colnames(new_data) == rownames(ref_loadings))
+      }
+      
+      
+      scaled_data <- scale(new_data, means, stdevs)
+      
+      
+      new_embeddings <- scaled_data %*% ref_loadings
+      
+    }else{
+      # Scale new data
+      new <- ScaleData(new, features = reference_genes, ...)
+      #new <- ScaleData(new, features = reference_genes)
+      
+      ## Subset shared genes from new dataset
+      
+      new_data <- GetAssayData(new, "scale.data")
+      new_data <- new_data[shared_genes, ]
+      new_data <- new_data[match(shared_genes, rownames(new_data)), ]
+      
+      # all(rownames(new_data) == shared_genes)
+      
+      new_embeddings <- t(new_data) %*% ref_loadings
+    }
     
     
-    ## Subset shared genes from new dataset
-    
-    new_data <- GetAssayData(new, "scale.data")
-    new_data <- new_data[shared_genes, ]
-    new_data <- new_data[match(shared_genes, rownames(new_data)), ]
-    
-    # all(rownames(new_data) == shared_genes)
-    
-    new_embeddings <- t(new_data) %*% ref_loadings
     
     
     dataset <- factor(c(rep("reference", nrow(ref_embeddings)), rep("new", nrow(new_embeddings))), 
@@ -129,7 +168,7 @@ scPredict <- function(reference,
     
   }else{
     new_embeddings_aligned <- Embeddings(new, reduction = "scPred")
-    colnames(new_embeddings_aligned) <- gsub("harmony", "PC", colnames(new_embeddings_aligned))
+    colnames(new_embeddings_aligned) <- gsub("harmony", "scPred", colnames(new_embeddings_aligned))
   }
   
   
@@ -139,7 +178,7 @@ scPredict <- function(reference,
   .predictCellClass <-  function(cellType, reference, testEmbeddings){
     
     # Extract features for a given cell type
-    as.character(reference@misc$scPred@features[[cellType]]$PC) -> features
+    as.character(reference@misc$scPred@features[[cellType]]$feature) -> features
     
     # Extract cell type model
     model <- reference@misc$scPred@train[[cellType]]
@@ -246,8 +285,15 @@ scPredict <- function(reference,
   res <- AddMetaData(new, res)
   rownames(new_embeddings_aligned) <- gsub("^new_", "", rownames(new_embeddings_aligned))
   res@reductions[["scPred"]] <- CreateDimReducObject(embeddings = new_embeddings_aligned, 
-                                                     key = "harmony_",
+                                                     key = "scPred_",
                                                      assay = DefaultAssay(object = new))
+  if(recompute.alignment){
+    
+    rownames(new_embeddings) <- gsub("^new_", "", rownames(new_embeddings))
+    res@reductions[["scPred_raw"]] <- CreateDimReducObject(embeddings = new_embeddings, 
+                                                           key = "Projection_",
+                                                           assay = DefaultAssay(object = new))
+  }
   res
   
   

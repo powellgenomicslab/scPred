@@ -2,7 +2,7 @@
 #' @description An S4 class to contain principal component analysis of a gene expression matrix, metadata, training, and
 #' prediction information.
 #' @slot pVar Column name from metadata to use as the variable to predict using
-#' @slot expVar Explained variance by each principoal component 
+#' @slot reduction Dimensionality reduction
 #' the informative principal components
 #' @slot features A data frame with the following information:
 #' \itemize{
@@ -21,11 +21,11 @@
 
 
 setClass("scPred", representation(pVar = "character",
-                                  expVar = "numeric",
                                   features = "list",
+                                  reduction = "character",
                                   train = "list"),
          prototype(pVar = character(),
-                   expVar = numeric(),
+                   reduction = character(),
                    features = data.frame(),
                    train = list()))
 

@@ -14,7 +14,7 @@ prediction information.
 \describe{
 \item{\code{pVar}}{Column name from metadata to use as the variable to predict using}
 
-\item{\code{expVar}}{Explained variance by each principoal component 
+\item{\code{reduction}}{Dimensionality reduction
 the informative principal components}
 
 \item{\code{features}}{A data frame with the following information:

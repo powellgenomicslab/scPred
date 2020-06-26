@@ -3,7 +3,6 @@
 #' explain variance differences between cell types. 
 #' @param object A \code{seurat} object
 #' @param pVar Column in \code{meta.data} slot containing the cell-type labels of each single cell
-#' @param varLim Threshold used to filter principal components based on their individual variance explained.
 #' @param correction Multiple testing correction method used. Default: false discovery rate. See \code{p.adjust} function 
 #' @param sig Significance level to determine principal components explaining class identity
 #' @return An \code{Seurat} object along with a \code{scPred} object stored in the \code{@misc} slot 
@@ -37,7 +36,7 @@
 
 
 
-getFeatureSpace <- function(object, pVar, varLim = 0, correction = "fdr", sig = 1){
+getFeatureSpace <- function(object, pVar, correction = "fdr", sig = 1, reduction = "pca"){
   
   
   # Validations -------------------------------------------------------------
@@ -63,23 +62,14 @@ getFeatureSpace <- function(object, pVar, varLim = 0, correction = "fdr", sig = 
   # Filter principal components by variance ---------------------------------
   
   # Check if a PCA has been computed
-  if(!("pca" %in% names(object@reductions))){
-    stop("No PCA has been computet yet. See RunPCA() function")
+  if(!(reduction %in% names(object@reductions))){
+    stop("No ",reduction, " reduction has been computet yet. See RunPCA() function?")
   }
   
   # Check if available was normalized
   
   assay <- DefaultAssay(object)
-  cellEmbeddings <- Embeddings(object)
-  
-  
-  # Subset PCA
-  expVar <- Stdev(object)**2/sum(Stdev(object)**2)
-  names(expVar) <- colnames(Embeddings(object))
-  i <-  expVar > varLim
-  
-  # Create scPred object
-  pca <- Embeddings(object, reduction = "pca")[,i]
+  cellEmbeddings <- Embeddings(object, reduction = reduction)
   
   
   # Validate response variable values
@@ -94,7 +84,6 @@ getFeatureSpace <- function(object, pVar, varLim = 0, correction = "fdr", sig = 
   
   object@meta.data[["scPred_response"]] <- classes
   
-  
   # Select informative principal components
   # If only 2 classes are present in prediction variable, train one model for the positive class
   # The positive class will be the first level of the factor variable
@@ -104,13 +93,13 @@ getFeatureSpace <- function(object, pVar, varLim = 0, correction = "fdr", sig = 
     
     message("First factor level in '", pVar, "' metadata column considered as positive class:")
     message(levels(classes)[1])
-    res <- .getFeatures(levels(classes)[1], expVar, classes, pca, correction, sig)
+    res <- .getFeatures(levels(classes)[1], classes, cellEmbeddings, correction, sig)
     res <- list(res)
     names(res) <- levels(classes)[1]
     
   }else{
     
-    res <- pblapply(levels(classes), .getFeatures, expVar, classes, pca, correction, sig)
+    res <- pblapply(levels(classes), .getFeatures, classes, cellEmbeddings, correction, sig)
     names(res) <- levels(classes)
     
   }
@@ -136,7 +125,7 @@ getFeatureSpace <- function(object, pVar, varLim = 0, correction = "fdr", sig = 
   
   object@misc$scPred <- new("scPred", 
                             pVar = pVar,
-                            expVar = expVar,
+                            reduction = reduction,
                             features = res)
   
   object
@@ -144,7 +133,7 @@ getFeatureSpace <- function(object, pVar, varLim = 0, correction = "fdr", sig = 
   
 }
 
-.getFeatures <- function(positiveClass, expVar, classes, pca, correction, sig){
+.getFeatures <- function(positiveClass, classes, cellEmbeddings, correction, sig){
   
   # Set non-positive classes to "other"
   i <- classes != positiveClass
@@ -157,16 +146,14 @@ getFeatureSpace <- function(object, pVar, varLim = 0, correction = "fdr", sig = 
   negativeCells <- newClasses == "other"
   
   # Get informative features
-  apply(pca, 2, function(pc) stats::wilcox.test(pc[positiveCells], pc[negativeCells])) %>%
+  apply(cellEmbeddings, 2, function(d) stats::wilcox.test(d[positiveCells], d[negativeCells])) %>%
     lapply('[[', "p.value") %>% # Extract p-values
     as.data.frame() %>% 
-    gather(key = "PC", value = "pValue") %>%
+    gather(key = "feature", value = "pValue") %>%
     mutate(pValueAdj = stats::p.adjust(pValue, method = correction, n = nrow(.))) %>% # Perform multiple test correction
     arrange(pValueAdj) %>% 
-    filter(pValueAdj < sig) %>% # Filter significant features by p-value
-    mutate(expVar = expVar[match(PC, names(expVar))]) %>% # Get explained variance for each feature
-    mutate(PC = factor(PC, levels = PC), cumExpVar = cumsum(expVar)) -> sigPCs
+    filter(pValueAdj < sig) -> sigDims
   
-  sigPCs
+  sigDims
 }
 
