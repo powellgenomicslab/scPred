@@ -2,11 +2,11 @@
 #' @description Trains a prediction model from an \code{scPred} object stored in a \code{Seurat} object
 #' @param object An \code{Seurat} object with informative PCs obtained using
 #' the \code{getFeatureSpace} function
+#' @param model Classification model supported via \code{caret} package. A list of all models can be found here:
 #' @param preProcess A string vector that defines a pre-processing of the predictor data. Current possibilities are 
 #' "BoxCox", "YeoJohnson", "expoTrans", "center", "scale", "range", "knnImpute", "bagImpute", "medianImpute", 
 #' "pca", "ica" and "spatialSign". The default is "center" and "scale. See preProcess and trainControl on the 
 #' procedures and how to adjust them
-#' @param model Classification model supported via \code{caret} package. A list of all models can be found here:
 #' https://topepo.github.io/caret/available-models.html
 #' Default: support vector machine with radial kernel
 #' @param resampleMethod Resample model used in \code{trainControl} function from \code{caret}. 
@@ -21,6 +21,7 @@
 #' @param returnData If \code{TRUE}, training data is returned within \code{scPred} object. 
 #' @param savePredictions Specifies the set of hold-out predictions for each resample that should be
 #' returned. Values can be either "all", "final", or "none".
+#' @param allowParallel Allow parallel processing for resampling?
 #' @return A list of \code{train} objects for each cell class (e.g. cell type). See \code{train} function for details.
 #' @keywords train, model
 #' @importFrom methods is
@@ -29,17 +30,6 @@
 #' @export
 #' @author
 #' Jose Alquicira Hernandez
-#' @examples
-#'
-#' # Train a SVM with a Radial kernel
-#' ## A numeric seed is provided for the K-fold cross validation
-#' ## The metric ROC is used to select the best tuned model. "Accuracy" and "Kappa" may be used too.
-#'
-#' pbmc_small <- getFeatureSpace(pbmc_small, "RNA_snn_res.0.8")
-#' pbmc_small <- trainModel(object = pbmc_small,
-#'                      seed = 1234,
-#'                      metric = "ROC")
-#'
 
 trainModel <- function(object,
                        model = "svmRadial",
@@ -73,9 +63,13 @@ trainModel <- function(object,
     # Train a prediction model for each class
     cat(crayon::green(cli::symbol$record, " Training models for each cell type...\n"))
     
+    
+    spmodel <- object@misc$scPred
+    
+    
     if(length(classes) == 1){
         modelsRes <-  .trainModel(classes[1],
-                                  object,
+                                  spmodel,
                                   model,
                                   reduction,
                                   preProcess,
@@ -93,7 +87,7 @@ trainModel <- function(object,
         
     }else{
         modelsRes <- pblapply(classes, .trainModel,
-                              object,
+                              spmodel,
                               model,
                               reduction,
                               preProcess,
@@ -110,12 +104,13 @@ trainModel <- function(object,
     
     cat(crayon::green("DONE!\n"))
     
-    object@misc$scPred@train <- modelsRes
+    spmodel@train <- modelsRes
+    object@misc$scPred <- spmodel
     object
 }
 
 .trainModel <- function(positiveClass,
-                        object,
+                        spmodel,
                         model,
                         reduction,
                         preProcess,
@@ -131,13 +126,13 @@ trainModel <- function(object,
     
     
     
-    if(nrow(object@misc$scPred@features[[positiveClass]]) == 0){
+    if(nrow(spmodel@features[[positiveClass]]) == 0){
         message("No informative principal components were identified for class: ", positiveClass)
     }
     
-    names_features <- as.character(object@misc$scPred@features[[positiveClass]]$feature)
-    features <- subsetMatrix(Embeddings(object, reduction = reduction), names_features)
-    response <-  object@meta.data[, "scPred_response", drop = TRUE] %>% as.character()
+    names_features <- as.character(spmodel@features[[positiveClass]]$feature)
+    features <- scPred:::subsetMatrix(spmodel@cell_embeddings, names_features)
+    response <-  spmodel@metadata$response %>% as.character()
     
     
     i <- response != positiveClass

@@ -1,18 +1,19 @@
 #' @title Definition of 'scPred' class
-#' @description An S4 class to contain principal component analysis of a gene expression matrix, metadata, training, and
-#' prediction information.
-#' @slot pVar Column name from metadata to use as the variable to predict using
-#' @slot reduction Dimensionality reduction
-#' the informative principal components
+#' @description An S4 class to containing features, dimensionality reduction information, and trained models
+#' @slot pvar Column name from metadata to use as the variable to predict using
+#' @slot metadata A data frame to store metadata including prediction variable (pvar)
 #' @slot features A data frame with the following information:
 #' \itemize{
-#' \item PC: Principal component
-#' \item Freq: Frequency of occurencxe of the principal component over a number of random samples from the PCA matrix
-#' \item expVar: Explained variance by the principal component
-#' \item cumExpVar: All principal components are ranked accoriding to their frequency of ocurrence and their variance explained. 
-#' This column contains the cumulative variance explained across the ranked principal components
+#' \item feature: Eigenvector (e.g. principal component)
+#' \item pValue: Significance value from a wilcoxon test 
+#' \item pValueAdj: Adjusted p-value for multiple testing
 #' }
+#' @slot loadings Gene loadings
+#' @slot scaling Means and standard deviation to center and standardize data
+#' @slot reduction Dimensionality reduction name
+#' @slot reduction_key Dimensionality reduction name key
 #' @slot train A list with all trained models using the \code{caret} package. Each model correspond to a cell type
+#' @slot mist A list to store extra information and for developing testing
 #' @name scPred
 #' @rdname scPred
 #' @aliases scPred-class
@@ -20,14 +21,27 @@
 #' 
 
 
-setClass("scPred", representation(pVar = "character",
+setClass("scPred", representation(pvar = "character",
+                                  metadata = "data.frame",
                                   features = "list",
+                                  cell_embeddings = "matrix",
+                                  feature_loadings = "matrix",
+                                  scaling = "data.frame",
                                   reduction = "character",
-                                  train = "list"),
-         prototype(pVar = character(),
+                                  reduction_key = "character",
+                                  train = "list",
+                                  misc = "list"),
+         prototype(pvar = character(),
+                   metadata = data.frame(),
+                   features = list(),
+                   cell_embeddings = matrix(),
+                   feature_loadings = matrix(),
+                   scaling = data.frame(),
                    reduction = character(),
-                   features = data.frame(),
-                   train = list()))
+                   reduction_key = character(),
+                   train = list(),
+                   misc = list())
+         )
 
 
 

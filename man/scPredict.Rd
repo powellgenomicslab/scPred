@@ -5,20 +5,20 @@
 \title{Predict cell classes from a new dataset using a trained model}
 \usage{
 scPredict(
-  reference,
   new,
-  threshold = NULL,
+  reference,
+  threshold = 0.75,
   tolerance = 0.1,
   max.iter.harmony = 20,
-  recompute.alignment = TRUE,
-  reference.scaling = TRUE,
+  recompute_alignment = TRUE,
+  reference_scaling = TRUE,
   ...
 )
 }
 \arguments{
-\item{reference}{An \code{Seurat} object with trained model(s) using \code{scPred}.}
-
 \item{new}{A seurat object containing cells to be classified}
+
+\item{reference}{An \code{Seurat} object with trained model(s) using \code{scPred} or an \code{scPred} object}
 
 \item{threshold}{Threshold used for probabilities to classify cells into classes}
 
@@ -27,7 +27,9 @@ the computed probability thresholds for the cell type of interest and the remain
 
 \item{max.iter.harmony}{Maximum number of rounds to run Harmony. One round of Harmony involves one clustering and one correction step.}
 
-\item{reference.scaling}{Scale new dataset based on means and stdevs from reference dataset before alignment. Otherwise, data will be independently scaled.}
+\item{recompute_alignment}{Recompute alignment? Useful if \code{scPredict()} has already been run}
+
+\item{reference_scaling}{Scale new dataset based on means and stdevs from reference dataset before alignment. Otherwise, data will be independently scaled.}
 }
 \value{
 A Seurat object with addtional metadata columns with prediction probabilities associated to each class, a \code{prediction} column, 
@@ -35,12 +37,6 @@ indicating the classification based on the provided threshold and a \code{generi
 }
 \description{
 Predicts cell classes for a new dataset based on trained model(s)
-}
-\examples{
-
-\dontrun{
-new <- scPredict(reference, new)
-}
 }
 \author{
 José Alquicira Hernández

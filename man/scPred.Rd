@@ -6,26 +6,32 @@
 \alias{scPred-class}
 \title{Definition of 'scPred' class}
 \description{
-An S4 class to contain principal component analysis of a gene expression matrix, metadata, training, and
-prediction information.
+An S4 class to containing features, dimensionality reduction information, and trained models
 }
 \section{Slots}{
 
 \describe{
-\item{\code{pVar}}{Column name from metadata to use as the variable to predict using}
+\item{\code{pvar}}{Column name from metadata to use as the variable to predict using}
 
-\item{\code{reduction}}{Dimensionality reduction
-the informative principal components}
+\item{\code{metadata}}{A data frame to store metadata including prediction variable (pvar)}
 
 \item{\code{features}}{A data frame with the following information:
 \itemize{
-\item PC: Principal component
-\item Freq: Frequency of occurencxe of the principal component over a number of random samples from the PCA matrix
-\item expVar: Explained variance by the principal component
-\item cumExpVar: All principal components are ranked accoriding to their frequency of ocurrence and their variance explained. 
-This column contains the cumulative variance explained across the ranked principal components
+\item feature: Eigenvector (e.g. principal component)
+\item pValue: Significance value from a wilcoxon test 
+\item pValueAdj: Adjusted p-value for multiple testing
 }}
 
+\item{\code{loadings}}{Gene loadings}
+
+\item{\code{scaling}}{Means and standard deviation to center and standardize data}
+
+\item{\code{reduction}}{Dimensionality reduction name}
+
+\item{\code{reduction_key}}{Dimensionality reduction name key}
+
 \item{\code{train}}{A list with all trained models using the \code{caret} package. Each model correspond to a cell type}
+
+\item{\code{mist}}{A list to store extra information and for developing testing}
 }}
 

@@ -22,14 +22,14 @@ trainModel(
 \item{object}{An \code{Seurat} object with informative PCs obtained using
 the \code{getFeatureSpace} function}
 
-\item{model}{Classification model supported via \code{caret} package. A list of all models can be found here:
-https://topepo.github.io/caret/available-models.html
-Default: support vector machine with radial kernel}
+\item{model}{Classification model supported via \code{caret} package. A list of all models can be found here:}
 
 \item{preProcess}{A string vector that defines a pre-processing of the predictor data. Current possibilities are 
 "BoxCox", "YeoJohnson", "expoTrans", "center", "scale", "range", "knnImpute", "bagImpute", "medianImpute", 
 "pca", "ica" and "spatialSign". The default is "center" and "scale. See preProcess and trainControl on the 
-procedures and how to adjust them}
+procedures and how to adjust them
+https://topepo.github.io/caret/available-models.html
+Default: support vector machine with radial kernel}
 
 \item{resampleMethod}{Resample model used in \code{trainControl} function from \code{caret}. 
 Default: K-fold cross validation}
@@ -49,24 +49,14 @@ See `?caret::train` documentation}
 
 \item{savePredictions}{Specifies the set of hold-out predictions for each resample that should be
 returned. Values can be either "all", "final", or "none".}
+
+\item{allowParallel}{Allow parallel processing for resampling?}
 }
 \value{
 A list of \code{train} objects for each cell class (e.g. cell type). See \code{train} function for details.
 }
 \description{
 Trains a prediction model from an \code{scPred} object stored in a \code{Seurat} object
-}
-\examples{
-
-# Train a SVM with a Radial kernel
-## A numeric seed is provided for the K-fold cross validation
-## The metric ROC is used to select the best tuned model. "Accuracy" and "Kappa" may be used too.
-
-pbmc_small <- getFeatureSpace(pbmc_small, "RNA_snn_res.0.8")
-pbmc_small <- trainModel(object = pbmc_small,
-                     seed = 1234,
-                     metric = "ROC")
-
 }
 \author{
 Jose Alquicira Hernandez

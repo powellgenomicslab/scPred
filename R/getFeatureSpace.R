@@ -2,9 +2,10 @@
 #' @description Given a prediction variable, finds a feature set of class-informative principal components that
 #' explain variance differences between cell types. 
 #' @param object A \code{seurat} object
-#' @param pVar Column in \code{meta.data} slot containing the cell-type labels of each single cell
+#' @param pvar Column in \code{meta.data} slot containing the cell-type labels of each single cell
 #' @param correction Multiple testing correction method used. Default: false discovery rate. See \code{p.adjust} function 
 #' @param sig Significance level to determine principal components explaining class identity
+#' @param reduction Name of reduction in Seurat objet to be used to determine the feature space. Default: "pca"
 #' @return An \code{Seurat} object along with a \code{scPred} object stored in the \code{@misc} slot 
 #' containing a data.frame of significant features with the following columns:
 #' \itemize{
@@ -36,7 +37,7 @@
 
 
 
-getFeatureSpace <- function(object, pVar, correction = "fdr", sig = 1, reduction = "pca"){
+getFeatureSpace <- function(object, pvar, correction = "fdr", sig = 1, reduction = "pca"){
   
   
   # Validations -------------------------------------------------------------
@@ -49,11 +50,11 @@ getFeatureSpace <- function(object, pVar, correction = "fdr", sig = 1, reduction
     stop("Invalid multiple testing correction method. See ?p.adjust function")
   }
   
-  if(!pVar %in% names(object@meta.data)){
+  if(!pvar %in% names(object@meta.data)){
     stop("Prediction variable is not stored in metadata slot")
   }
   
-  classes <- object[[pVar, drop = TRUE]]
+  classes <- object[[pvar, drop = TRUE]]
   
   if(!is.factor(classes)){
     classes <- as.factor(classes)
@@ -70,7 +71,12 @@ getFeatureSpace <- function(object, pVar, correction = "fdr", sig = 1, reduction
   
   assay <- DefaultAssay(object)
   cellEmbeddings <- Embeddings(object, reduction = reduction)
+  loadings <- Loadings(object, reduction = reduction)
+  reduction_key <- object[[reduction]]@key
   
+  # Store original labels in metadata slot
+  
+  spmodel <- new("scPred", metadata = data.frame(pvar = classes))
   
   # Validate response variable values
   uniqueClasses <- unique(classes)
@@ -82,7 +88,35 @@ getFeatureSpace <- function(object, pVar, correction = "fdr", sig = 1, reduction
     names(classes) <- Cells(object)
   }
   
-  object@meta.data[["scPred_response"]] <- classes
+  spmodel@metadata$response <- classes
+
+  # Get means and sds -------------------------------------------------------
+
+  features <- rownames(loadings)
+  
+  data <- GetAssayData(object, "data", assay = assay)[features,]
+  means <- Matrix::rowMeans(data)
+  
+  rowVar <- function(x, ...) {
+    sqrt(Matrix::rowSums((x - means)^2, ...)/(ncol(x) - 1))
+  }
+  
+  stdevs  <- rowVar(data)
+  
+  i <- stdevs == 0
+  
+  if(any(i)){
+    warning(paste0(sum(i), " genes have zero variance but are present in the gene loadings. \nDid you subset or integrated this data before?"))
+    cat(crayon::yellow("Removing zero-variance genes from loadings\n"))
+    
+    loadings <- loadings[!i,]
+    means <- means[!i]
+    stdevs <- stdevs[!i]
+  }
+  
+  
+  spmodel@scaling <- data.frame(means, stdevs)
+  
   
   # Select informative principal components
   # If only 2 classes are present in prediction variable, train one model for the positive class
@@ -91,7 +125,7 @@ getFeatureSpace <- function(object, pVar, correction = "fdr", sig = 1, reduction
   cat(crayon::green(cli::symbol$record, " Extracting feature space for each cell type...\n"))
   if(length(levels(classes)) == 2){
     
-    message("First factor level in '", pVar, "' metadata column considered as positive class:")
+    message("First factor level in '", pvar, "' metadata column considered as positive class:")
     message(levels(classes)[1])
     res <- .getFeatures(levels(classes)[1], classes, cellEmbeddings, correction, sig)
     res <- list(res)
@@ -117,16 +151,20 @@ getFeatureSpace <- function(object, pVar, correction = "fdr", sig = 1, reduction
     
   }
   
-  cat(crayon::green("DONE!\n"))
-  
   
   
   # Create scPred object
   
-  object@misc$scPred <- new("scPred", 
-                            pVar = pVar,
-                            reduction = reduction,
-                            features = res)
+  spmodel@pvar <- pvar
+  spmodel@features <- res
+  spmodel@cell_embeddings <- cellEmbeddings
+  spmodel@feature_loadings <- loadings
+  spmodel@reduction <- reduction
+  spmodel@reduction_key <- reduction_key
+  
+  object@misc$scPred <- spmodel
+  
+  cat(crayon::green("DONE!\n"))
   
   object
   

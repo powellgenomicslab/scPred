@@ -35,8 +35,8 @@ setMethod("show", signature("scPred"), function(object) {
     
     training_value <- NA
     
-    if(length(object@pVar) != 0){
-        pVar <- object@pVar
+    if(length(object@pvar) != 0){
+        pVar <- object@pvar
     }
     
     if(length(object@features) != 0){
