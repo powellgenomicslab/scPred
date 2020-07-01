@@ -22,7 +22,6 @@
 #' @importFrom magrittr "%>%"
 #' @importFrom dplyr mutate arrange filter
 #' @importFrom pbapply pblapply
-#' @importFrom robustbase covMcd 
 #' 
 #' @export
 #' @author
