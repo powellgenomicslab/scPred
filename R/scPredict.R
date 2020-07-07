@@ -8,6 +8,7 @@
 #' @param max.iter.harmony Maximum number of rounds to run Harmony. One round of Harmony involves one clustering and one correction step.
 #' @param recompute_alignment Recompute alignment? Useful if \code{scPredict()} has already been run
 #' @param reference_scaling Scale new dataset based on means and stdevs from reference dataset before alignment. Otherwise, data will be independently scaled.
+#' @param seed Numeric seed for harmony 
 #' @return A Seurat object with addtional metadata columns with prediction probabilities associated to each class, a \code{prediction} column, 
 #' indicating the classification based on the provided threshold and a \code{generic_class} column without "unassigned" labels.
 #' @keywords prediction, new, test, validation
@@ -30,6 +31,7 @@ scPredict <- function(new,
                       max.iter.harmony = 20,
                       recompute_alignment = TRUE,
                       reference_scaling = TRUE,
+                      seed = 66,
                       ...){
   
   # Function validations ----------------------------------------------------
@@ -151,6 +153,7 @@ scPredict <- function(new,
     
     cat(crayon::green(cli::symbol$record, " Aligning new data to reference...\n"))
     
+    set.seed(seed)
     harmony_embeddings <- HarmonyMatrix(eigenspace, 
                                         meta_data, 
                                         'dataset', 

@@ -12,6 +12,7 @@ scPredict(
   max.iter.harmony = 20,
   recompute_alignment = TRUE,
   reference_scaling = TRUE,
+  seed = 66,
   ...
 )
 }
@@ -30,6 +31,8 @@ the computed probability thresholds for the cell type of interest and the remain
 \item{recompute_alignment}{Recompute alignment? Useful if \code{scPredict()} has already been run}
 
 \item{reference_scaling}{Scale new dataset based on means and stdevs from reference dataset before alignment. Otherwise, data will be independently scaled.}
+
+\item{seed}{Numeric seed for harmony}
 }
 \value{
 A Seurat object with addtional metadata columns with prediction probabilities associated to each class, a \code{prediction} column, 
