@@ -3,7 +3,6 @@
 #' @param new A seurat object containing cells to be classified
 #' @param reference An \code{Seurat} object with trained model(s) using \code{scPred} or an \code{scPred} object
 #' @param threshold Threshold used for probabilities to classify cells into classes
-#' @param tolerance Probability tolerance value for threshold. This value is substracted or added from
 #' the computed probability thresholds for the cell type of interest and the remaining cell types respectively.
 #' @param max.iter.harmony Maximum number of rounds to run Harmony. One round of Harmony involves one clustering and one correction step.
 #' @param recompute_alignment Recompute alignment? Useful if \code{scPredict()} has already been run
@@ -27,7 +26,6 @@
 scPredict <- function(new,
                       reference, 
                       threshold = 0.75, 
-                      tolerance = 0.1,
                       max.iter.harmony = 20,
                       recompute_alignment = TRUE,
                       reference_scaling = TRUE,
