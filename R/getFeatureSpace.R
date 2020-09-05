@@ -59,19 +59,26 @@ getFeatureSpace <- function(object, pvar, correction = "fdr", sig = 1, reduction
     classes <- as.factor(classes)
   }
   
+  assay <- DefaultAssay(object)
   # Filter principal components by variance ---------------------------------
   
   # Check if a PCA has been computed
-  if(!(reduction %in% names(object@reductions))){
+  if(!(reduction %in% Reductions(object))){
     stop("No ",reduction, " reduction has been computet yet. See RunPCA() function?")
+  }else{
+    reduction_data <- Reductions(object, slot = reduction)
+    if(reduction_data@assay.used != assay) 
+      stop("No ", 
+           reduction, 
+           " reduction associated with default assay: ", 
+           assay, "\nChange default assay or compute a new reduction")
   }
   
   # Check if available was normalized
   
-  assay <- DefaultAssay(object)
-  cellEmbeddings <- Embeddings(object, reduction = reduction)
-  loadings <- Loadings(object, reduction = reduction)
-  reduction_key <- object[[reduction]]@key
+  cellEmbeddings <- Embeddings(reduction_data)
+  loadings <- Loadings(reduction_data)
+  reduction_key <- reduction_data@key
   
   # Store original labels in metadata slot
   

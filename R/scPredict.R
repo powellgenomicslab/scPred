@@ -99,7 +99,13 @@ scPredict <- function(new,
       means <- spmodel@scaling$means
       stdevs  <- spmodel@scaling$stdevs
       new_data <- Matrix::t(new_data)
+      names(means) <- rownames(spmodel@scaling) -> names(stdevs)
       
+      # Subset means and standard deviations
+      means <- means[shared_features]
+      stdevs <- stdevs[shared_features]
+      #all(colnames(new_data) == names(means))
+
       i <- stdevs == 0
       
       if(any(i)){
