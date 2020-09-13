@@ -20,7 +20,7 @@
 #' @importFrom methods is
 #' @importFrom tidyr gather
 #' @importFrom magrittr "%>%"
-#' @importFrom dplyr mutate arrange filter
+#' @importFrom dplyr mutate arrange filter distinct
 #' @importFrom pbapply pblapply
 #' 
 #' @export
@@ -85,6 +85,7 @@ getFeatureSpace <- function(object, pvar, correction = "fdr", sig = 1, reduction
   spmodel <- new("scPred", metadata = data.frame(pvar = classes))
   
   # Validate response variable values
+  original_classes <- classes
   uniqueClasses <- unique(classes)
   isValidName <- uniqueClasses == make.names(uniqueClasses)
   
@@ -132,15 +133,19 @@ getFeatureSpace <- function(object, pvar, correction = "fdr", sig = 1, reduction
   if(length(levels(classes)) == 2){
     
     message("First factor level in '", pvar, "' metadata column considered as positive class:")
-    message(levels(classes)[1])
-    res <- .getFeatures(levels(classes)[1], classes, cellEmbeddings, correction, sig)
+    message(levels(original_classes)[1])
+    res <- .getFeatures(make.names(levels(original_classes)[1]), classes, cellEmbeddings, correction, sig)
     res <- list(res)
-    names(res) <- levels(classes)[1]
+    names(res) <- levels(original_classes)[1]
     
   }else{
     
     res <- pblapply(levels(classes), .getFeatures, classes, cellEmbeddings, correction, sig)
-    names(res) <- levels(classes)
+    dict <- data.frame(classes, original_classes) %>% 
+      distinct()
+    
+    i <- match(levels(classes), dict$classes)
+    names(res) <- as.character(dict$original_classes[i])
     
   }
   

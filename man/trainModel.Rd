@@ -19,8 +19,8 @@ trainModel(
 )
 }
 \arguments{
-\item{object}{An \code{Seurat} object with informative PCs obtained using
-the \code{getFeatureSpace} function}
+\item{object}{An \code{Seurat} or \code{scPred} object after running 
+\code{getFeatureSpace}}
 
 \item{model}{Classification model supported via \code{caret} package. A list of all models can be found here:}
 

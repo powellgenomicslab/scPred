@@ -8,13 +8,12 @@ Description: Provides a series of functions to train a prediction model based on
 License: MIT
 Encoding: UTF-8
 LazyData: true
-biocViews: harmony
 Imports:
     harmony,
     Seurat,
     methods,
     stats,
-    robustbase,
+    ggbeeswarm,
     MLmetrics,
     dplyr,
     tidyr,
@@ -24,7 +23,9 @@ Imports:
     pROC,
     ggplot2,
     tibble,
+    knitr,
     pbapply,
     cli,
     crayon
+biocViews: harmony
 RoxygenNote: 7.1.1

@@ -2,12 +2,17 @@
 #' @description Predicts cell classes for a new dataset based on trained model(s)
 #' @param new A seurat object containing cells to be classified
 #' @param reference An \code{Seurat} object with trained model(s) using \code{scPred} or an \code{scPred} object
-#' @param threshold Threshold used for probabilities to classify cells into classes
-#' the computed probability thresholds for the cell type of interest and the remaining cell types respectively.
+#' @param threshold Threshold used for probabilities to classify cells into classes. All cells below 
+#' this threshold value will be labels as "unassigned". In the case of binary classification (two cell tyoes),
+#' a threshold of \code{0.5} will force all cells to be classified to any of the two cell types. For multi-class
+#' classification, if there's no probability higher than the threshold associated to a cell type, this will
+#' be labelled as "unassigned"
 #' @param max.iter.harmony Maximum number of rounds to run Harmony. One round of Harmony involves one clustering and one correction step.
 #' @param recompute_alignment Recompute alignment? Useful if \code{scPredict()} has already been run
-#' @param reference_scaling Scale new dataset based on means and stdevs from reference dataset before alignment. Otherwise, data will be independently scaled.
+#' @param reference_scaling Scale new dataset based on means and stdevs from reference dataset before alignment. 
+#' Otherwise, data will be independently scaled via \code{Seurat::ScaleData()}.
 #' @param seed Numeric seed for harmony 
+#' @param ... Further parameters passed to \code{Seurat::ScaleData()} if \code{reference_scaling} is \code{FALSE}
 #' @return A Seurat object with addtional metadata columns with prediction probabilities associated to each class, a \code{prediction} column, 
 #' indicating the classification based on the provided threshold and a \code{generic_class} column without "unassigned" labels.
 #' @keywords prediction, new, test, validation
@@ -25,7 +30,7 @@
 
 scPredict <- function(new,
                       reference, 
-                      threshold = 0.75, 
+                      threshold = 0.55, 
                       max.iter.harmony = 20,
                       recompute_alignment = TRUE,
                       reference_scaling = TRUE,
@@ -210,8 +215,8 @@ scPredict <- function(new,
   #plot(res$Lymphoid, col = as.factor(test$CellType))
   # If there is only 2 classes, compute complementary probability for negative class
   if(length(cellTypeModelNames) == 1){
-    
-    cellClasses <- levels(spmodel@metadata$response)
+    metadata <- spmodel %>% get_metadata()
+    cellClasses <- levels(metadata$pvar)
     res_comp <- 1 - res[,1]
     negClass <- cellClasses[cellClasses != names(res)]
     res[[negClass]] <- res_comp
@@ -229,26 +234,27 @@ scPredict <- function(new,
   
   
   # Relabel cells according to original values
-  dict <- spmodel@metadata[c("pvar", "response")] %>% 
-    distinct() %>% 
-    mutate_all(as.character)
-  
-  
-  res$no_rejection <- dict[match(res$generic_class, dict[,2]), 1]
+  # dict <- spmodel@metadata[c("pvar", "response")] %>% 
+  #   distinct() %>% 
+  #   mutate_all(as.character)
+  # 
+  # 
+  # res$no_rejection <- dict[match(res$generic_class, dict[,2]), 1] 
   
   
   # Classify cells according to probability threshold
     
-  pred <- ifelse(res$max > threshold, res$no_rejection, "unassigned")
+  pred <- ifelse(res$max > threshold, res$generic_class, "unassigned")
   
   names(pred) <- colnames(new)
   
   # Format results
   res$prediction <- pred
   res$index <- NULL
+  no_rejection <- res$generic_class
   res$generic_class <- NULL
   
-  names(res) <- paste0("scpred_", names(res))
+  names(res) <- make.names(paste0("scpred_", names(res)))
   
   
   # Return results

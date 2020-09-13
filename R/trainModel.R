@@ -1,7 +1,7 @@
 #' @title Train a prediction model
 #' @description Trains a prediction model from an \code{scPred} object stored in a \code{Seurat} object
-#' @param object An \code{Seurat} object with informative PCs obtained using
-#' the \code{getFeatureSpace} function
+#' @param object An \code{Seurat} or \code{scPred} object after running 
+#' \code{getFeatureSpace}
 #' @param model Classification model supported via \code{caret} package. A list of all models can be found here:
 #' @param preProcess A string vector that defines a pre-processing of the predictor data. Current possibilities are 
 #' "BoxCox", "YeoJohnson", "expoTrans", "center", "scale", "range", "knnImpute", "bagImpute", "medianImpute", 
@@ -48,28 +48,37 @@ trainModel <- function(object,
     # Validations -------------------------------------------------------------
     
     # Check class
-    if(!is(object, "Seurat")){
-        stop("object must be 'Seurat'")
+    if(!is(object, "Seurat") | is(object, "scPred")){
+        stop("object must be 'Seurat' or 'scPred'")
     }
     
-    if(is.null(object@misc$scPred)){
-        stop("No features have been determined. Use 'getFeatureSpace()' function")
+    
+    if(is(object, "Seurat")){
+        seurat_object <- object
+        object <- get_scpred(object)
+        
+        if(is.null(object))
+            stop("No features have been determined. Use 'getFeatureSpace()' function")
+        
+        object_class <- "Seurat"
+        
+    }else{
+        object_class <- "scPred"
     }
     
-    classes <- names(object@misc$scPred@features)
+
+    classes <- names(object@features)
     metric <- match.arg(metric)
-    reduction <- object@misc$scPred@reduction
+    reduction <- object@reduction
     
     # Train a prediction model for each class
     cat(crayon::green(cli::symbol$record, " Training models for each cell type...\n"))
     
     
-    spmodel <- object@misc$scPred
-    
     
     if(length(classes) == 1){
         modelsRes <-  .trainModel(classes[1],
-                                  spmodel,
+                                  object,
                                   model,
                                   reduction,
                                   preProcess,
@@ -87,7 +96,7 @@ trainModel <- function(object,
         
     }else{
         modelsRes <- pblapply(classes, .trainModel,
-                              spmodel,
+                              object,
                               model,
                               reduction,
                               preProcess,
@@ -104,9 +113,15 @@ trainModel <- function(object,
     
     cat(crayon::green("DONE!\n"))
     
-    spmodel@train <- modelsRes
-    object@misc$scPred <- spmodel
-    object
+    object@train <- modelsRes
+    
+    if(object_class == "Seurat"){
+        seurat_object@misc$scPred <- object
+        seurat_object
+        
+    }else{
+        object
+    }
 }
 
 .trainModel <- function(positiveClass,
@@ -135,9 +150,9 @@ trainModel <- function(object,
     response <-  spmodel@metadata$response %>% as.character()
     
     
-    i <- response != positiveClass
+    i <- response != make.names(positiveClass)
     response[i] <- "other"
-    response <- factor(response, levels = c(positiveClass, "other"))
+    response <- factor(response, levels = c(make.names(positiveClass), "other"))
     
     
     if(!is.null(seed)) set.seed(seed)

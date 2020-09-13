@@ -7,8 +7,7 @@
 scPredict(
   new,
   reference,
-  threshold = 0.75,
-  tolerance = 0.1,
+  threshold = 0.55,
   max.iter.harmony = 20,
   recompute_alignment = TRUE,
   reference_scaling = TRUE,
@@ -21,18 +20,22 @@ scPredict(
 
 \item{reference}{An \code{Seurat} object with trained model(s) using \code{scPred} or an \code{scPred} object}
 
-\item{threshold}{Threshold used for probabilities to classify cells into classes}
-
-\item{tolerance}{Probability tolerance value for threshold. This value is substracted or added from
-the computed probability thresholds for the cell type of interest and the remaining cell types respectively.}
+\item{threshold}{Threshold used for probabilities to classify cells into classes. All cells below 
+this threshold value will be labels as "unassigned". In the case of binary classification (two cell tyoes),
+a threshold of \code{0.5} will force all cells to be classified to any of the two cell types. For multi-class
+classification, if there's no probability higher than the threshold associated to a cell type, this will
+be labelled as "unassigned"}
 
 \item{max.iter.harmony}{Maximum number of rounds to run Harmony. One round of Harmony involves one clustering and one correction step.}
 
 \item{recompute_alignment}{Recompute alignment? Useful if \code{scPredict()} has already been run}
 
-\item{reference_scaling}{Scale new dataset based on means and stdevs from reference dataset before alignment. Otherwise, data will be independently scaled.}
+\item{reference_scaling}{Scale new dataset based on means and stdevs from reference dataset before alignment. 
+Otherwise, data will be independently scaled via \code{Seurat::ScaleData()}.}
 
 \item{seed}{Numeric seed for harmony}
+
+\item{...}{Further parameters passed to \code{Seurat::ScaleData()} if \code{reference_scaling} is \code{FALSE}}
 }
 \value{
 A Seurat object with addtional metadata columns with prediction probabilities associated to each class, a \code{prediction} column, 
