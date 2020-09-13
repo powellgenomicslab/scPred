@@ -364,3 +364,12 @@ query <- scPredict(query, scpred)
 
 From now on, only the `scPred` models can be imported and applied to other query 
 `Seurat` objects/datasets.
+
+
+# Session information
+
+```{r}
+options(width = 120)
+devtools::session_info()
+```
+
