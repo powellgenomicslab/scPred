@@ -29,7 +29,7 @@ devtools::install_github("powellgenomicslab/scPred")
 
 Visit the following vignette to start using `scPred`:
 
-[introduction to scPred](https://powellgenomicslab.github.io/scPred/introduction-to-scpred/)
+[introduction to scPred](https://powellgenomicslab.github.io/scPred/articles/introduction.html)
 
 
 
