@@ -4,17 +4,30 @@
 # scPred: accurate supervised method for cell-type classification from single-cell RNA-seq data
 
 
-`scPred` is a general method to predict cell types based on variance structure decomposition.
-It selects the most cell type-informative principal components from a dataset and trains a prediction model for each cell type. The principal training axes are projected onto the test dataset to obtain the PCs scores for the test dataset and the trained model(s) is/are used to classify single cells.
+`scPred` is a general method to classify cells based on a low-dimensional 
+representation of gene expression (e.g. PCA).
 
 For more details see our paper in **Genome Biology**:
 
 [scPred: accurate supervised method for cell-type classification from single-cell RNA-seq data](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-019-1862-5)
 
-This [introduction to scPred](https://joseah.github.io/post/introduction-to-scpred/) shows a basic workflow for cell type prediction.
+Visit the following vignette to start using `scPred`:
 
-You can install scPred via devtools as follows:
+[introduction to scPred](https://joseah.github.io/post/introduction-to-scpred/)
+
+---
+
+Before installing `scPred`, please install harmony as follows:
+
+```r
+devtools::install_github("immunogenomics/harmony")
+```
+
+You can install `scPred` via devtools as follows:
 
 ```r
 devtools::install_github("powellgenomicslab/scPred")
 ```
+
+
+
