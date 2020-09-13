@@ -15,7 +15,8 @@ trainModel(
   metric = c("ROC", "PR", "Accuracy", "Kappa"),
   returnData = FALSE,
   savePredictions = "final",
-  allowParallel = FALSE
+  allowParallel = FALSE,
+  reclassify = NULL
 )
 }
 \arguments{
@@ -51,6 +52,8 @@ See `?caret::train` documentation}
 returned. Values can be either "all", "final", or "none".}
 
 \item{allowParallel}{Allow parallel processing for resampling?}
+
+\item{reclassify}{Cell types to reclassify using a different model}
 }
 \value{
 A list of \code{train} objects for each cell class (e.g. cell type). See \code{train} function for details.

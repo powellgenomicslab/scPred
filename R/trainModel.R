@@ -22,6 +22,7 @@
 #' @param savePredictions Specifies the set of hold-out predictions for each resample that should be
 #' returned. Values can be either "all", "final", or "none".
 #' @param allowParallel Allow parallel processing for resampling?
+#' @param reclassify Cell types to reclassify using a different model
 #' @return A list of \code{train} objects for each cell class (e.g. cell type). See \code{train} function for details.
 #' @keywords train, model
 #' @importFrom methods is
@@ -41,7 +42,8 @@ trainModel <- function(object,
                        metric = c("ROC", "PR", "Accuracy", "Kappa"),
                        returnData = FALSE,
                        savePredictions = "final",
-                       allowParallel = FALSE
+                       allowParallel = FALSE,
+                       reclassify = NULL
 ){
     
     
@@ -67,7 +69,11 @@ trainModel <- function(object,
     }
     
 
-    classes <- names(object@features)
+    if(is.null(reclassify)){
+        classes <- names(object@features)
+    }else{
+        classes <- reclassify
+    }
     metric <- match.arg(metric)
     reduction <- object@reduction
     
@@ -113,7 +119,11 @@ trainModel <- function(object,
     
     cat(crayon::green("DONE!\n"))
     
-    object@train <- modelsRes
+    if(is.null(reclassify)){
+        object@train <- modelsRes
+    }else{
+        object@train[names(modelsRes)] <- modelsRes
+    }
     
     if(object_class == "Seurat"){
         seurat_object@misc$scPred <- object

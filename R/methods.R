@@ -66,13 +66,15 @@ setMethod("show", signature("scPred"), function(object) {
             lapply(function(x, metric){
                 bestModelIndex <- as.integer(rownames(x$bestTune))
                 metric <- x$metric
+                method <- x$method
                 if(metric == "ROC"){
-                    round(x$results[bestModelIndex, c("ROC", "Sens", "Spec")], 3)
+                    perf <- round(x$results[bestModelIndex, c("ROC", "Sens", "Spec")], 3)
                 }else if(metric == "Accuracy"){
-                    round(x$results[bestModelIndex, c("Accuracy", "Kappa")], 3)
+                    perf <- round(x$results[bestModelIndex, c("Accuracy", "Kappa")], 3)
                 }else if(metric == "AUC"){
-                    round(x$results[bestModelIndex, c("AUC", "Precision", "Recall", "F")], 3)
+                    perf <- round(x$results[bestModelIndex, c("AUC", "Precision", "Recall", "F")], 3)
                 }
+                cbind(Method = method, perf)
             }) %>% 
             bind_rows(.id = "Cell type") -> training_value
         
