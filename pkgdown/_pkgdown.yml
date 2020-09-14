@@ -1,4 +1,4 @@
 template:
   params:
-    bootswatch: cosmo
+    bootswatch: readable
     ganalytics: UA-177825195-1
