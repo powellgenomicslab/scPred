@@ -90,6 +90,8 @@ getFeatureSpace <- function(object, pvar, correction = "fdr", sig = 1, reduction
   isValidName <- uniqueClasses == make.names(uniqueClasses)
   
   if(!all(isValidName)){
+    classes <- gsub("\\+", "_plus", classes)
+    classes <- gsub("\\-", "_minus", classes)
     classes <- make.names(classes)
     classes <- factor(classes, levels = unique(classes))
     names(classes) <- Cells(object)
