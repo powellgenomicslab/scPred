@@ -251,10 +251,10 @@ scPredict <- function(new,
   # Format results
   res$prediction <- pred
   res$index <- NULL
-  no_rejection <- res$generic_class
+  res$no_rejection <- res$generic_class
   res$generic_class <- NULL
   
-  names(res) <- make.names(paste0("scpred_", names(res)))
+  names(res) <- .make_names(paste0("scpred_", names(res)))
   
   
   # Return results

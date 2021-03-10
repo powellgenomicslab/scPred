@@ -1,3 +1,10 @@
+.make_names <- function(x){
+  x <- gsub("\\+", "_plus", x)
+  x <- gsub("\\-", "_minus", x)
+  x <- make.names(x)
+}
+
+
 .intersectMat <- function(ref, new){
   
   # Get gene names from loadings reference

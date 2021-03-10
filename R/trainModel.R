@@ -160,9 +160,9 @@ trainModel <- function(object,
     response <-  spmodel@metadata$response %>% as.character()
     
     
-    i <- response != make.names(positiveClass)
+    i <- response != .make_names(positiveClass)
     response[i] <- "other"
-    response <- factor(response, levels = c(make.names(positiveClass), "other"))
+    response <- factor(response, levels = c(.make_names(positiveClass), "other"))
     
     
     if(!is.null(seed)) set.seed(seed)
