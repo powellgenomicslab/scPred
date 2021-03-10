@@ -59,7 +59,7 @@ scPredict <- function(new,
   if("scpred" %in% names(new@reductions)){
     if(recompute_alignment){
       alignment <- TRUE
-      crayon::yellow(cli::symbol$figure_dash, "Data has already being aligned to a reference.\n") %>% 
+      crayon::yellow(cli::symbol$figure_dash, "Data has already been aligned to a reference.\n") %>% 
         cat(sep = "")
       crayon::yellow(cli::symbol$sup_plus, "Skip data alignment using `recompute.alignment = FALSE`.\n") %>% 
         cat(sep = "")
