@@ -28,5 +28,6 @@ Imports:
     pbapply,
     cli,
     crayon
-biocViews: harmony
+Remotes:
+    immunogenomics/harmony
 RoxygenNote: 7.1.1
