@@ -134,7 +134,7 @@ getFeatureSpace <- function(object, pvar, correction = "fdr", sig = 1, reduction
     
     message("First factor level in '", pvar, "' metadata column considered as positive class:")
     message(levels(original_classes)[1])
-    res <- .getFeatures(make.names(levels(original_classes)[1]), classes, cellEmbeddings, correction, sig)
+    res <- .getFeatures(.make_names(levels(original_classes)[1]), classes, cellEmbeddings, correction, sig)
     res <- list(res)
     names(res) <- levels(original_classes)[1]
     
