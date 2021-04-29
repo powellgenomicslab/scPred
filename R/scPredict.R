@@ -170,7 +170,7 @@ scPredict <- function(new,
                                         reference_values = "reference",
                                         max.iter.harmony = max.iter.harmony)
     
-    new_embeddings_aligned <- harmony_embeddings[dataset == "new", ]
+    new_embeddings_aligned <- harmony_embeddings[dataset == "new", , drop = FALSE]
     
   }else{
     new_embeddings_aligned <- Embeddings(new, reduction = "scpred")
