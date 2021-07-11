@@ -37,7 +37,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">scPred</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.9.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">1.9.2</span>
       </span>
     </div>
 
@@ -45,7 +45,7 @@
       <ul class="nav navbar-nav">
 <li>
   <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -68,7 +68,7 @@
 <ul class="nav navbar-nav navbar-right">
 <li>
   <a href="https://github.com/powellgenomicslab/scPred/">
-    <span class="fab fa fab fa-github fa-lg"></span>
+    <span class="fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -82,13 +82,13 @@
 
       
 
-      </header><script src="introduction_files/header-attrs-2.3/header-attrs.js"></script><script src="introduction_files/accessible-code-block-0.0.1/empty-anchor.js"></script><div class="row">
+      </header><script src="introduction_files/header-attrs-2.9/header-attrs.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>Introduction to scPred</h1>
                         <h4 class="author">Jose Alquicira Hernandez</h4>
             
-            <h4 class="date">2020-09-14</h4>
+            <h4 class="date">2021-07-12</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/powellgenomicslab/scPred/blob/master/vignettes/introduction.Rmd"><code>vignettes/introduction.Rmd</code></a></small>
       <div class="hidden name"><code>introduction.Rmd</code></div>
@@ -109,13 +109,15 @@
 <a href="#application-of-scpred" class="anchor"></a>Application of <code>scPred</code>
 </h1>
 <p>First, we’ll load the <code>scPred</code> package and <code>Seurat</code>.</p>
-<div class="sourceCode" id="cb1"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st">"scPred"</span>)
-<span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st">"Seurat"</span>)
-<span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st">"magrittr"</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="st"><a href="https://github.com/powellgenomicslab/scPred">"scPred"</a></span><span class="op">)</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="st"><a href="https://satijalab.org/seurat">"Seurat"</a></span><span class="op">)</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="st"><a href="https://magrittr.tidyverse.org">"magrittr"</a></span><span class="op">)</span></code></pre></div>
 <p>We will work with Peripheral Mononuclear Blood Cells (PBMCs) from two different individuals. The libraries were processed using the Chromium system -10× Genomics- and sequenced with an Illumina NovaSeq 6000 platform. See <a href="https://academic.oup.com/nargab/article/2/2/lqaa034/5836690">Comparative performance of the BGI and Illumina sequencing technology for single-cell RNA-sequencing</a> for more details on the samples.</p>
 <p>For this tutorial, we’ll use the PBMCs from one individual to build cell classifiers for the populations of interest. Then, we’ll apply these models to an indepent dataset of PBMCs from another independent individual.</p>
-<div class="sourceCode" id="cb2"><html><body><pre class="r"><span class="no">reference</span> <span class="kw">&lt;-</span> <span class="kw pkg">scPred</span><span class="kw ns">::</span><span class="no"><a href="../reference/pbmc_1.html">pbmc_1</a></span>
-<span class="no">query</span> <span class="kw">&lt;-</span> <span class="kw pkg">scPred</span><span class="kw ns">::</span><span class="no"><a href="../reference/pbmc_2.html">pbmc_2</a></span></pre></body></html></div>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">reference</span> <span class="op">&lt;-</span> <span class="fu">scPred</span><span class="fu">::</span><span class="va"><a href="../reference/pbmc_1.html">pbmc_1</a></span>
+<span class="va">query</span> <span class="op">&lt;-</span> <span class="fu">scPred</span><span class="fu">::</span><span class="va"><a href="../reference/pbmc_2.html">pbmc_2</a></span></code></pre></div>
 <p><code>scPred</code> is now built to be incorporated withing the Seurat framework. Similar to clustering in <code>Seurat</code>, <code>scPred</code> uses the cell embeddings from a principal component analysis to make inferences about cell-type identity. However —unlike clustering—, <code>scPred</code> trains classifiers for each cell type of interest in a supervised manner by using the known cell identity from a reference dataset to guide the classification of cells in a different data set.</p>
 <p>The following code:</p>
 <ol style="list-style-type: decimal">
@@ -125,12 +127,13 @@
 <li>Runs a PCA</li>
 <li>Runs a UMAP using the top 30 most variable PCs</li>
 </ol>
-<div class="sourceCode" id="cb3"><html><body><pre class="r"><span class="no">reference</span> <span class="kw">&lt;-</span> <span class="no">reference</span> <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://rdrr.io/pkg/Seurat/man/NormalizeData.html">NormalizeData</a></span>() <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://rdrr.io/pkg/Seurat/man/FindVariableFeatures.html">FindVariableFeatures</a></span>() <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://rdrr.io/pkg/Seurat/man/ScaleData.html">ScaleData</a></span>() <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://rdrr.io/pkg/Seurat/man/RunPCA.html">RunPCA</a></span>() <span class="kw">%&gt;%</span>
-  <span class="fu"><a href="https://rdrr.io/pkg/Seurat/man/RunUMAP.html">RunUMAP</a></span>(<span class="kw">dims</span> <span class="kw">=</span> <span class="fl">1</span>:<span class="fl">30</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">reference</span> <span class="op">&lt;-</span> <span class="va">reference</span> <span class="op">%&gt;%</span> 
+  <span class="fu"><a href="https://satijalab.org/seurat/reference/NormalizeData.html">NormalizeData</a></span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span> 
+  <span class="fu"><a href="https://satijalab.org/seurat/reference/FindVariableFeatures.html">FindVariableFeatures</a></span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span> 
+  <span class="fu"><a href="https://satijalab.org/seurat/reference/ScaleData.html">ScaleData</a></span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span> 
+  <span class="fu"><a href="https://satijalab.org/seurat/reference/RunPCA.html">RunPCA</a></span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span> 
+  <span class="fu"><a href="https://satijalab.org/seurat/reference/RunUMAP.html">RunUMAP</a></span><span class="op">(</span>dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span><span class="op">)</span></code></pre></div>
 <pre><code>## Centering and scaling data matrix</code></pre>
 <pre><code>## PC_ 1 
 ## Positive:  MALAT1, RPS12, RPL13, RPS18, RPS4X, LTB, IL32, IL7R, EEF1A1, RPL10 
@@ -170,25 +173,23 @@
 <pre><code>## Warning: The default method for RunUMAP has changed from calling Python UMAP via reticulate to the R-native UWOT using the cosine metric
 ## To use Python UMAP via reticulate, set umap.method to 'umap-learn' and metric to 'correlation'
 ## This message will be shown once per session</code></pre>
-<pre><code>## 02:31:57 UMAP embedding parameters a = 0.9922 b = 1.112</code></pre>
-<pre><code>## 02:31:57 Read 3500 rows and found 30 numeric columns</code></pre>
-<pre><code>## 02:31:57 Using Annoy for neighbor search, n_neighbors = 30</code></pre>
-<pre><code>## 02:31:57 Building Annoy index with metric = cosine, n_trees = 50</code></pre>
+<pre><code>## 01:05:04 UMAP embedding parameters a = 0.9922 b = 1.112</code></pre>
+<pre><code>## 01:05:04 Read 3500 rows and found 30 numeric columns</code></pre>
+<pre><code>## 01:05:04 Using Annoy for neighbor search, n_neighbors = 30</code></pre>
+<pre><code>## 01:05:04 Building Annoy index with metric = cosine, n_trees = 50</code></pre>
 <pre><code>## 0%   10   20   30   40   50   60   70   80   90   100%</code></pre>
 <pre><code>## [----|----|----|----|----|----|----|----|----|----|</code></pre>
 <pre><code>## **************************************************|
-## 02:31:58 Writing NN index file to temp file /var/folders/6y/nzcvsw7j5dn1g0k8b13x086w0000gp/T//RtmpvL3gNk/fileb92e12fbc97c
-## 02:31:58 Searching Annoy index using 1 thread, search_k = 3000
-## 02:31:58 Annoy recall = 100%
-## 02:31:58 Commencing smooth kNN distance calibration using 1 thread
-## 02:31:59 Initializing from normalized Laplacian + noise
-## 02:31:59 Commencing optimization for 500 epochs, with 157998 positive edges
-## 02:32:04 Optimization finished</code></pre>
+## 01:05:05 Writing NN index file to temp file /var/folders/yj/yd72sc650wq90dvmfl2869jm0000gq/T//RtmpkVwOki/file2c637a4757d1
+## 01:05:05 Searching Annoy index using 1 thread, search_k = 3000
+## 01:05:06 Annoy recall = 100%
+## 01:05:06 Commencing smooth kNN distance calibration using 1 thread
+## 01:05:06 Initializing from normalized Laplacian + noise
+## 01:05:07 Commencing optimization for 500 epochs, with 158046 positive edges
+## 01:05:12 Optimization finished</code></pre>
 <p>The column <code>cell_type</code> contains the identity of each cell in the meta data slot. Let’s plot the UMAP and grouping the cells by cell type.</p>
-<div class="sourceCode" id="cb14"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/pkg/Seurat/man/DimPlot.html">DimPlot</a></span>(<span class="no">reference</span>, <span class="kw">group.by</span> <span class="kw">=</span> <span class="st">"cell_type"</span>, <span class="kw">label</span> <span class="kw">=</span> <span class="fl">TRUE</span>, <span class="kw">repel</span> <span class="kw">=</span> <span class="fl">TRUE</span>)</pre></body></html></div>
-<pre><code>## Warning: Using `as.character()` on a quosure is deprecated as of rlang 0.3.0.
-## Please use `as_label()` or `as_name()` instead.
-## This warning is displayed once per session.</code></pre>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html">DimPlot</a></span><span class="op">(</span><span class="va">reference</span>, group.by <span class="op">=</span> <span class="st">"cell_type"</span>, label <span class="op">=</span> <span class="cn">TRUE</span>, repel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
 <p><img src="introduction_files/figure-html/plot_umap-1.png" width="576"></p>
 </div>
 <div id="training-classifiers-with-scpred" class="section level1">
@@ -197,20 +198,21 @@
 </h1>
 <p>Firstly, let’s get the feature space to train the classifiers. By default, <code>scPred</code> will use all principal components. The reference labels of each cells are specified as the second parameter value of the function (in this case the <code>cell_type</code> column.</p>
 <p><code>getFeatureSpace</code> will create a <code>scPred</code> object stored in the <code>@misc</code> slot. This object will contained all required information to classify cells. See <code><a href="../reference/getFeatureSpace.html">?getFeatureSpace</a></code> help documentation.</p>
-<div class="sourceCode" id="cb16"><html><body><pre class="r"><span class="no">reference</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/getFeatureSpace.html">getFeatureSpace</a></span>(<span class="no">reference</span>, <span class="st">"cell_type"</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">reference</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/getFeatureSpace.html">getFeatureSpace</a></span><span class="op">(</span><span class="va">reference</span>, <span class="st">"cell_type"</span><span class="op">)</span></code></pre></div>
 <pre><code>## Registered S3 method overwritten by 'cli':
-##   method     from    
-##   print.boxx spatstat</code></pre>
+##   method     from         
+##   print.boxx spatstat.geom</code></pre>
 <pre><code>## ●  Extracting feature space for each cell type...
 ## DONE!</code></pre>
 <p>Secondly, we train the classifiers for each cell using the <code>trainModel</code> function. By default, <code>scPred</code> will use a support vector machine with a radial kernel.</p>
-<div class="sourceCode" id="cb19"><html><body><pre class="r"><span class="no">reference</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/trainModel.html">trainModel</a></span>(<span class="no">reference</span>)</pre></body></html></div>
-<pre><code>## ●  Training models for each cell type...</code></pre>
-<pre><code>## Loading required package: lattice</code></pre>
-<pre><code>## Loading required package: ggplot2</code></pre>
-<pre><code>## maximum number of iterations reached 0.0001163544 -0.0001154305DONE!</code></pre>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">reference</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/trainModel.html">trainModel</a></span><span class="op">(</span><span class="va">reference</span><span class="op">)</span></code></pre></div>
+<pre><code>## ●  Training models for each cell type...
+## maximum number of iterations reached 0.0001163544 -0.0001154305DONE!</code></pre>
 <p>Training probabilities for each cell in the reference data can be accessed using the <code>get_probabilities</code> method:</p>
-<div class="sourceCode" id="cb24"><html><body><pre class="r"><span class="fu"><a href="../reference/get_probabilities.html">get_probabilities</a></span>(<span class="no">reference</span>) <span class="kw">%&gt;%</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span>()</pre></body></html></div>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="../reference/get_probabilities.html">get_probabilities</a></span><span class="op">(</span><span class="va">reference</span><span class="op">)</span> <span class="op">%&gt;%</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
 <pre><code>##                    CD8 T cell   CD4 T cell        cMono       B cell
 ## CCACGGACATGCTGGC-1 0.99997400 3.986948e-06 3.429930e-05 1.895677e-04
 ## GATTCAGGTCTCCACT-1 0.04042862 9.889574e-01 1.067423e-06 4.731890e-05
@@ -239,7 +241,8 @@
 <li>Prediction model (method)</li>
 <li>Performance metrics</li>
 </ul>
-<div class="sourceCode" id="cb26"><html><body><pre class="r"><span class="fu"><a href="../reference/get_scpred.html">get_scpred</a></span>(<span class="no">reference</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="../reference/get_scpred.html">get_scpred</a></span><span class="op">(</span><span class="va">reference</span><span class="op">)</span></code></pre></div>
 <pre><code>## 'scPred' object
 ## ✓  Prediction variable = cell_type 
 ## ✓  Discriminant features per cell type
@@ -258,17 +261,23 @@
 ## |pDC         |   20|       50|svmRadial | 1.000| 0.700| 1.000|
 ## |Plasma cell |    6|       50|svmRadial | 1.000| 0.800| 1.000|</code></pre>
 <p>To visualize the performance for each cell type we can use the <code>plot_probabilities</code> function:</p>
-<div class="sourceCode" id="cb28"><html><body><pre class="r"><span class="fu"><a href="../reference/plot_probabilities.html">plot_probabilities</a></span>(<span class="no">reference</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="../reference/plot_probabilities.html">plot_probabilities</a></span><span class="op">(</span><span class="va">reference</span><span class="op">)</span></code></pre></div>
 <p><img src="introduction_files/figure-html/unnamed-chunk-3-1.png" width="576"></p>
 <p>From the previous plot we can observe an overall lower performance for classical monocytes (cMono) and non-classical monocytes (ncMono).</p>
 <p>Depending on the data, other models may show an better performance. <code>scPred</code> is built on top of the <code>caret</code> package and allows using a large set of prediction models (e.g. logistic regression, decision trees, bagging, neural networks, etc). To see the list of available models see <a href="https://topepo.github.io/caret/available-models.html">available models in caret</a>.</p>
 <p>A different model can be specified using the <code>model</code> parameter and providing the <em>method value</em> from <code>caret</code> (e.g. <code>mda</code> for a mixture discriminant analysis using the <code>mda</code> package). Additionally, if only an <code>mda</code> model wants to be applied to a subset of cells, we can specify this using the <code>reclassify</code> parameter. In this case, we want to train different models for “cMono” and “ncMono” to improve their classification performance:</p>
-<div class="sourceCode" id="cb29"><html><body><pre class="r"><span class="no">reference</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/trainModel.html">trainModel</a></span>(<span class="no">reference</span>, <span class="kw">model</span> <span class="kw">=</span> <span class="st">"mda"</span>, <span class="kw">reclassify</span> <span class="kw">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"cMono"</span>, <span class="st">"ncMono"</span>))</pre></body></html></div>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">reference</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/trainModel.html">trainModel</a></span><span class="op">(</span><span class="va">reference</span>, model <span class="op">=</span> <span class="st">"mda"</span>, reclassify <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"cMono"</span>, <span class="st">"ncMono"</span><span class="op">)</span><span class="op">)</span></code></pre></div>
+<pre><code>## Registered S3 method overwritten by 'cli':
+##   method     from         
+##   print.boxx spatstat.geom</code></pre>
 <pre><code>## ●  Training models for each cell type...
 ## DONE!</code></pre>
 <p>The code above trains a mixture discriminant analysis for two cell types and preserves the previous support vector machines for the remaing cell types.</p>
 <p>We can observe a change in the sensitivity for “cMono” and “ncMono”:</p>
-<div class="sourceCode" id="cb31"><html><body><pre class="r"><span class="fu"><a href="../reference/get_scpred.html">get_scpred</a></span>(<span class="no">reference</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="../reference/get_scpred.html">get_scpred</a></span><span class="op">(</span><span class="va">reference</span><span class="op">)</span></code></pre></div>
 <pre><code>## 'scPred' object
 ## ✓  Prediction variable = cell_type 
 ## ✓  Discriminant features per cell type
@@ -287,7 +296,8 @@
 ## |pDC         |   20|       50|svmRadial | 1.000| 0.700| 1.000|
 ## |Plasma cell |    6|       50|svmRadial | 1.000| 0.800| 1.000|</code></pre>
 <p>and also verify that higher probabilities for these cell types were obtained by plotting the training probabilities again:</p>
-<div class="sourceCode" id="cb33"><html><body><pre class="r"><span class="fu"><a href="../reference/plot_probabilities.html">plot_probabilities</a></span>(<span class="no">reference</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="../reference/plot_probabilities.html">plot_probabilities</a></span><span class="op">(</span><span class="va">reference</span><span class="op">)</span></code></pre></div>
 <p><img src="introduction_files/figure-html/unnamed-chunk-6-1.png" width="576"></p>
 </div>
 <div id="cell-classification" class="section level1">
@@ -295,13 +305,15 @@
 <a href="#cell-classification" class="anchor"></a>Cell classification</h1>
 <p>An important requirement for classifying cells is using the <strong>same normalization method</strong> for both the <code>reference</code> and the <code>query</code> datasets.</p>
 <p>First, let’s normalize the <strong>query</strong> dataset (cells to be classfied).</p>
-<div class="sourceCode" id="cb34"><html><body><pre class="r"><span class="no">query</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/Seurat/man/NormalizeData.html">NormalizeData</a></span>(<span class="no">query</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">query</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/NormalizeData.html">NormalizeData</a></span><span class="op">(</span><span class="va">query</span><span class="op">)</span></code></pre></div>
 <p>Finally, we ca classify the cells from the <code>query</code> data using the <code>scPredict</code> function. The first argument corresponds to the <code>query</code> object and the second to the <code>reference</code> object (with a scPred model trained already).</p>
 <p><code>scPred</code> now uses <code>Harmony</code> to align the query data onto the training low-dimensional space used as reference. Once the data is aligned, cells are classified using the pre-trained models.</p>
 <blockquote>
-<p><code>scPredict</code> will return the query dataset. Make sure the left-side value of the <code>&lt;-</code> operator corresponds to the query data.</p>
+<p><code>scPredict</code> will return the query dataset. Make sure the left-side value of the <code><a href="https://rdrr.io/r/base/assignOps.html">&lt;-</a></code> operator corresponds to the query data.</p>
 </blockquote>
-<div class="sourceCode" id="cb35"><html><body><pre class="r"><span class="no">query</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/scPredict.html">scPredict</a></span>(<span class="no">query</span>, <span class="no">reference</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">query</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/scPredict.html">scPredict</a></span><span class="op">(</span><span class="va">query</span>, <span class="va">reference</span><span class="op">)</span></code></pre></div>
 <pre><code>## ●  Matching reference with new dataset...
 ##   ─ 2000 features present in reference loadings
 ##   ─ 2000 features shared between reference and new dataset
@@ -322,37 +334,46 @@
 ## DONE!</code></pre>
 <p><code>scPred</code> will store the final classifications in the <code>scpred_prediction</code> column of the Seurat meta data. Likewise, it will store a the <em>aligned</em> data and store it as a <code>scpred</code> reduction.</p>
 <p>Let’s plot the classifications over the aligned data.</p>
-<div class="sourceCode" id="cb49"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/pkg/Seurat/man/DimPlot.html">DimPlot</a></span>(<span class="no">query</span>, <span class="kw">group.by</span> <span class="kw">=</span> <span class="st">"scpred_prediction"</span>, <span class="kw">reduction</span> <span class="kw">=</span> <span class="st">"scpred"</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html">DimPlot</a></span><span class="op">(</span><span class="va">query</span>, group.by <span class="op">=</span> <span class="st">"scpred_prediction"</span>, reduction <span class="op">=</span> <span class="st">"scpred"</span><span class="op">)</span></code></pre></div>
 <p><img src="introduction_files/figure-html/unnamed-chunk-8-1.png" width="576"></p>
 <p>We can also run UMAP using the aligned data as an input</p>
-<div class="sourceCode" id="cb50"><html><body><pre class="r"><span class="no">query</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/Seurat/man/RunUMAP.html">RunUMAP</a></span>(<span class="no">query</span>, <span class="kw">reduction</span> <span class="kw">=</span> <span class="st">"scpred"</span>, <span class="kw">dims</span> <span class="kw">=</span> <span class="fl">1</span>:<span class="fl">30</span>)</pre></body></html></div>
-<pre><code>## 02:35:07 UMAP embedding parameters a = 0.9922 b = 1.112</code></pre>
-<pre><code>## 02:35:07 Read 3000 rows and found 30 numeric columns</code></pre>
-<pre><code>## 02:35:07 Using Annoy for neighbor search, n_neighbors = 30</code></pre>
-<pre><code>## 02:35:07 Building Annoy index with metric = cosine, n_trees = 50</code></pre>
+<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">query</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://satijalab.org/seurat/reference/RunUMAP.html">RunUMAP</a></span><span class="op">(</span><span class="va">query</span>, reduction <span class="op">=</span> <span class="st">"scpred"</span>, dims <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span><span class="op">)</span></code></pre></div>
+<pre><code>## Warning: The default method for RunUMAP has changed from calling Python UMAP via reticulate to the R-native UWOT using the cosine metric
+## To use Python UMAP via reticulate, set umap.method to 'umap-learn' and metric to 'correlation'
+## This message will be shown once per session</code></pre>
+<pre><code>## 01:17:09 UMAP embedding parameters a = 0.9922 b = 1.112</code></pre>
+<pre><code>## 01:17:09 Read 3000 rows and found 30 numeric columns</code></pre>
+<pre><code>## 01:17:09 Using Annoy for neighbor search, n_neighbors = 30</code></pre>
+<pre><code>## 01:17:09 Building Annoy index with metric = cosine, n_trees = 50</code></pre>
 <pre><code>## 0%   10   20   30   40   50   60   70   80   90   100%</code></pre>
 <pre><code>## [----|----|----|----|----|----|----|----|----|----|</code></pre>
 <pre><code>## **************************************************|
-## 02:35:07 Writing NN index file to temp file /var/folders/6y/nzcvsw7j5dn1g0k8b13x086w0000gp/T//RtmpvL3gNk/fileb92e189cf6d2
-## 02:35:07 Searching Annoy index using 1 thread, search_k = 3000
-## 02:35:08 Annoy recall = 100%
-## 02:35:08 Commencing smooth kNN distance calibration using 1 thread
-## 02:35:09 Initializing from normalized Laplacian + noise
-## 02:35:09 Commencing optimization for 500 epochs, with 134492 positive edges
-## 02:35:13 Optimization finished</code></pre>
+## 01:17:10 Writing NN index file to temp file /var/folders/yj/yd72sc650wq90dvmfl2869jm0000gq/T//Rtmp98X9YM/file2f24610613be
+## 01:17:10 Searching Annoy index using 1 thread, search_k = 3000
+## 01:17:10 Annoy recall = 100%
+## 01:17:11 Commencing smooth kNN distance calibration using 1 thread
+## 01:17:11 Initializing from normalized Laplacian + noise
+## 01:17:11 Commencing optimization for 500 epochs, with 134488 positive edges
+## 01:17:16 Optimization finished</code></pre>
 <p>and plot the predicted labels for each cell type over the UMAP:</p>
-<div class="sourceCode" id="cb58"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/pkg/Seurat/man/DimPlot.html">DimPlot</a></span>(<span class="no">query</span>, <span class="kw">group.by</span> <span class="kw">=</span> <span class="st">"scpred_prediction"</span>, <span class="kw">label</span> <span class="kw">=</span> <span class="fl">TRUE</span>, <span class="kw">repel</span> <span class="kw">=</span> <span class="fl">TRUE</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb56"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html">DimPlot</a></span><span class="op">(</span><span class="va">query</span>, group.by <span class="op">=</span> <span class="st">"scpred_prediction"</span>, label <span class="op">=</span> <span class="cn">TRUE</span>, repel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
 <p><img src="introduction_files/figure-html/unnamed-chunk-10-1.png" width="576"></p>
 <p>We can compare the results with the original labels:</p>
-<div class="sourceCode" id="cb59"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/pkg/Seurat/man/DimPlot.html">DimPlot</a></span>(<span class="no">query</span>, <span class="kw">group.by</span> <span class="kw">=</span> <span class="st">"cell_type"</span>, <span class="kw">label</span> <span class="kw">=</span> <span class="fl">TRUE</span>, <span class="kw">repel</span> <span class="kw">=</span> <span class="fl">TRUE</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb57"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://satijalab.org/seurat/reference/DimPlot.html">DimPlot</a></span><span class="op">(</span><span class="va">query</span>, group.by <span class="op">=</span> <span class="st">"cell_type"</span>, label <span class="op">=</span> <span class="cn">TRUE</span>, repel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
 <p><img src="introduction_files/figure-html/unnamed-chunk-11-1.png" width="576"></p>
 <p>Additionally, <code>scPred</code> stores the probabilities of each cell in the <code>@meta.data</code> slot of the query Seurat object. We can visualize the probabilities over the UMAP plot:</p>
-<div class="sourceCode" id="cb60"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/pkg/Seurat/man/FeaturePlot.html">FeaturePlot</a></span>(<span class="no">query</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"scpred_B.cell"</span>, <span class="st">"scpred_CD4.T.cell"</span>, <span class="st">"scpred_CD8.T.cell"</span>,
-                     <span class="st">"scpred_cMono"</span>, <span class="st">"scpred_ncMono"</span>, <span class="st">"scpred_Plasma.cell"</span>,
-                     <span class="st">"scpred_cDC"</span>, <span class="st">"scpred_pDC"</span>))</pre></body></html></div>
+<div class="sourceCode" id="cb58"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://satijalab.org/seurat/reference/FeaturePlot.html">FeaturePlot</a></span><span class="op">(</span><span class="va">query</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"scpred_B.cell"</span>, <span class="st">"scpred_CD4.T.cell"</span>, <span class="st">"scpred_CD8.T.cell"</span>, 
+                     <span class="st">"scpred_cMono"</span>, <span class="st">"scpred_ncMono"</span>, <span class="st">"scpred_Plasma.cell"</span>, 
+                     <span class="st">"scpred_cDC"</span>, <span class="st">"scpred_pDC"</span><span class="op">)</span><span class="op">)</span></code></pre></div>
 <p><img src="introduction_files/figure-html/unnamed-chunk-12-1.png" width="864"></p>
 <p>To verify the performance of the models in the <code>query</code> dataset, we can use the <code>crossTab</code> to create a contingency table using two colums from the metadata. In this example, the cell type info is sotred in the <code>cell_type</code> columns and the predicted labels for each cell in the <code>scpred_prediction</code> column.</p>
-<div class="sourceCode" id="cb61"><html><body><pre class="r"><span class="fu"><a href="../reference/crossTab.html">crossTab</a></span>(<span class="no">query</span>, <span class="st">"cell_type"</span>, <span class="st">"scpred_prediction"</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb59"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="../reference/crossTab.html">crossTab</a></span><span class="op">(</span><span class="va">query</span>, <span class="st">"cell_type"</span>, <span class="st">"scpred_prediction"</span><span class="op">)</span></code></pre></div>
 <pre><code>##             B cell CD4 T cell CD8 T cell cDC cMono ncMono NK cell pDC
 ## B cell         250          0          0   0     0      0       0   0
 ## CD4 T cell       0       1179         25   0     1      0       0   0
@@ -376,7 +397,8 @@
 ## Plasma cell           6
 ## unassigned            0</code></pre>
 <p>The proportion of cells can be obtained using <code>output = "prop</code></p>
-<div class="sourceCode" id="cb63"><html><body><pre class="r"><span class="fu"><a href="../reference/crossTab.html">crossTab</a></span>(<span class="no">query</span>, <span class="st">"cell_type"</span>, <span class="st">"scpred_prediction"</span>, <span class="kw">output</span> <span class="kw">=</span> <span class="st">"prop"</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb61"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="../reference/crossTab.html">crossTab</a></span><span class="op">(</span><span class="va">query</span>, <span class="st">"cell_type"</span>, <span class="st">"scpred_prediction"</span>, output <span class="op">=</span> <span class="st">"prop"</span><span class="op">)</span></code></pre></div>
 <pre><code>##             B cell CD4 T cell CD8 T cell  cDC cMono ncMono NK cell  pDC
 ## B cell           1       0.00       0.00 0.00  0.00   0.00    0.00 0.00
 ## CD4 T cell       0       0.95       0.04 0.00  0.00   0.00    0.00 0.00
@@ -407,7 +429,8 @@
 <h2 class="hasAnchor">
 <a href="#accessing-classifiers" class="anchor"></a>Accessing classifiers</h2>
 <p>The raw models for each cell type can be retrieved using the <code><a href="../reference/get_classifiers.html">get_classifiers()</a></code> function. This will return a list of <code>train</code> objects.</p>
-<div class="sourceCode" id="cb65"><html><body><pre class="r"><span class="fu"><a href="../reference/get_classifiers.html">get_classifiers</a></span>(<span class="no">reference</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb63"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="../reference/get_classifiers.html">get_classifiers</a></span><span class="op">(</span><span class="va">reference</span><span class="op">)</span></code></pre></div>
 <pre><code>## $`CD8 T cell`
 ## Support Vector Machines with Radial Basis Function Kernel 
 ## 
@@ -559,7 +582,8 @@
 ## ROC was used to select the optimal model using the largest value.
 ## The final values used for the model were sigma = 0.02458556 and C = 0.25.</code></pre>
 <p>Each model can be normally treated using the <code>caret</code> enviroment. For example, we can plot the performance resamples using the <code>plot.train</code>:</p>
-<div class="sourceCode" id="cb67"><html><body><pre class="r"><span class="kw pkg">caret</span><span class="kw ns">::</span><span class="fu"><a href="https://rdrr.io/pkg/caret/man/plot.train.html">plot.train</a></span>(<span class="fu"><a href="../reference/get_classifiers.html">get_classifiers</a></span>(<span class="no">reference</span>)<span class="kw">[[</span><span class="st">"NK cell"</span>]])</pre></body></html></div>
+<div class="sourceCode" id="cb65"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu">caret</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/caret/man/plot.train.html">plot.train</a></span><span class="op">(</span><span class="fu"><a href="../reference/get_classifiers.html">get_classifiers</a></span><span class="op">(</span><span class="va">reference</span><span class="op">)</span><span class="op">[[</span><span class="st">"NK cell"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></code></pre></div>
 <p><img src="introduction_files/figure-html/unnamed-chunk-16-1.png" width="576"></p>
 </div>
 <div id="using-a-different-prediction-model-approach" class="section level2">
@@ -567,10 +591,12 @@
 <a href="#using-a-different-prediction-model-approach" class="anchor"></a>Using a different prediction model approach</h2>
 <p>As shown before, a different classification method can be used using the <code>model</code> parameter by providing a distinct <em>method value</em> of type <strong>classification</strong> as handled by caret (see <a href="https://topepo.github.io/caret/available-models.html">available models in caret</a>). Most available models will require the user to install new packages.</p>
 <p>The following code trains a logistic regression via <code><a href="https://rdrr.io/r/stats/glm.html">glm()</a></code> for each cell type:</p>
-<div class="sourceCode" id="cb68"><html><body><pre class="r"><span class="no">reference</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/trainModel.html">trainModel</a></span>(<span class="no">reference</span>, <span class="kw">model</span> <span class="kw">=</span> <span class="st">"glm"</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb66"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">reference</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/trainModel.html">trainModel</a></span><span class="op">(</span><span class="va">reference</span>, model <span class="op">=</span> <span class="st">"glm"</span><span class="op">)</span></code></pre></div>
 <pre><code>## ●  Training models for each cell type...
 ## DONE!</code></pre>
-<div class="sourceCode" id="cb70"><html><body><pre class="r"><span class="fu"><a href="../reference/get_scpred.html">get_scpred</a></span>(<span class="no">reference</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb68"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="../reference/get_scpred.html">get_scpred</a></span><span class="op">(</span><span class="va">reference</span><span class="op">)</span></code></pre></div>
 <pre><code>## 'scPred' object
 ## ✓  Prediction variable = cell_type 
 ## ✓  Discriminant features per cell type
@@ -593,7 +619,8 @@
 <h2 class="hasAnchor">
 <a href="#avoid-aligning-the-data-multiple-times" class="anchor"></a>Avoid aligning the data multiple times</h2>
 <p>Training and alignning the data are separate processes. Therefore, if a <code>query</code> dataset has already being aligned to a <code>reference</code> data via scPred/harmony and the prediction models have changed, then we can use <code>recompute_alignment = FALSE</code> to avoid aligning step (as the alignment is already stored in the <code>query</code> object)</p>
-<div class="sourceCode" id="cb72"><html><body><pre class="r"><span class="no">query</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/scPredict.html">scPredict</a></span>(<span class="no">query</span>, <span class="no">reference</span>, <span class="kw">recompute_alignment</span> <span class="kw">=</span> <span class="fl">FALSE</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb70"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">query</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/scPredict.html">scPredict</a></span><span class="op">(</span><span class="va">query</span>, <span class="va">reference</span>, recompute_alignment <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></code></pre></div>
 <pre><code>## ●  Classifying cells...
 ## DONE!</code></pre>
 <p>The code above will only apply the classificatio models.</p>
@@ -602,7 +629,8 @@
 <h2 class="hasAnchor">
 <a href="#using-a-different-probability-threshold" class="anchor"></a>Using a different probability threshold</h2>
 <p>By default, <code>scPred</code> now uses a relaxed probability theshold of <code>0.55</code> to label cells. If none of the classifiers provide a probability higher than the threshold for a given cell, then it is labelled as “unassigned”. This value can be changed using the <code>threshold</code> parameter:</p>
-<div class="sourceCode" id="cb74"><html><body><pre class="r"><span class="no">query</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/scPredict.html">scPredict</a></span>(<span class="no">query</span>, <span class="no">reference</span>, <span class="kw">recompute_alignment</span> <span class="kw">=</span> <span class="fl">FALSE</span>, <span class="kw">threshold</span> <span class="kw">=</span> <span class="fl">0.9</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb72"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">query</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/scPredict.html">scPredict</a></span><span class="op">(</span><span class="va">query</span>, <span class="va">reference</span>, recompute_alignment <span class="op">=</span> <span class="cn">FALSE</span>, threshold <span class="op">=</span> <span class="fl">0.9</span><span class="op">)</span></code></pre></div>
 <pre><code>## ●  Classifying cells...
 ## DONE!</code></pre>
 <p>In the case of a binary classification (only two cell types), a threshold equals <code>0.5</code> implies no “unassigned labeling”.</p>
@@ -611,16 +639,15 @@
 <h2 class="hasAnchor">
 <a href="#parallel-training" class="anchor"></a>Parallel training</h2>
 <p>Depending on the sample size of the reference dataset and the number of cell types, training models can be computatinally expensive. The resampling performed for each model can be parallelized via <code>doParallel</code> to speed-up the training step as follows:</p>
-<div class="sourceCode" id="cb76"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="no">doParallel</span>)</pre></body></html></div>
-<pre><code>## Loading required package: foreach</code></pre>
-<pre><code>## Loading required package: iterators</code></pre>
-<pre><code>## Loading required package: parallel</code></pre>
-<div class="sourceCode" id="cb80"><html><body><pre class="r"><span class="no">cl</span> <span class="kw">&lt;-</span> <span class="fu">makePSOCKcluster</span>(<span class="fl">2</span>)
-<span class="fu"><a href="https://rdrr.io/pkg/doParallel/man/registerDoParallel.html">registerDoParallel</a></span>(<span class="no">cl</span>)
-<span class="no">reference</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/trainModel.html">trainModel</a></span>(<span class="no">reference</span>, <span class="kw">model</span> <span class="kw">=</span> <span class="st">"mda"</span>, <span class="kw">allowParallel</span> <span class="kw">=</span> <span class="fl">TRUE</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb74"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">doParallel</span><span class="op">)</span>
+<span class="va">cl</span> <span class="op">&lt;-</span> <span class="fu">makePSOCKcluster</span><span class="op">(</span><span class="fl">2</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/pkg/doParallel/man/registerDoParallel.html">registerDoParallel</a></span><span class="op">(</span><span class="va">cl</span><span class="op">)</span>
+<span class="va">reference</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/trainModel.html">trainModel</a></span><span class="op">(</span><span class="va">reference</span>, model <span class="op">=</span> <span class="st">"mda"</span>, allowParallel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
 <pre><code>## ●  Training models for each cell type...
 ## DONE!</code></pre>
-<div class="sourceCode" id="cb82"><html><body><pre class="r"><span class="fu">stopCluster</span>(<span class="no">cl</span>)</pre></body></html></div>
+<div class="sourceCode" id="cb76"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu">stopCluster</span><span class="op">(</span><span class="va">cl</span><span class="op">)</span></code></pre></div>
 <blockquote>
 <p><code>allowParallel = TRUE</code> has to be set in order for <code>trainModel</code> to be able to run the resamplings in parallel</p>
 </blockquote>
@@ -633,9 +660,10 @@
 <h2 class="hasAnchor">
 <a href="#applying-scpred-classifiers-without-seurat-object" class="anchor"></a>Applying <code>scPred</code> classifiers without <code>Seurat</code> object</h2>
 <p>Once final <code>scPred</code> models have been obtained, we can extract the <code>scPred</code> object from the <code>Seurat</code> object and apply the classifiers in other datasets.</p>
-<div class="sourceCode" id="cb83"><html><body><pre class="r"><span class="no">scpred</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/get_scpred.html">get_scpred</a></span>(<span class="no">reference</span>)
-<span class="no">query</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/scPredict.html">scPredict</a></span>(<span class="no">query</span>, <span class="no">scpred</span>)</pre></body></html></div>
-<pre><code>## ‒ Data has already being aligned to a reference.
+<div class="sourceCode" id="cb77"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">scpred</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_scpred.html">get_scpred</a></span><span class="op">(</span><span class="va">reference</span><span class="op">)</span>
+<span class="va">query</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/scPredict.html">scPredict</a></span><span class="op">(</span><span class="va">query</span>, <span class="va">scpred</span><span class="op">)</span></code></pre></div>
+<pre><code>## ‒ Data has already been aligned to a reference.
 ## ⁺ Skip data alignment using `recompute.alignment = FALSE`.
 ## ●  Matching reference with new dataset...
 ##   ─ 2000 features present in reference loadings
@@ -661,165 +689,181 @@
 <div id="session-information" class="section level1">
 <h1 class="hasAnchor">
 <a href="#session-information" class="anchor"></a>Session information</h1>
-<div class="sourceCode" id="cb97"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/options.html">options</a></span>(<span class="kw">width</span> <span class="kw">=</span> <span class="fl">120</span>)
-<span class="kw pkg">devtools</span><span class="kw ns">::</span><span class="fu"><a href="https://devtools.r-lib.org//reference/reexports.html">session_info</a></span>()</pre></body></html></div>
-<pre><code>## Registered S3 method overwritten by 'cli':
-##   method     from    
-##   print.boxx spatstat</code></pre>
+<div class="sourceCode" id="cb91"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/options.html">options</a></span><span class="op">(</span>width <span class="op">=</span> <span class="fl">120</span><span class="op">)</span>
+<span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/sessioninfo/man/session_info.html">session_info</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
 <pre><code>## ─ Session info ───────────────────────────────────────────────────────────────────────────────────────────────────────
 ##  setting  value                       
-##  version  R version 4.0.2 (2020-06-22)
-##  os       macOS Catalina 10.15.6      
+##  version  R version 4.1.0 (2021-05-18)
+##  os       macOS Big Sur 10.16         
 ##  system   x86_64, darwin17.0          
 ##  ui       X11                         
 ##  language (EN)                        
 ##  collate  en_AU.UTF-8                 
 ##  ctype    en_AU.UTF-8                 
 ##  tz       Australia/Sydney            
-##  date     2020-09-14                  
+##  date     2021-07-12                  
 ## 
 ## ─ Packages ───────────────────────────────────────────────────────────────────────────────────────────────────────────
-##  package        * version    date       lib source                                 
-##  abind            1.4-5      2016-07-21 [2] CRAN (R 4.0.0)                         
-##  ape              5.4-1      2020-08-13 [2] CRAN (R 4.0.2)                         
-##  assertthat       0.2.1      2019-03-21 [2] CRAN (R 4.0.0)                         
-##  backports        1.1.9      2020-08-24 [2] CRAN (R 4.0.2)                         
-##  beeswarm         0.2.3      2016-04-25 [2] CRAN (R 4.0.0)                         
-##  callr            3.4.3      2020-03-28 [2] CRAN (R 4.0.0)                         
-##  caret          * 6.0-86     2020-03-20 [2] CRAN (R 4.0.0)                         
-##  class            7.3-17     2020-04-26 [2] CRAN (R 4.0.2)                         
-##  cli              2.0.2      2020-02-28 [2] CRAN (R 4.0.0)                         
-##  cluster          2.1.0      2019-06-19 [2] CRAN (R 4.0.2)                         
-##  codetools        0.2-16     2018-12-24 [2] CRAN (R 4.0.2)                         
-##  colorspace       1.4-1      2019-03-18 [2] CRAN (R 4.0.0)                         
-##  cowplot          1.0.0      2019-07-11 [2] CRAN (R 4.0.0)                         
-##  crayon           1.3.4      2017-09-16 [2] CRAN (R 4.0.0)                         
-##  data.table       1.13.0     2020-07-24 [2] CRAN (R 4.0.2)                         
-##  deldir           0.1-28     2020-07-15 [2] CRAN (R 4.0.1)                         
-##  desc             1.2.0      2018-05-01 [2] CRAN (R 4.0.0)                         
-##  devtools         2.3.1      2020-07-21 [2] CRAN (R 4.0.2)                         
-##  digest           0.6.25     2020-02-23 [2] CRAN (R 4.0.0)                         
-##  doParallel     * 1.0.15     2019-08-02 [2] CRAN (R 4.0.0)                         
-##  dplyr            1.0.2      2020-08-18 [2] CRAN (R 4.0.2)                         
-##  ellipsis         0.3.1      2020-05-15 [2] CRAN (R 4.0.0)                         
-##  evaluate         0.14       2019-05-28 [2] CRAN (R 4.0.0)                         
-##  fansi            0.4.1      2020-01-08 [2] CRAN (R 4.0.0)                         
-##  fastmap          1.0.1      2019-10-08 [2] CRAN (R 4.0.0)                         
-##  fitdistrplus     1.1-1      2020-05-19 [2] CRAN (R 4.0.0)                         
-##  foreach        * 1.5.0      2020-03-30 [2] CRAN (R 4.0.0)                         
-##  fs               1.5.0      2020-07-31 [2] CRAN (R 4.0.2)                         
-##  future           1.18.0     2020-07-09 [2] CRAN (R 4.0.1)                         
-##  future.apply     1.6.0      2020-07-01 [2] CRAN (R 4.0.1)                         
-##  generics         0.0.2      2018-11-29 [2] CRAN (R 4.0.0)                         
-##  ggbeeswarm       0.6.0      2017-08-07 [2] CRAN (R 4.0.2)                         
-##  ggplot2        * 3.3.2      2020-06-19 [2] CRAN (R 4.0.1)                         
-##  ggrepel          0.8.2      2020-03-08 [2] CRAN (R 4.0.0)                         
-##  ggridges         0.5.2      2020-01-12 [2] CRAN (R 4.0.0)                         
-##  globals          0.12.5     2019-12-07 [2] CRAN (R 4.0.0)                         
-##  glue             1.4.2      2020-08-27 [2] CRAN (R 4.0.2)                         
-##  goftest          1.2-2      2019-12-02 [2] CRAN (R 4.0.0)                         
-##  gower            0.2.2      2020-06-23 [2] CRAN (R 4.0.1)                         
-##  gridExtra        2.3        2017-09-09 [2] CRAN (R 4.0.0)                         
-##  gtable           0.3.0      2019-03-25 [2] CRAN (R 4.0.0)                         
-##  harmony          1.0        2020-06-25 [2] Github (immunogenomics/harmony@88b1e2a)
-##  htmltools        0.5.0      2020-06-16 [2] CRAN (R 4.0.1)                         
-##  htmlwidgets      1.5.1      2019-10-08 [2] CRAN (R 4.0.0)                         
-##  httpuv           1.5.4      2020-06-06 [2] CRAN (R 4.0.0)                         
-##  httr             1.4.2      2020-07-20 [2] CRAN (R 4.0.2)                         
-##  ica              1.0-2      2018-05-24 [2] CRAN (R 4.0.0)                         
-##  igraph           1.2.5      2020-03-19 [2] CRAN (R 4.0.0)                         
-##  ipred            0.9-9      2019-04-28 [2] CRAN (R 4.0.0)                         
-##  irlba            2.3.3      2019-02-05 [2] CRAN (R 4.0.0)                         
-##  iterators      * 1.0.12     2019-07-26 [2] CRAN (R 4.0.0)                         
-##  jsonlite         1.7.0      2020-06-25 [2] CRAN (R 4.0.0)                         
-##  KernSmooth       2.23-17    2020-04-26 [2] CRAN (R 4.0.2)                         
-##  knitr            1.29       2020-06-23 [2] CRAN (R 4.0.1)                         
-##  later            1.1.0.1    2020-06-05 [2] CRAN (R 4.0.0)                         
-##  lattice        * 0.20-41    2020-04-02 [2] CRAN (R 4.0.2)                         
-##  lava             1.6.7      2020-03-05 [2] CRAN (R 4.0.0)                         
-##  lazyeval         0.2.2      2019-03-15 [2] CRAN (R 4.0.0)                         
-##  leiden           0.3.3      2020-02-04 [2] CRAN (R 4.0.0)                         
-##  lifecycle        0.2.0      2020-03-06 [2] CRAN (R 4.0.0)                         
-##  listenv          0.8.0      2019-12-05 [2] CRAN (R 4.0.0)                         
-##  lmtest           0.9-37     2019-04-30 [2] CRAN (R 4.0.0)                         
-##  lubridate        1.7.9      2020-06-08 [2] CRAN (R 4.0.0)                         
-##  magrittr       * 1.5        2014-11-22 [2] CRAN (R 4.0.0)                         
-##  MASS             7.3-52     2020-08-18 [2] CRAN (R 4.0.2)                         
-##  Matrix           1.2-18     2019-11-27 [2] CRAN (R 4.0.2)                         
-##  memoise          1.1.0      2017-04-21 [2] CRAN (R 4.0.0)                         
-##  mgcv             1.8-33     2020-08-27 [2] CRAN (R 4.0.2)                         
-##  mime             0.9        2020-02-04 [2] CRAN (R 4.0.0)                         
-##  miniUI           0.1.1.1    2018-05-18 [2] CRAN (R 4.0.0)                         
-##  ModelMetrics     1.2.2.2    2020-03-17 [2] CRAN (R 4.0.0)                         
-##  munsell          0.5.0      2018-06-12 [2] CRAN (R 4.0.0)                         
-##  nlme             3.1-149    2020-08-23 [2] CRAN (R 4.0.2)                         
-##  nnet             7.3-14     2020-04-26 [2] CRAN (R 4.0.2)                         
-##  patchwork        1.0.1      2020-06-22 [2] CRAN (R 4.0.1)                         
-##  pbapply          1.4-3      2020-08-18 [2] CRAN (R 4.0.2)                         
-##  pillar           1.4.6      2020-07-10 [2] CRAN (R 4.0.1)                         
-##  pkgbuild         1.1.0      2020-07-13 [2] CRAN (R 4.0.1)                         
-##  pkgconfig        2.0.3      2019-09-22 [2] CRAN (R 4.0.0)                         
-##  pkgdown          1.5.1      2020-04-09 [2] CRAN (R 4.0.0)                         
-##  pkgload          1.1.0      2020-05-29 [2] CRAN (R 4.0.0)                         
-##  plotly           4.9.2.1    2020-04-04 [2] CRAN (R 4.0.0)                         
-##  plyr             1.8.6      2020-03-03 [2] CRAN (R 4.0.0)                         
-##  png              0.1-7      2013-12-03 [2] CRAN (R 4.0.0)                         
-##  polyclip         1.10-0     2019-03-14 [2] CRAN (R 4.0.0)                         
-##  prettyunits      1.1.1      2020-01-24 [2] CRAN (R 4.0.0)                         
-##  pROC             1.16.2     2020-03-19 [2] CRAN (R 4.0.0)                         
-##  processx         3.4.4      2020-09-03 [2] CRAN (R 4.0.2)                         
-##  prodlim          2019.11.13 2019-11-17 [2] CRAN (R 4.0.0)                         
-##  promises         1.1.1      2020-06-09 [2] CRAN (R 4.0.0)                         
-##  ps               1.3.4      2020-08-11 [2] CRAN (R 4.0.2)                         
-##  purrr            0.3.4      2020-04-17 [2] CRAN (R 4.0.0)                         
-##  R6               2.4.1      2019-11-12 [2] CRAN (R 4.0.0)                         
-##  RANN             2.6.1      2019-01-08 [2] CRAN (R 4.0.0)                         
-##  RColorBrewer     1.1-2      2014-12-07 [2] CRAN (R 4.0.0)                         
-##  Rcpp             1.0.5      2020-07-06 [2] CRAN (R 4.0.2)                         
-##  RcppAnnoy        0.0.16     2020-03-08 [2] CRAN (R 4.0.0)                         
-##  recipes          0.1.13     2020-06-23 [2] CRAN (R 4.0.1)                         
-##  remotes          2.2.0      2020-07-21 [2] CRAN (R 4.0.2)                         
-##  reshape2         1.4.4      2020-04-09 [2] CRAN (R 4.0.0)                         
-##  reticulate       1.16       2020-05-27 [2] CRAN (R 4.0.0)                         
-##  rlang            0.4.7      2020-07-09 [2] CRAN (R 4.0.1)                         
-##  rmarkdown        2.3        2020-06-18 [2] CRAN (R 4.0.0)                         
-##  ROCR             1.0-11     2020-05-02 [2] CRAN (R 4.0.0)                         
-##  rpart            4.1-15     2019-04-12 [2] CRAN (R 4.0.2)                         
-##  rprojroot        1.3-2      2018-01-03 [2] CRAN (R 4.0.0)                         
-##  rstudioapi       0.11       2020-02-07 [2] CRAN (R 4.0.0)                         
-##  rsvd             1.0.3      2020-02-17 [2] CRAN (R 4.0.0)                         
-##  Rtsne            0.15       2018-11-10 [2] CRAN (R 4.0.0)                         
-##  scales           1.1.1      2020-05-11 [2] CRAN (R 4.0.0)                         
-##  scPred         * 1.9.0      2020-09-13 [1] Bioconductor                           
-##  sctransform      0.2.1      2019-12-17 [2] CRAN (R 4.0.0)                         
-##  sessioninfo      1.1.1      2018-11-05 [2] CRAN (R 4.0.0)                         
-##  Seurat         * 3.2.0      2020-07-16 [2] CRAN (R 4.0.1)                         
-##  shiny            1.5.0      2020-06-23 [2] CRAN (R 4.0.1)                         
-##  spatstat         1.64-1     2020-05-12 [2] CRAN (R 4.0.0)                         
-##  spatstat.data    1.4-3      2020-01-26 [2] CRAN (R 4.0.0)                         
-##  spatstat.utils   1.17-0     2020-02-07 [2] CRAN (R 4.0.0)                         
-##  stringi          1.4.6      2020-02-17 [2] CRAN (R 4.0.0)                         
-##  stringr          1.4.0      2019-02-10 [2] CRAN (R 4.0.0)                         
-##  survival         3.2-3      2020-06-13 [2] CRAN (R 4.0.2)                         
-##  tensor           1.5        2012-05-05 [2] CRAN (R 4.0.0)                         
-##  testthat         2.3.2      2020-03-02 [2] CRAN (R 4.0.0)                         
-##  tibble           3.0.3      2020-07-10 [2] CRAN (R 4.0.1)                         
-##  tidyr            1.1.2      2020-08-27 [2] CRAN (R 4.0.2)                         
-##  tidyselect       1.1.0      2020-05-11 [2] CRAN (R 4.0.0)                         
-##  timeDate         3043.102   2018-02-21 [2] CRAN (R 4.0.0)                         
-##  usethis          1.6.1      2020-04-29 [2] CRAN (R 4.0.0)                         
-##  uwot             0.1.8      2020-03-16 [2] CRAN (R 4.0.0)                         
-##  vctrs            0.3.4      2020-08-29 [2] CRAN (R 4.0.2)                         
-##  vipor            0.4.5      2017-03-22 [2] CRAN (R 4.0.0)                         
-##  viridisLite      0.3.0      2018-02-01 [2] CRAN (R 4.0.0)                         
-##  withr            2.2.0      2020-04-20 [2] CRAN (R 4.0.0)                         
-##  xfun             0.16       2020-07-24 [2] CRAN (R 4.0.2)                         
-##  xtable           1.8-4      2019-04-21 [2] CRAN (R 4.0.0)                         
-##  yaml             2.2.1      2020-02-01 [2] CRAN (R 4.0.0)                         
-##  zoo              1.8-8      2020-05-02 [2] CRAN (R 4.0.0)                         
+##  package         * version    date       lib source                                 
+##  abind             1.4-5      2016-07-21 [2] CRAN (R 4.1.0)                         
+##  assertthat        0.2.1      2019-03-21 [2] CRAN (R 4.1.0)                         
+##  beeswarm          0.4.0      2021-06-01 [2] CRAN (R 4.1.0)                         
+##  bslib             0.2.5.1    2021-05-18 [2] CRAN (R 4.1.0)                         
+##  cachem            1.0.5      2021-05-15 [2] CRAN (R 4.1.0)                         
+##  callr             3.7.0      2021-04-20 [2] CRAN (R 4.1.0)                         
+##  caret           * 6.0-88     2021-05-15 [2] CRAN (R 4.1.0)                         
+##  class             7.3-19     2021-05-03 [2] CRAN (R 4.1.0)                         
+##  cli               3.0.0      2021-06-30 [2] CRAN (R 4.1.0)                         
+##  cluster           2.1.2      2021-04-17 [2] CRAN (R 4.1.0)                         
+##  codetools         0.2-18     2020-11-04 [2] CRAN (R 4.1.0)                         
+##  colorspace        2.0-2      2021-06-24 [2] CRAN (R 4.1.0)                         
+##  cowplot           1.1.1      2020-12-30 [2] CRAN (R 4.1.0)                         
+##  crayon            1.4.1      2021-02-08 [2] CRAN (R 4.1.0)                         
+##  data.table        1.14.1     2021-06-08 [2] local                                  
+##  DBI               1.1.1      2021-01-15 [2] CRAN (R 4.1.0)                         
+##  deldir            0.2-10     2021-02-16 [2] CRAN (R 4.1.0)                         
+##  desc              1.3.0      2021-03-05 [2] CRAN (R 4.1.0)                         
+##  devtools          2.4.2      2021-06-07 [2] CRAN (R 4.1.0)                         
+##  digest            0.6.27     2020-10-24 [2] CRAN (R 4.1.0)                         
+##  doParallel      * 1.0.16     2020-10-16 [2] CRAN (R 4.1.0)                         
+##  dplyr             1.0.7      2021-06-18 [2] CRAN (R 4.1.0)                         
+##  ellipsis          0.3.2      2021-04-29 [2] CRAN (R 4.1.0)                         
+##  evaluate          0.14       2019-05-28 [2] CRAN (R 4.1.0)                         
+##  fansi             0.5.0      2021-05-25 [2] CRAN (R 4.1.0)                         
+##  farver            2.1.0      2021-02-28 [2] CRAN (R 4.1.0)                         
+##  fastmap           1.1.0      2021-01-25 [2] CRAN (R 4.1.0)                         
+##  fitdistrplus      1.1-5      2021-05-28 [2] CRAN (R 4.1.0)                         
+##  foreach         * 1.5.1      2020-10-15 [2] CRAN (R 4.1.0)                         
+##  fs                1.5.0      2020-07-31 [2] CRAN (R 4.1.0)                         
+##  future            1.21.0     2020-12-10 [2] CRAN (R 4.1.0)                         
+##  future.apply      1.7.0      2021-01-04 [2] CRAN (R 4.1.0)                         
+##  generics          0.1.0      2020-10-31 [2] CRAN (R 4.1.0)                         
+##  ggbeeswarm        0.6.0      2017-08-07 [2] CRAN (R 4.1.0)                         
+##  ggplot2         * 3.3.5      2021-06-25 [2] CRAN (R 4.1.0)                         
+##  ggrepel           0.9.1      2021-01-15 [2] CRAN (R 4.1.0)                         
+##  ggridges          0.5.3      2021-01-08 [2] CRAN (R 4.1.0)                         
+##  globals           0.14.0     2020-11-22 [2] CRAN (R 4.1.0)                         
+##  glue              1.4.2      2020-08-27 [2] CRAN (R 4.1.0)                         
+##  goftest           1.2-2      2019-12-02 [2] CRAN (R 4.1.0)                         
+##  gower             0.2.2      2020-06-23 [2] CRAN (R 4.1.0)                         
+##  gridExtra         2.3        2017-09-09 [2] CRAN (R 4.1.0)                         
+##  gtable            0.3.0      2019-03-25 [2] CRAN (R 4.1.0)                         
+##  harmony           0.1.0      2021-07-07 [2] Github (immunogenomics/harmony@c93de54)
+##  highr             0.9        2021-04-16 [2] CRAN (R 4.1.0)                         
+##  htmltools         0.5.1.1    2021-01-22 [2] CRAN (R 4.1.0)                         
+##  htmlwidgets       1.5.3      2020-12-10 [2] CRAN (R 4.1.0)                         
+##  httpuv            1.6.1      2021-05-07 [2] CRAN (R 4.1.0)                         
+##  httr              1.4.2      2020-07-20 [2] CRAN (R 4.1.0)                         
+##  ica               1.0-2      2018-05-24 [2] CRAN (R 4.1.0)                         
+##  igraph            1.2.6      2020-10-06 [2] CRAN (R 4.1.0)                         
+##  ipred             0.9-11     2021-03-12 [2] CRAN (R 4.1.0)                         
+##  irlba             2.3.3      2019-02-05 [2] CRAN (R 4.1.0)                         
+##  iterators       * 1.0.13     2020-10-15 [2] CRAN (R 4.1.0)                         
+##  jquerylib         0.1.4      2021-04-26 [2] CRAN (R 4.1.0)                         
+##  jsonlite          1.7.2      2020-12-09 [2] CRAN (R 4.1.0)                         
+##  kernlab           0.9-29     2019-11-12 [2] CRAN (R 4.1.0)                         
+##  KernSmooth        2.23-20    2021-05-03 [2] CRAN (R 4.1.0)                         
+##  knitr             1.33       2021-04-24 [2] CRAN (R 4.1.0)                         
+##  labeling          0.4.2      2020-10-20 [2] CRAN (R 4.1.0)                         
+##  later             1.2.0      2021-04-23 [2] CRAN (R 4.1.0)                         
+##  lattice         * 0.20-44    2021-05-02 [2] CRAN (R 4.1.0)                         
+##  lava              1.6.9      2021-03-11 [2] CRAN (R 4.1.0)                         
+##  lazyeval          0.2.2      2019-03-15 [2] CRAN (R 4.1.0)                         
+##  leiden            0.3.8      2021-05-24 [2] CRAN (R 4.1.0)                         
+##  lifecycle         1.0.0      2021-02-15 [2] CRAN (R 4.1.0)                         
+##  listenv           0.8.0      2019-12-05 [2] CRAN (R 4.1.0)                         
+##  lmtest            0.9-38     2020-09-09 [2] CRAN (R 4.1.0)                         
+##  lubridate         1.7.10     2021-02-26 [2] CRAN (R 4.1.0)                         
+##  magrittr        * 2.0.1      2020-11-17 [2] CRAN (R 4.1.0)                         
+##  MASS              7.3-54     2021-05-03 [2] CRAN (R 4.1.0)                         
+##  Matrix            1.3-4      2021-06-01 [2] CRAN (R 4.1.0)                         
+##  matrixStats       0.59.0     2021-06-01 [2] CRAN (R 4.1.0)                         
+##  mda               0.5-2      2020-06-29 [2] CRAN (R 4.1.0)                         
+##  memoise           2.0.0      2021-01-26 [2] CRAN (R 4.1.0)                         
+##  mgcv              1.8-36     2021-06-01 [2] CRAN (R 4.1.0)                         
+##  mime              0.11       2021-06-23 [2] CRAN (R 4.1.0)                         
+##  miniUI            0.1.1.1    2018-05-18 [2] CRAN (R 4.1.0)                         
+##  ModelMetrics      1.2.2.2    2020-03-17 [2] CRAN (R 4.1.0)                         
+##  munsell           0.5.0      2018-06-12 [2] CRAN (R 4.1.0)                         
+##  nlme              3.1-152    2021-02-04 [2] CRAN (R 4.1.0)                         
+##  nnet              7.3-16     2021-05-03 [2] CRAN (R 4.1.0)                         
+##  parallelly        1.26.1     2021-06-30 [2] CRAN (R 4.1.0)                         
+##  patchwork         1.1.1      2020-12-17 [2] CRAN (R 4.1.0)                         
+##  pbapply           1.4-3      2020-08-18 [2] CRAN (R 4.1.0)                         
+##  pillar            1.6.1      2021-05-16 [2] CRAN (R 4.1.0)                         
+##  pkgbuild          1.2.0      2020-12-15 [2] CRAN (R 4.1.0)                         
+##  pkgconfig         2.0.3      2019-09-22 [2] CRAN (R 4.1.0)                         
+##  pkgdown           1.6.1      2020-09-12 [2] CRAN (R 4.1.0)                         
+##  pkgload           1.2.1      2021-04-06 [2] CRAN (R 4.1.0)                         
+##  plotly            4.9.4.1    2021-06-18 [2] CRAN (R 4.1.0)                         
+##  plyr              1.8.6      2020-03-03 [2] CRAN (R 4.1.0)                         
+##  png               0.1-7      2013-12-03 [2] CRAN (R 4.1.0)                         
+##  polyclip          1.10-0     2019-03-14 [2] CRAN (R 4.1.0)                         
+##  prettyunits       1.1.1      2020-01-24 [2] CRAN (R 4.1.0)                         
+##  pROC              1.17.0.1   2021-01-13 [2] CRAN (R 4.1.0)                         
+##  processx          3.5.2      2021-04-30 [2] CRAN (R 4.1.0)                         
+##  prodlim           2019.11.13 2019-11-17 [2] CRAN (R 4.1.0)                         
+##  promises          1.2.0.1    2021-02-11 [2] CRAN (R 4.1.0)                         
+##  ps                1.6.0      2021-02-28 [2] CRAN (R 4.1.0)                         
+##  purrr             0.3.4      2020-04-17 [2] CRAN (R 4.1.0)                         
+##  R6                2.5.0      2020-10-28 [2] CRAN (R 4.1.0)                         
+##  ragg              1.1.3      2021-06-09 [2] CRAN (R 4.1.0)                         
+##  RANN              2.6.1      2019-01-08 [2] CRAN (R 4.1.0)                         
+##  RColorBrewer      1.1-2      2014-12-07 [2] CRAN (R 4.1.0)                         
+##  Rcpp              1.0.6      2021-01-15 [2] CRAN (R 4.1.0)                         
+##  RcppAnnoy         0.0.18     2020-12-15 [2] CRAN (R 4.1.0)                         
+##  recipes           0.1.16     2021-04-16 [2] CRAN (R 4.1.0)                         
+##  remotes           2.4.0      2021-06-02 [2] CRAN (R 4.1.0)                         
+##  reshape2          1.4.4      2020-04-09 [2] CRAN (R 4.1.0)                         
+##  reticulate        1.20       2021-05-03 [2] CRAN (R 4.1.0)                         
+##  rlang             0.4.11     2021-04-30 [2] CRAN (R 4.1.0)                         
+##  rmarkdown         2.9        2021-06-15 [2] CRAN (R 4.1.0)                         
+##  ROCR              1.0-11     2020-05-02 [2] CRAN (R 4.1.0)                         
+##  rpart             4.1-15     2019-04-12 [2] CRAN (R 4.1.0)                         
+##  rprojroot         2.0.2      2020-11-15 [2] CRAN (R 4.1.0)                         
+##  RSpectra          0.16-0     2019-12-01 [2] CRAN (R 4.1.0)                         
+##  rstudioapi        0.13       2020-11-12 [2] CRAN (R 4.1.0)                         
+##  Rtsne             0.15       2018-11-10 [2] CRAN (R 4.1.0)                         
+##  sass              0.4.0      2021-05-12 [2] CRAN (R 4.1.0)                         
+##  scales            1.1.1      2020-05-11 [2] CRAN (R 4.1.0)                         
+##  scattermore       0.7        2020-11-24 [2] CRAN (R 4.1.0)                         
+##  scPred          * 1.9.2      2021-07-11 [1] local                                  
+##  sctransform       0.3.2      2020-12-16 [2] CRAN (R 4.1.0)                         
+##  sessioninfo       1.1.1      2018-11-05 [2] CRAN (R 4.1.0)                         
+##  Seurat          * 4.0.3      2021-06-10 [2] CRAN (R 4.1.0)                         
+##  SeuratObject    * 4.0.2      2021-06-09 [2] CRAN (R 4.1.0)                         
+##  shiny             1.6.0      2021-01-25 [2] CRAN (R 4.1.0)                         
+##  spatstat.core     2.2-0      2021-06-17 [2] CRAN (R 4.1.0)                         
+##  spatstat.data     2.1-0      2021-03-21 [2] CRAN (R 4.1.0)                         
+##  spatstat.geom     2.2-0      2021-06-15 [2] CRAN (R 4.1.0)                         
+##  spatstat.sparse   2.0-0      2021-03-16 [2] CRAN (R 4.1.0)                         
+##  spatstat.utils    2.2-0      2021-06-14 [2] CRAN (R 4.1.0)                         
+##  stringi           1.6.2      2021-05-17 [2] CRAN (R 4.1.0)                         
+##  stringr           1.4.0      2019-02-10 [2] CRAN (R 4.1.0)                         
+##  survival          3.2-11     2021-04-26 [2] CRAN (R 4.1.0)                         
+##  systemfonts       1.0.2      2021-05-11 [2] CRAN (R 4.1.0)                         
+##  tensor            1.5        2012-05-05 [2] CRAN (R 4.1.0)                         
+##  testthat          3.0.4      2021-07-01 [2] CRAN (R 4.1.0)                         
+##  textshaping       0.3.5      2021-06-09 [2] CRAN (R 4.1.0)                         
+##  tibble            3.1.2      2021-05-16 [2] CRAN (R 4.1.0)                         
+##  tidyr             1.1.3      2021-03-03 [2] CRAN (R 4.1.0)                         
+##  tidyselect        1.1.1      2021-04-30 [2] CRAN (R 4.1.0)                         
+##  timeDate          3043.102   2018-02-21 [2] CRAN (R 4.1.0)                         
+##  usethis           2.0.1      2021-02-10 [2] CRAN (R 4.1.0)                         
+##  utf8              1.2.1      2021-03-12 [2] CRAN (R 4.1.0)                         
+##  uwot              0.1.10     2020-12-15 [2] CRAN (R 4.1.0)                         
+##  vctrs             0.3.8      2021-04-29 [2] CRAN (R 4.1.0)                         
+##  vipor             0.4.5      2017-03-22 [2] CRAN (R 4.1.0)                         
+##  viridisLite       0.4.0      2021-04-13 [2] CRAN (R 4.1.0)                         
+##  withr             2.4.2      2021-04-18 [2] CRAN (R 4.1.0)                         
+##  xfun              0.24       2021-06-15 [2] CRAN (R 4.1.0)                         
+##  xtable            1.8-4      2019-04-21 [2] CRAN (R 4.1.0)                         
+##  yaml              2.2.1      2020-02-01 [2] CRAN (R 4.1.0)                         
+##  zoo               1.8-9      2021-03-09 [2] CRAN (R 4.1.0)                         
 ## 
-## [1] /private/var/folders/6y/nzcvsw7j5dn1g0k8b13x086w0000gp/T/Rtmp6zp1Tb/temp_libpathc23ed96b965
-## [2] /Library/Frameworks/R.framework/Versions/4.0/Resources/library</code></pre>
+## [1] /private/var/folders/yj/yd72sc650wq90dvmfl2869jm0000gq/T/RtmpbVhim7/temp_libpath2e33576e5670
+## [2] /Library/Frameworks/R.framework/Versions/4.1/Resources/library</code></pre>
 </div>
   </div>
 
@@ -838,7 +882,7 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>
