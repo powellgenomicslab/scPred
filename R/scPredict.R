@@ -9,18 +9,13 @@
 #' be labelled as "unassigned"
 #' @param max.iter.harmony Maximum number of rounds to run Harmony. One round of Harmony involves one clustering and one correction step.
 #' @param recompute_alignment Recompute alignment? Useful if \code{scPredict()} has already been run
-#' @param reference_scaling Scale new dataset based on means and stdevs from reference dataset before alignment. 
-#' Otherwise, data will be independently scaled via \code{Seurat::ScaleData()}.
 #' @param seed Numeric seed for harmony 
-#' @param ... Further parameters passed to \code{Seurat::ScaleData()} if \code{reference_scaling} is \code{FALSE}
 #' @return A Seurat object with addtional metadata columns with prediction probabilities associated to each class, a \code{prediction} column, 
 #' indicating the classification based on the provided threshold and a \code{generic_class} column without "unassigned" labels.
 #' @keywords prediction, new, test, validation
 #' @importFrom methods is
 #' @importFrom stats predict
-#' @importFrom Seurat Embeddings Stdev ScaleData AddMetaData DefaultAssay CreateDimReducObject VariableFeatures Loadings GetAssayData
-#' @importFrom tibble rownames_to_column column_to_rownames
-#' @importFrom dplyr mutate select distinct mutate_all
+#' @importFrom SeuratObject Embeddings Stdev AddMetaData DefaultAssay CreateDimReducObject VariableFeatures Loadings GetAssayData
 #' @importFrom pbapply pblapply
 #' @importFrom harmony HarmonyMatrix
 #' @export
@@ -33,9 +28,7 @@ scPredict <- function(new,
                       threshold = 0.55, 
                       max.iter.harmony = 20,
                       recompute_alignment = TRUE,
-                      reference_scaling = TRUE,
-                      seed = 66,
-                      ...){
+                      seed = 66){
   
   # Function validations ----------------------------------------------------
   
@@ -97,7 +90,7 @@ scPredict <- function(new,
     ref_loadings <- ref_loadings[shared_features, ]
     
     
-    if(reference_scaling){
+    
       new_data <- GetAssayData(new, "data")[shared_features,]
       means <- spmodel@scaling$means
       stdevs  <- spmodel@scaling$stdevs
@@ -128,25 +121,6 @@ scPredict <- function(new,
       
       new_embeddings <- scaled_data %*% ref_loadings
       
-    }else{
-      # Scale new data
-      scale.data <- GetAssayData(new, "scale.data")
-      new <- ScaleData(new, features = reference_features, ...)
-      #new <- ScaleData(new, features = reference_features)
-      
-      ## Subset shared genes from new dataset
-      
-      new_data <- GetAssayData(new, "scale.data")
-      new_data <- new_data[shared_features, ]
-      new_data <- new_data[match(shared_features, rownames(new_data)), ]
-      
-      # all(rownames(new_data) == shared_genes)
-      
-      new_embeddings <- t(new_data) %*% ref_loadings
-      new <- SetAssayData(new, "scale.data", new.data = scale.data)
-    }
-    
-    
     
     
     dataset <- factor(c(rep("reference", nrow(ref_embeddings)), rep("new", nrow(new_embeddings))), 
@@ -207,7 +181,7 @@ scPredict <- function(new,
   res <- sapply(cellTypeModelNames, .predictCellClass, spmodel, new_embeddings_aligned)
   
   # Gather results
-  res <- Reduce(cbind, res) %>% as.data.frame()
+  res <- as.data.frame(Reduce(cbind, res))
   colnames(res) <- cellTypeModelNames
   rownames(res) <- colnames(new)
   
@@ -215,7 +189,7 @@ scPredict <- function(new,
   #plot(res$Lymphoid, col = as.factor(test$CellType))
   # If there is only 2 classes, compute complementary probability for negative class
   if(length(cellTypeModelNames) == 1){
-    metadata <- spmodel %>% get_metadata()
+    metadata <- get_metadata(spmodel)
     cellClasses <- levels(metadata$pvar)
     res_comp <- 1 - res[,1]
     negClass <- cellClasses[cellClasses != names(res)]
@@ -231,16 +205,6 @@ scPredict <- function(new,
   # Store classification based on maximum probability
   max_props$generic_class <- names(res)[max_props$index]
   res <- cbind(res, max_props)
-  
-  
-  # Relabel cells according to original values
-  # dict <- spmodel@metadata[c("pvar", "response")] %>% 
-  #   distinct() %>% 
-  #   mutate_all(as.character)
-  # 
-  # 
-  # res$no_rejection <- dict[match(res$generic_class, dict[,2]), 1] 
-  
   
   # Classify cells according to probability threshold
     

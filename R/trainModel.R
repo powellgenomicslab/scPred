@@ -157,7 +157,7 @@ trainModel <- function(object,
     
     names_features <- as.character(spmodel@features[[positiveClass]]$feature)
     features <- scPred:::subsetMatrix(spmodel@cell_embeddings, names_features)
-    response <-  spmodel@metadata$response %>% as.character()
+    response <- as.character(spmodel@metadata$response)
     
     
     i <- response != .make_names(positiveClass)

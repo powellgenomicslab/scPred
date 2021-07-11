@@ -10,7 +10,6 @@ scPredict(
   threshold = 0.55,
   max.iter.harmony = 20,
   recompute_alignment = TRUE,
-  reference_scaling = TRUE,
   seed = 66,
   ...
 )
@@ -30,12 +29,7 @@ be labelled as "unassigned"}
 
 \item{recompute_alignment}{Recompute alignment? Useful if \code{scPredict()} has already been run}
 
-\item{reference_scaling}{Scale new dataset based on means and stdevs from reference dataset before alignment. 
-Otherwise, data will be independently scaled via \code{Seurat::ScaleData()}.}
-
 \item{seed}{Numeric seed for harmony}
-
-\item{...}{Further parameters passed to \code{Seurat::ScaleData()} if \code{reference_scaling} is \code{FALSE}}
 }
 \value{
 A Seurat object with addtional metadata columns with prediction probabilities associated to each class, a \code{prediction} column, 
