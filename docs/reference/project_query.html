@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Predict cell classes from a new dataset using a trained model — scPredict • scPred</title>
+<title>Project query data onto PCA reference — project_query • scPred</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Predict cell classes from a new dataset using a trained model — scPredict" />
-<meta property="og:description" content="Predicts cell classes for a new dataset based on trained model(s)" />
+<meta property="og:title" content="Project query data onto PCA reference — project_query" />
+<meta property="og:description" content="Projects data from Seurat object onto a pre-computed PCA" />
 
 
 
@@ -130,22 +130,22 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Predict cell classes from a new dataset using a trained model</h1>
-    <small class="dont-index">Source: <a href='https://github.com/powellgenomicslab/scPred/blob/master/R/scPredict.R'><code>R/scPredict.R</code></a></small>
-    <div class="hidden name"><code>scPredict.Rd</code></div>
+    <h1>Project query data onto PCA reference</h1>
+    <small class="dont-index">Source: <a href='https://github.com/powellgenomicslab/scPred/blob/master/R/project_query.R'><code>R/project_query.R</code></a></small>
+    <div class="hidden name"><code>project_query.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Predicts cell classes for a new dataset based on trained model(s)</p>
+    <p>Projects data from Seurat object onto a pre-computed PCA</p>
     </div>
 
-    <pre class="usage"><span class='fu'>scPredict</span><span class='op'>(</span>
+    <pre class="usage"><span class='fu'>project_query</span><span class='op'>(</span>
   <span class='va'>new</span>,
   <span class='va'>reference</span>,
-  threshold <span class='op'>=</span> <span class='fl'>0.55</span>,
   max.iter.harmony <span class='op'>=</span> <span class='fl'>20</span>,
   recompute_alignment <span class='op'>=</span> <span class='cn'>TRUE</span>,
-  seed <span class='op'>=</span> <span class='fl'>66</span>
+  seed <span class='op'>=</span> <span class='fl'>66</span>,
+  <span class='va'>...</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -153,19 +153,11 @@
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>new</th>
-      <td><p>A seurat object containing cells to be classified</p></td>
+      <td><p>A Seurat object containing cells to be projected</p></td>
     </tr>
     <tr>
       <th>reference</th>
-      <td><p>A <code>Seurat</code> object with trained model(s) using <code>scPred</code> or an <code>scPred</code> object</p></td>
-    </tr>
-    <tr>
-      <th>threshold</th>
-      <td><p>Threshold used for probabilities to classify cells into classes. All cells below 
-this threshold value will be labels as "unassigned". In the case of binary classification (two cell tyoes),
-a threshold of <code>0.5</code> will force all cells to be classified to any of the two cell types. For multi-class
-classification, if there's no probability higher than the threshold associated to a cell type, this will
-be labelled as "unassigned"</p></td>
+      <td><p>A <code>Seurat</code> object after running <code><a href='getFeatureSpace.html'>getFeatureSpace()</a></code></p></td>
     </tr>
     <tr>
       <th>max.iter.harmony</th>
@@ -173,19 +165,21 @@ be labelled as "unassigned"</p></td>
     </tr>
     <tr>
       <th>recompute_alignment</th>
-      <td><p>Recompute alignment? Useful if <code>scPredict()</code> has already been run</p></td>
+      <td><p>Recompute alignment? Useful if <code><a href='scPredict.html'>scPredict()</a></code> has already been run</p></td>
     </tr>
     <tr>
       <th>seed</th>
       <td><p>Numeric seed for harmony</p></td>
     </tr>
+    <tr>
+      <th>...</th>
+      <td><p>Further arguments to <code>HarmonyMatrix()</code></p></td>
+    </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A Seurat object with additional metadata columns with prediction probabilities associated to each class, a <code>prediction</code> column, 
-indicating the classification based on the provided threshold and a <code>generic_class</code> column without "unassigned" labels. Additionally,
-two new reductions are returned:</p><ul>
+    <p>A Seurat object with two new reductions:</p><ul>
 <li><p><code>scpred</code>: Aligned data using harmony</p></li>
 <li><p><code>scpred_projection</code>: Raw projection using reference loadings</p></li>
 </ul>

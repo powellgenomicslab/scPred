@@ -10,14 +10,13 @@ scPredict(
   threshold = 0.55,
   max.iter.harmony = 20,
   recompute_alignment = TRUE,
-  seed = 66,
-  ...
+  seed = 66
 )
 }
 \arguments{
 \item{new}{A seurat object containing cells to be classified}
 
-\item{reference}{An \code{Seurat} object with trained model(s) using \code{scPred} or an \code{scPred} object}
+\item{reference}{A \code{Seurat} object with trained model(s) using \code{scPred} or an \code{scPred} object}
 
 \item{threshold}{Threshold used for probabilities to classify cells into classes. All cells below 
 this threshold value will be labels as "unassigned". In the case of binary classification (two cell tyoes),
@@ -32,8 +31,13 @@ be labelled as "unassigned"}
 \item{seed}{Numeric seed for harmony}
 }
 \value{
-A Seurat object with addtional metadata columns with prediction probabilities associated to each class, a \code{prediction} column, 
-indicating the classification based on the provided threshold and a \code{generic_class} column without "unassigned" labels.
+A Seurat object with additional metadata columns with prediction probabilities associated to each class, a \code{prediction} column, 
+indicating the classification based on the provided threshold and a \code{generic_class} column without "unassigned" labels. Additionally,
+two new reductions are returned: 
+\itemize{
+\item \code{scpred}: Aligned data using harmony
+\item \code{scpred_projection}: Raw projection using reference loadings
+}
 }
 \description{
 Predicts cell classes for a new dataset based on trained model(s)
