@@ -10,15 +10,13 @@ scPredict(
   threshold = 0.55,
   max.iter.harmony = 20,
   recompute_alignment = TRUE,
-  reference_scaling = TRUE,
-  seed = 66,
-  ...
+  seed = 66
 )
 }
 \arguments{
 \item{new}{A seurat object containing cells to be classified}
 
-\item{reference}{An \code{Seurat} object with trained model(s) using \code{scPred} or an \code{scPred} object}
+\item{reference}{A \code{Seurat} object with trained model(s) using \code{scPred} or an \code{scPred} object}
 
 \item{threshold}{Threshold used for probabilities to classify cells into classes. All cells below 
 this threshold value will be labels as "unassigned". In the case of binary classification (two cell tyoes),
@@ -30,16 +28,16 @@ be labelled as "unassigned"}
 
 \item{recompute_alignment}{Recompute alignment? Useful if \code{scPredict()} has already been run}
 
-\item{reference_scaling}{Scale new dataset based on means and stdevs from reference dataset before alignment. 
-Otherwise, data will be independently scaled via \code{Seurat::ScaleData()}.}
-
 \item{seed}{Numeric seed for harmony}
-
-\item{...}{Further parameters passed to \code{Seurat::ScaleData()} if \code{reference_scaling} is \code{FALSE}}
 }
 \value{
-A Seurat object with addtional metadata columns with prediction probabilities associated to each class, a \code{prediction} column, 
-indicating the classification based on the provided threshold and a \code{generic_class} column without "unassigned" labels.
+A Seurat object with additional metadata columns with prediction probabilities associated to each class, a \code{prediction} column, 
+indicating the classification based on the provided threshold and a \code{generic_class} column without "unassigned" labels. Additionally,
+two new reductions are returned: 
+\itemize{
+\item \code{scpred}: Aligned data using harmony
+\item \code{scpred_projection}: Raw projection using reference loadings
+}
 }
 \description{
 Predicts cell classes for a new dataset based on trained model(s)

@@ -30,8 +30,6 @@ print.scPred <- function(string) {
 #' object such as number of cells, genes, significant features.
 #' @importFrom methods setMethod
 #' @importFrom methods show
-#' @importFrom tibble column_to_rownames
-#' @importFrom dplyr full_join bind_rows
 #' @importFrom knitr kable
 #' @export
 
@@ -43,57 +41,59 @@ setMethod("show", signature("scPred"), function(object) {
     }
     
     # Extract number of cells per cell type
-    n <- get_metadata(object)[,"pvar"] %>% 
-        table() %>% 
-        as.data.frame() %>%
-        `names<-`(c("Cell type", "n"))
+    n <- get_metadata(object)[,"pvar"] 
+    n <- table(n)
+    n <- as.data.frame(n)
+    names(n) <- c("Cell type", "n")
     
     # Extract number of features per cell type
     if(length(object@features) != 0){
-        object@features %>%
-            sapply(nrow) -> nFeatures
-        features <- nFeatures %>% 
-            as.data.frame() %>% 
-            `names<-`("Features") %>% 
-            rownames_to_column("Cell type")
+        features <- sapply(object@features, nrow)
+        features <- as.data.frame(features)
+        names(features) <- "Features"
+        features$`Cell type` <- rownames(features)
+        rownames(features) <- NULL
     }
     
     training_value <- NULL
     # Extract performance metrics from each classifier
     if(length(object@train) != 0){
-        object %>% 
-            get_classifiers() %>% 
-            lapply(function(x, metric){
-                bestModelIndex <- as.integer(rownames(x$bestTune))
-                metric <- x$metric
-                method <- x$method
-                if(metric == "ROC"){
-                    perf <- round(x$results[bestModelIndex, c("ROC", "Sens", "Spec")], 3)
-                }else if(metric == "Accuracy"){
-                    perf <- round(x$results[bestModelIndex, c("Accuracy", "Kappa")], 3)
-                }else if(metric == "AUC"){
-                    perf <- round(x$results[bestModelIndex, c("AUC", "Precision", "Recall", "F")], 3)
-                }
-                cbind(Method = method, perf)
-            }) %>% 
-            bind_rows(.id = "Cell type") -> training_value
+        
+        classifiers <- get_classifiers(object)
+        
+        training_value <- lapply(classifiers, function(x, metric){
+            bestModelIndex <- as.integer(rownames(x$bestTune))
+            metric <- x$metric
+            method <- x$method
+            if(metric == "ROC"){
+                perf <- round(x$results[bestModelIndex, c("ROC", "Sens", "Spec")], 3)
+            }else if(metric == "Accuracy"){
+                perf <- round(x$results[bestModelIndex, c("Accuracy", "Kappa")], 3)
+            }else if(metric == "AUC"){
+                perf <- round(x$results[bestModelIndex, c("AUC", "Precision", "Recall", "F")], 3)
+            }
+            cbind(Method = method, perf)
+        })
+        
+        training_value <- do.call(rbind, training_value)
+        training_value$`Cell type` <- rownames(training_value)
         
     }
     
     
     
-    display <- full_join(n, features, by = "Cell type")
+    display <- merge(n, features, by = "Cell type")
     
     if(is.null(training_value)){
         training_section <- crayon::red(c(cli::symbol$cross, " Training model(s)\n"))
     }else{
         training_section <- crayon::green(c(cli::symbol$tick, " Training model(s)\n"))
-        display <- full_join(display, training_value, by = "Cell type")
+        display <- merge(display, training_value, by = "Cell type")
     }
     
     
     string <- list(
-        pVar_value =  c(pVar, "\n"),
+        pVar_value = c(pVar, "\n"),
         training_section = training_section,
         display = kable(display)
     )
@@ -113,10 +113,6 @@ setMethod("show", signature("scPred"), function(object) {
 #' @param digits If proportions are returned, number of digits to round numbers
 #' @return A contingency table
 #' @export
-#' @importFrom dplyr group_by_ summarise
-#' @importFrom tidyr spread
-#' @importFrom magrittr "%>%"
-#' @importFrom tibble column_to_rownames
 #' @author Jose Alquicira Hernandez
 #'
 
@@ -138,14 +134,13 @@ setMethod("crossTab", signature("Seurat"),
               sums <- colSums(cont)
               
               if(output == "prop"){
-                  mapply(function(x, y) x/y, cont, sums) %>% 
-                      as.data.frame() %>% 
-                      round(digits) %>% 
-                      `dimnames<-`(dim_names) -> cont
+                  cont <- as.data.frame(mapply(function(x, y) x/y, cont, sums))
+                  cont <- round(cont, digits)
+                  dimnames(cont) <- dim_names   
+                   
               }else if(output == "fraction"){
-                  mapply(function(x, y) paste0(x, "/", y), cont, sums) %>% 
-                      as.data.frame() %>% 
-                      `dimnames<-`(dim_names) -> cont
+                  cont <- as.data.frame(mapply(function(x, y) paste0(x, "/", y), cont, sums))
+                  dimnames(cont) <- dim_names
               }
               
               cont
@@ -153,10 +148,6 @@ setMethod("crossTab", signature("Seurat"),
 
 
 setOldClass("train")
-
-
-
-
 
 
 #' @title Get scPred object
@@ -212,30 +203,31 @@ setMethod("get_classifiers",
 #' @description Plots all training probabilities for each cell type
 #' @param object Seurat or scPred object
 #' @param size Point size for each cell
-#' @importFrom magrittr "%>%"
-#' @importFrom dplyr select mutate if_else
-#' @importFrom tidyr pivot_longer
 #' @importFrom ggplot2 ggplot aes xlab ylab scale_color_manual facet_wrap theme element_text element_blank element_rect element_line
 #' @importFrom ggbeeswarm geom_quasirandom
 #' @return Plot with the probability distribution for each cell type
 
 .plot_probabilities <- function(object, size = 0.8){
     
-    cbind(get_probabilities(object), 
-          get_metadata(object)) %>% 
-        select(-response) %>% 
-        pivot_longer(-pvar, names_to = "class") %>% 
-        mutate(response = if_else(as.character(pvar) == class, 
-                                  "Positive", 
-                                  "Negative")) %>% 
-        mutate(response = factor(response, 
-                                 c("Positive", 
-                                   "Negative")))-> dat
+    
+    dat <- cbind(get_probabilities(object), 
+          get_metadata(object)) 
+    
+    dat$response <- NULL
+    
+    dat <- reshape(dat,
+            v.names = "value", 
+            timevar = "class",
+            times = unique(as.character(dat$pvar)), 
+            direction = "long", 
+            varying = unique(as.character(dat$pvar)))
+
+    
+    dat$response <- ifelse(as.character(dat$pvar) == dat$class, "Positive", "Negative")
+    dat$response <- factor(dat$response, c("Positive", "Negative"))
     
     
     ggplot(dat, aes(response, value,  color = response)) +
-        #geom_boxplot(color = "black", outlier.shape = NA) +
-        #geom_jitter(size = 0.1) +
         geom_quasirandom(method = "smiley", size = size) +
         xlab("Response") +
         ylab("Probability") +
@@ -275,23 +267,19 @@ setMethod("plot_probabilities",
 #' @title Get training probabilities
 #' @description Gets training probabilities for each cell type
 #' @param object Seurat object
-#' @importFrom magrittr "%>%"
 #' @export
 #' @return A data frame with all cell-type probabilities associated to each cell
 
 setMethod("get_probabilities", 
           signature("Seurat"), 
           function(object){
-              object %>% get_scpred() %>% get_probabilities()
+              get_probabilities(get_scpred(object))
           })
 
 
 #' @title Get training probabilities
 #' @description Gets training probabilities for each cell type
 #' @param object scPred object
-#' @importFrom magrittr "%>%"
-#' @importFrom tibble column_to_rownames
-#' @importFrom dplyr full_join
 #' @export
 #' @return A data frame with all cell-type probabilities associated to each cell
 
@@ -307,15 +295,18 @@ setMethod("get_probabilities",
                   
               })
               
-              barcodes <- object %>% get_metadata() %>% rownames()
-              mapply(function(x, x_name){
+              barcodes <- rownames(get_metadata(object))
+              
+              probs <- mapply(function(x, x_name){
                   res <- data.frame(x, barcode = barcodes[x$rowIndex])
                   res$rowIndex <- NULL
                   names(res)[1] <- x_name
                   res
-              }, probs, names(probs), SIMPLIFY = FALSE)  %>% 
-                  Reduce(function(x, y) full_join(x, y, by = "barcode"), .) %>%
-                  column_to_rownames("barcode") -> probs
+              }, probs, names(probs), SIMPLIFY = FALSE)
+              
+              probs <- Reduce(function(x, y) merge(x, y, by = "barcode"), probs)
+              rownames(probs) <- probs$barcode
+              probs$barcode <- NULL
               
               probs <- probs[match(barcodes, rownames(probs)), ]
               probs
@@ -339,11 +330,10 @@ setMethod("get_metadata",
 #' @description Accessor function to retrieve metadata from scPred object
 #' @return A dataframe including the cell barcodes and prediction variable 
 #' (cell type labels)
-#' @importFrom magrittr "%>%"
 #' @export
 
 setMethod("get_metadata", 
           signature("Seurat"), 
           function(object){
-              object %>% get_scpred() %>% get_metadata()
+              get_metadata(get_scpred(object))
           })

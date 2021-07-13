@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Get scPred object — get_scpred • scPred</title>
+<title>Project query data onto PCA reference — project_query • scPred</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Get scPred object — get_scpred" />
-<meta property="og:description" content="Accessor function to retrieve scPred models from Seurat objects" />
+<meta property="og:title" content="Project query data onto PCA reference — project_query" />
+<meta property="og:description" content="Projects data from Seurat object onto a pre-computed PCA" />
 
 
 
@@ -130,29 +130,63 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Get scPred object</h1>
-    <small class="dont-index">Source: <a href='https://github.com/powellgenomicslab/scPred/blob/master/R/generics.R'><code>R/generics.R</code></a></small>
-    <div class="hidden name"><code>get_scpred.Rd</code></div>
+    <h1>Project query data onto PCA reference</h1>
+    <small class="dont-index">Source: <a href='https://github.com/powellgenomicslab/scPred/blob/master/R/project_query.R'><code>R/project_query.R</code></a></small>
+    <div class="hidden name"><code>project_query.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Accessor function to retrieve scPred models from Seurat objects</p>
+    <p>Projects data from Seurat object onto a pre-computed PCA</p>
     </div>
 
-    <pre class="usage"><span class='fu'>get_scpred</span><span class='op'>(</span><span class='va'>object</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>project_query</span><span class='op'>(</span>
+  <span class='va'>new</span>,
+  <span class='va'>reference</span>,
+  max.iter.harmony <span class='op'>=</span> <span class='fl'>20</span>,
+  recompute_alignment <span class='op'>=</span> <span class='cn'>TRUE</span>,
+  seed <span class='op'>=</span> <span class='fl'>66</span>,
+  <span class='va'>...</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>object</th>
-      <td><p>Seurat object</p></td>
+      <th>new</th>
+      <td><p>A Seurat object containing cells to be projected</p></td>
+    </tr>
+    <tr>
+      <th>reference</th>
+      <td><p>A <code>Seurat</code> object after running <code><a href='getFeatureSpace.html'>getFeatureSpace()</a></code></p></td>
+    </tr>
+    <tr>
+      <th>max.iter.harmony</th>
+      <td><p>Maximum number of rounds to run Harmony. One round of Harmony involves one clustering and one correction step.</p></td>
+    </tr>
+    <tr>
+      <th>recompute_alignment</th>
+      <td><p>Recompute alignment? Useful if <code><a href='scPredict.html'>scPredict()</a></code> has already been run</p></td>
+    </tr>
+    <tr>
+      <th>seed</th>
+      <td><p>Numeric seed for harmony</p></td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td><p>Further arguments to <code>HarmonyMatrix()</code></p></td>
     </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>scPred object</p>
+    <p>A Seurat object with two new reductions:</p><ul>
+<li><p><code>scpred</code>: Aligned data using harmony</p></li>
+<li><p><code>scpred_projection</code>: Raw projection using reference loadings</p></li>
+</ul>
+
+    <h2 class="hasAnchor" id="author"><a class="anchor" href="#author"></a>Author</h2>
+
+    <p>José Alquicira Hernández</p>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

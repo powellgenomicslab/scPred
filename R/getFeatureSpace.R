@@ -18,10 +18,8 @@
 #' }
 #' @keywords informative, significant, features
 #' @importFrom methods is
-#' @importFrom tidyr gather
-#' @importFrom magrittr "%>%"
-#' @importFrom dplyr mutate arrange filter distinct
 #' @importFrom pbapply pblapply
+#' @importFrom SeuratObject DefaultAssay Embeddings Loadings Reductions Cells
 #' 
 #' @export
 #' @author
@@ -49,7 +47,7 @@ getFeatureSpace <- function(object, pvar, correction = "fdr", sig = 1, reduction
     stop("Invalid multiple testing correction method. See ?p.adjust function")
   }
   
-  if(!pvar %in% names(object@meta.data)){
+  if(!pvar %in% names(object[[]])){
     stop("Prediction variable is not stored in metadata slot")
   }
   
@@ -141,8 +139,8 @@ getFeatureSpace <- function(object, pvar, correction = "fdr", sig = 1, reduction
   }else{
     
     res <- pblapply(levels(classes), .getFeatures, classes, cellEmbeddings, correction, sig)
-    dict <- data.frame(classes, original_classes) %>% 
-      distinct()
+    dict <- data.frame(classes, original_classes)
+    dict <- unique(dict)
     
     i <- match(levels(classes), dict$classes)
     names(res) <- as.character(dict$original_classes[i])
@@ -162,10 +160,7 @@ getFeatureSpace <- function(object, pvar, correction = "fdr", sig = 1, reduction
     
   }
   
-  
-  
   # Create scPred object
-  
   spmodel@pvar <- pvar
   spmodel@features <- res
   spmodel@cell_embeddings <- cellEmbeddings
@@ -193,16 +188,15 @@ getFeatureSpace <- function(object, pvar, correction = "fdr", sig = 1, reduction
   # Get indices for positive and negative class cells
   positiveCells <- newClasses == positiveClass
   negativeCells <- newClasses == "other"
+
   
   # Get informative features
-  apply(cellEmbeddings, 2, function(d) stats::wilcox.test(d[positiveCells], d[negativeCells])) %>%
-    lapply('[[', "p.value") %>% # Extract p-values
-    as.data.frame() %>% 
-    gather(key = "feature", value = "pValue") %>%
-    mutate(pValueAdj = stats::p.adjust(pValue, method = correction, n = nrow(.))) %>% # Perform multiple test correction
-    arrange(pValueAdj) %>% 
-    filter(pValueAdj < sig) -> sigDims
-  
-  sigDims
+  wt_res <- apply(cellEmbeddings, 2, function(d) stats::wilcox.test(d[positiveCells], d[negativeCells]))
+  wt_res <- lapply(wt_res, '[[', "p.value")
+  wt_res <- data.frame(feature = names(wt_res), pValue = as.numeric(wt_res))
+  wt_res$pValueAdj <- stats::p.adjust(wt_res$pValue, method = correction, n = nrow(wt_res))
+  wt_res <- wt_res[order(wt_res$pValueAdj), ]
+  wt_res <- wt_res[wt_res$pValueAdj < sig, ]
+  wt_res
 }
 
