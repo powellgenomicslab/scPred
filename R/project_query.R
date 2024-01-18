@@ -47,7 +47,7 @@ if("scpred" %in% names(new@reductions)){
   if(recompute_alignment){
     alignment <- TRUE
     cat(crayon::yellow(cli::symbol$figure_dash, "Data has already been aligned to a reference.\n"), sep = "")
-    cat(crayon::yellow(cli::symbol$sup_plus, "Skip data alignment using `recompute.alignment = FALSE`.\n"),  sep = "")
+    cat(crayon::yellow(cli::symbol$sup_plus, "Skip data alignment using 'recompute.alignment = FALSE'.\n"),  sep = "")
       
   } 
   else {
@@ -84,7 +84,7 @@ if(alignment){
   
   
   
-  new_data <- GetAssayData(new, "data")[shared_features,]
+  new_data <- GetAssayData(new, layer="data")[shared_features,]
   means <- spmodel@scaling$means
   stdevs  <- spmodel@scaling$stdevs
   new_data <- Matrix::t(new_data)
